@@ -20,7 +20,50 @@ npm install
 This repository uses Nx as a build system with a focus on monorepo development:
 
 - `apps/` - Contains application projects
+  - `frontend/` - React frontend application
+  - `backend/` - Node.js backend with GraphQL API
 - `libs/` - Contains shared library projects
+
+## Applications
+
+### Frontend
+
+A React application built with Vite and React Router.
+
+**Start the frontend:**
+```bash
+npx nx serve frontend
+```
+
+### Backend
+
+A Node.js application with TypeScript that provides a GraphQL API using Apollo Server.
+
+**Start the backend:**
+```bash
+npx nx serve backend
+```
+
+The GraphQL endpoint will be available at `http://localhost:3000/graphql`.
+
+**Example GraphQL queries:**
+
+```graphql
+# Get hello message
+{
+  hello
+}
+
+# Get all videos
+{
+  videos {
+    id
+    title
+    description
+    url
+  }
+}
+```
 
 ## Available Commands
 
