@@ -22,23 +22,23 @@
     "projectFileMap": {
       "frontend": [
         {
-          "file": "frontend/index.html",
+          "file": "apps/frontend/index.html",
           "hash": "2323699249478598756"
         },
         {
-          "file": "frontend/project.json",
-          "hash": "11389205431730976346"
+          "file": "apps/frontend/project.json",
+          "hash": "1581687993160957088"
         },
         {
-          "file": "frontend/public/favicon.ico",
+          "file": "apps/frontend/public/favicon.ico",
           "hash": "9303420814833116677"
         },
         {
-          "file": "frontend/src/app/app.module.css",
+          "file": "apps/frontend/src/app/app.module.css",
           "hash": "8887387885984320532"
         },
         {
-          "file": "frontend/src/app/app.spec.tsx",
+          "file": "apps/frontend/src/app/app.spec.tsx",
           "hash": "15198245222472965612",
           "deps": [
             "npm:@testing-library/react",
@@ -46,22 +46,22 @@
           ]
         },
         {
-          "file": "frontend/src/app/app.tsx",
+          "file": "apps/frontend/src/app/app.tsx",
           "hash": "13016597669077160099",
           "deps": [
             "npm:react-router-dom"
           ]
         },
         {
-          "file": "frontend/src/app/nx-welcome.tsx",
+          "file": "apps/frontend/src/app/nx-welcome.tsx",
           "hash": "2348102959109701629"
         },
         {
-          "file": "frontend/src/assets/.gitkeep",
+          "file": "apps/frontend/src/assets/.gitkeep",
           "hash": "3244421341483603138"
         },
         {
-          "file": "frontend/src/main.tsx",
+          "file": "apps/frontend/src/main.tsx",
           "hash": "6494962159756833686",
           "deps": [
             "npm:react",
@@ -70,24 +70,24 @@
           ]
         },
         {
-          "file": "frontend/src/styles.css",
+          "file": "apps/frontend/src/styles.css",
           "hash": "5195668842064076916"
         },
         {
-          "file": "frontend/tsconfig.app.json",
+          "file": "apps/frontend/tsconfig.app.json",
           "hash": "13403476513633183731"
         },
         {
-          "file": "frontend/tsconfig.json",
-          "hash": "8372035408268418786"
+          "file": "apps/frontend/tsconfig.json",
+          "hash": "11166545116916107487"
         },
         {
-          "file": "frontend/tsconfig.spec.json",
+          "file": "apps/frontend/tsconfig.spec.json",
           "hash": "11887952472848760817"
         },
         {
-          "file": "frontend/vite.config.ts",
-          "hash": "11789996756071785572",
+          "file": "apps/frontend/vite.config.ts",
+          "hash": "15931724005608583567",
           "deps": [
             "npm:vite",
             "npm:@vitejs/plugin-react",
@@ -127,7 +127,7 @@
       },
       {
         "file": "package-lock.json",
-        "hash": "17425445675130211278"
+        "hash": "13014334804822031645"
       },
       {
         "file": "package.json",
@@ -143,5 +143,5 @@
       }
     ]
   },
-  "externalNodesHash": "2550300036716847900"
+  "externalNodesHash": "11696496821163056371"
 }
