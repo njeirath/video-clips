@@ -26,6 +26,51 @@
   ],
   "fileMap": {
     "projectFileMap": {
+      "backend": [
+        {
+          "file": "apps/backend/README.md",
+          "hash": "16129243249734099860"
+        },
+        {
+          "file": "apps/backend/jest.config.ts",
+          "hash": "2828906426970719238"
+        },
+        {
+          "file": "apps/backend/project.json",
+          "hash": "12364752360813510345"
+        },
+        {
+          "file": "apps/backend/src/assets/.gitkeep",
+          "hash": "3244421341483603138"
+        },
+        {
+          "file": "apps/backend/src/main.spec.ts",
+          "hash": "12331376637773612460",
+          "deps": [
+            "npm:@apollo/server"
+          ]
+        },
+        {
+          "file": "apps/backend/src/main.ts",
+          "hash": "10751067291027292738",
+          "deps": [
+            "npm:express",
+            "npm:@apollo/server"
+          ]
+        },
+        {
+          "file": "apps/backend/tsconfig.app.json",
+          "hash": "11137898450640994363"
+        },
+        {
+          "file": "apps/backend/tsconfig.json",
+          "hash": "3490524966360018312"
+        },
+        {
+          "file": "apps/backend/tsconfig.spec.json",
+          "hash": "6622138706846345436"
+        }
+      ],
       "frontend": [
         {
           "file": "apps/frontend/index.html",
@@ -103,47 +148,6 @@
             "npm:@vitejs/plugin-react",
             "npm:@nx/vite"
           ]
-        }
-      ],
-      "backend": [
-        {
-          "file": "apps/backend/jest.config.ts",
-          "hash": "2828906426970719238"
-        },
-        {
-          "file": "apps/backend/project.json",
-          "hash": "12364752360813510345"
-        },
-        {
-          "file": "apps/backend/src/assets/.gitkeep",
-          "hash": "3244421341483603138"
-        },
-        {
-          "file": "apps/backend/src/main.spec.ts",
-          "hash": "12331376637773612460",
-          "deps": [
-            "npm:@apollo/server"
-          ]
-        },
-        {
-          "file": "apps/backend/src/main.ts",
-          "hash": "10751067291027292738",
-          "deps": [
-            "npm:express",
-            "npm:@apollo/server"
-          ]
-        },
-        {
-          "file": "apps/backend/tsconfig.app.json",
-          "hash": "11137898450640994363"
-        },
-        {
-          "file": "apps/backend/tsconfig.json",
-          "hash": "3490524966360018312"
-        },
-        {
-          "file": "apps/backend/tsconfig.spec.json",
-          "hash": "6622138706846345436"
         }
       ]
     },
