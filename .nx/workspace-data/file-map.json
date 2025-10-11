@@ -1,0 +1,44 @@
+{
+  "version": "6.0",
+  "nxVersion": "21.6.4",
+  "pathMappings": {},
+  "nxJsonPlugins": [],
+  "fileMap": {
+    "projectFileMap": {},
+    "nonProjectFiles": [
+      {
+        "file": ".gitignore",
+        "hash": "9646630833880135138"
+      },
+      {
+        "file": "README.md",
+        "hash": "3248763676016508622"
+      },
+      {
+        "file": "apps/.gitkeep",
+        "hash": "3244421341483603138"
+      },
+      {
+        "file": "libs/.gitkeep",
+        "hash": "3244421341483603138"
+      },
+      {
+        "file": "nx.json",
+        "hash": "4233989801470488161"
+      },
+      {
+        "file": "package-lock.json",
+        "hash": "5195188891836829342"
+      },
+      {
+        "file": "package.json",
+        "hash": "10841265055477151017"
+      },
+      {
+        "file": "tsconfig.base.json",
+        "hash": "16936441711144470533"
+      }
+    ]
+  },
+  "externalNodesHash": "9096044576614473574"
+}
