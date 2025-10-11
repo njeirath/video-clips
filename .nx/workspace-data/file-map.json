@@ -2,13 +2,112 @@
   "version": "6.0",
   "nxVersion": "21.6.4",
   "pathMappings": {},
-  "nxJsonPlugins": [],
+  "nxJsonPlugins": [
+    {
+      "name": "@nx/vite/plugin",
+      "options": {
+        "buildTargetName": "build",
+        "testTargetName": "test",
+        "serveTargetName": "serve",
+        "devTargetName": "dev",
+        "previewTargetName": "preview",
+        "serveStaticTargetName": "serve-static",
+        "typecheckTargetName": "typecheck",
+        "buildDepsTargetName": "build-deps",
+        "watchDepsTargetName": "watch-deps"
+      }
+    }
+  ],
   "fileMap": {
-    "projectFileMap": {},
+    "projectFileMap": {
+      "frontend": [
+        {
+          "file": "frontend/index.html",
+          "hash": "2323699249478598756"
+        },
+        {
+          "file": "frontend/project.json",
+          "hash": "11389205431730976346"
+        },
+        {
+          "file": "frontend/public/favicon.ico",
+          "hash": "9303420814833116677"
+        },
+        {
+          "file": "frontend/src/app/app.module.css",
+          "hash": "8887387885984320532"
+        },
+        {
+          "file": "frontend/src/app/app.spec.tsx",
+          "hash": "15198245222472965612",
+          "deps": [
+            "npm:@testing-library/react",
+            "npm:react-router-dom"
+          ]
+        },
+        {
+          "file": "frontend/src/app/app.tsx",
+          "hash": "13016597669077160099",
+          "deps": [
+            "npm:react-router-dom"
+          ]
+        },
+        {
+          "file": "frontend/src/app/nx-welcome.tsx",
+          "hash": "2348102959109701629"
+        },
+        {
+          "file": "frontend/src/assets/.gitkeep",
+          "hash": "3244421341483603138"
+        },
+        {
+          "file": "frontend/src/main.tsx",
+          "hash": "6494962159756833686",
+          "deps": [
+            "npm:react",
+            "npm:react-router-dom",
+            "npm:react-dom"
+          ]
+        },
+        {
+          "file": "frontend/src/styles.css",
+          "hash": "5195668842064076916"
+        },
+        {
+          "file": "frontend/tsconfig.app.json",
+          "hash": "13403476513633183731"
+        },
+        {
+          "file": "frontend/tsconfig.json",
+          "hash": "8372035408268418786"
+        },
+        {
+          "file": "frontend/tsconfig.spec.json",
+          "hash": "11887952472848760817"
+        },
+        {
+          "file": "frontend/vite.config.ts",
+          "hash": "11789996756071785572",
+          "deps": [
+            "npm:vite",
+            "npm:@vitejs/plugin-react",
+            "npm:@nx/vite"
+          ]
+        }
+      ]
+    },
     "nonProjectFiles": [
       {
         "file": ".gitignore",
-        "hash": "9646630833880135138"
+        "hash": "15547506559474800689"
+      },
+      {
+        "file": ".prettierignore",
+        "hash": "14688272390704683536"
+      },
+      {
+        "file": ".prettierrc",
+        "hash": "16267754514737964994"
       },
       {
         "file": "README.md",
@@ -24,21 +123,25 @@
       },
       {
         "file": "nx.json",
-        "hash": "4233989801470488161"
+        "hash": "5916593864591340550"
       },
       {
         "file": "package-lock.json",
-        "hash": "5195188891836829342"
+        "hash": "17425445675130211278"
       },
       {
         "file": "package.json",
-        "hash": "10841265055477151017"
+        "hash": "6436289232305319270"
       },
       {
         "file": "tsconfig.base.json",
         "hash": "16936441711144470533"
+      },
+      {
+        "file": "vitest.workspace.ts",
+        "hash": "4665328684042819579"
       }
     ]
   },
-  "externalNodesHash": "9096044576614473574"
+  "externalNodesHash": "2550300036716847900"
 }
