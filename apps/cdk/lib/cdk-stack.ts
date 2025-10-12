@@ -34,5 +34,29 @@ export class CdkStack extends cdk.Stack {
       accountRecovery: cognito.AccountRecovery.EMAIL_ONLY,
       removalPolicy: isDev ? cdk.RemovalPolicy.DESTROY : cdk.RemovalPolicy.RETAIN,
     });
+
+    // Cognito User Pool Client (App Client)
+    const userPoolClient = new cognito.UserPoolClient(this, `${stage.charAt(0).toUpperCase() + stage.slice(1)}UserPoolClient`, {
+      userPool,
+      userPoolClientName: `${stage}-user-pool-client`,
+      generateSecret: false,
+      authFlows: {
+        userPassword: true,
+        userSrp: true,
+      },
+      oAuth: {
+        flows: {
+          authorizationCodeGrant: true,
+        },
+        scopes: [
+          cognito.OAuthScope.OPENID,
+          cognito.OAuthScope.EMAIL,
+          cognito.OAuthScope.PROFILE,
+        ],
+        callbackUrls: ['http://localhost:4200/callback'], // Update as needed for prod
+        logoutUrls: ['http://localhost:4200/logout'],
+      },
+      preventUserExistenceErrors: true,
+    });
   }
 }
