@@ -18,11 +18,6 @@ const typeDefs = `#graphql
     url: String!
   }
 
-
-
-  type Mutation {
-    # signup removed; handled by frontend
-  }
 `;
 
 // Sample data
@@ -43,14 +38,10 @@ const videos = [
 
 // Resolvers
 
-
 const resolvers = {
   Query: {
     hello: () => 'Hello from GraphQL API!',
     videos: () => videos,
-  },
-  Mutation: {
-    // signup removed; handled by frontend
   },
 };
 

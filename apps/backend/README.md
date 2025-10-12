@@ -146,10 +146,10 @@ apps/backend/
 └── tsconfig.spec.json   # TypeScript config for tests
 ```
 
+
 ## Future Enhancements
 
 - Add mutations for creating, updating, and deleting videos
-- Integrate with a database (e.g., PostgreSQL, MongoDB)
 - Add authentication and authorization
 - Implement file upload for video content
 - Add pagination and filtering for video queries
