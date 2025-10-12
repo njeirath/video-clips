@@ -9,6 +9,7 @@ This is an Nx monorepo with the following structure:
 - `apps/` - Application projects
   - `frontend/` - React frontend application (Vite + React Router)
   - `backend/` - Node.js backend with GraphQL API (to be added)
+  - `cdk/` - AWS CDK app for infrastructure as code
 - `libs/` - Shared library projects (currently empty)
 
 ## Technology Stack
@@ -20,6 +21,7 @@ This is an Nx monorepo with the following structure:
 - **Testing**: Vitest with React Testing Library
 - **Language**: TypeScript
 
+
 ### Backend (planned)
 - **Runtime**: Node.js
 - **Language**: TypeScript
@@ -27,6 +29,11 @@ This is an Nx monorepo with the following structure:
 - **GraphQL**: Apollo Server 5
 - **Build Tool**: esbuild (via Nx)
 - **Testing**: Jest
+
+### Infrastructure
+- **App**: AWS CDK (TypeScript)
+- **Location**: `apps/cdk`
+- **Purpose**: Infrastructure as code for AWS resources
 
 ## Development Commands
 
@@ -84,9 +91,11 @@ npx nx lint frontend
 When creating new projects, use Nx generators:
 
 ```bash
+
 # Create a new application
 npx nx g @nx/node:application my-app
 npx nx g @nx/web:application my-web-app
+npx nx g @nx/aws-cdk:application my-cdk-app
 
 # Create a new library
 npx nx g @nx/js:library my-lib
