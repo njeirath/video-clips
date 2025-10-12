@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { signUp } from 'aws-amplify/auth';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
@@ -7,29 +7,27 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import Alert from '@mui/material/Alert';
-import CircularProgress from '@mui/material/CircularProgress';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+import { signIn } from 'aws-amplify/auth';
+import '../app/cognito-config';
 
-
-
-export default function Signup() {
+export default function SignIn() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [success, setSuccess] = useState<string | null>(null);
-
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSuccess(null);
-    setError(null);
     setLoading(true);
+    setError('');
     try {
-      const result = await signUp({ username, password });
-      setSuccess('Sign up successful! Please check your email for a confirmation code.');
+      await signIn({ username, password });
+      // Optionally store tokens or user info here
+      navigate('/');
     } catch (err: any) {
-      setError(err.message || 'Sign up failed');
+      setError(err.message || 'Sign in failed');
     } finally {
       setLoading(false);
     }
@@ -49,7 +47,7 @@ export default function Signup() {
           <LockOutlinedIcon />
         </Avatar>
         <Typography component="h1" variant="h5">
-          Sign Up
+          Sign In
         </Typography>
         <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
           <TextField
@@ -72,18 +70,13 @@ export default function Signup() {
             label="Password"
             type="password"
             id="password"
-            autoComplete="new-password"
+            autoComplete="current-password"
             value={password}
             onChange={e => setPassword(e.target.value)}
           />
           {error && (
             <Alert severity="error" sx={{ mt: 2 }}>
               {error}
-            </Alert>
-          )}
-          {success && (
-            <Alert severity="success" sx={{ mt: 2 }}>
-              {success}
             </Alert>
           )}
           <Button
@@ -94,7 +87,7 @@ export default function Signup() {
             disabled={loading}
             sx={{ mt: 3, mb: 2 }}
           >
-            {loading ? <CircularProgress size={24} color="inherit" /> : 'Sign Up'}
+            {loading ? 'Signing in...' : 'Sign In'}
           </Button>
         </Box>
       </Box>
