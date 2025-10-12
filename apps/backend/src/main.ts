@@ -1,6 +1,5 @@
 import express from 'express';
-import { ApolloServer } from '@apollo/server';
-import { startStandaloneServer } from '@apollo/server/standalone';
+import { ApolloServer } from 'apollo-server-express';
 
 const host = process.env.HOST ?? 'localhost';
 const port = process.env.PORT ? Number(process.env.PORT) : 3000;
@@ -17,6 +16,15 @@ const typeDefs = `#graphql
     title: String!
     description: String
     url: String!
+  }
+
+  type SignupResult {
+    message: String!
+    userSub: String
+  }
+
+  type Mutation {
+    signup(username: String!, password: String!): SignupResult!
   }
 `;
 
@@ -37,27 +45,62 @@ const videos = [
 ];
 
 // Resolvers
+import {
+  CognitoIdentityProviderClient,
+  SignUpCommand,
+} from '@aws-sdk/client-cognito-identity-provider';
+
+const COGNITO_CLIENT_ID = process.env.COGNITO_CLIENT_ID;
+if (!COGNITO_CLIENT_ID)
+  throw new Error('COGNITO_CLIENT_ID environment variable is not set.');
+
+const REGION = process.env.AWS_REGION || 'us-east-2';
+const cognito = new CognitoIdentityProviderClient({ region: REGION });
+
 const resolvers = {
   Query: {
     hello: () => 'Hello from GraphQL API!',
     videos: () => videos,
   },
+  Mutation: {
+    signup: async (
+      _: any,
+      { username, password }: { username: string; password: string }
+    ) => {
+      if (!username || !password) {
+        throw new Error('Username and password are required.');
+      }
+      try {
+        const command = new SignUpCommand({
+          ClientId: COGNITO_CLIENT_ID,
+          Username: username,
+          Password: password,
+          UserAttributes: [{ Name: 'preferred_username', Value: username }],
+        });
+        const response = await cognito.send(command);
+        return { message: 'Signup successful', userSub: response.UserSub };
+      } catch (error: any) {
+        throw new Error(error.message || 'Signup failed');
+      }
+    },
+  },
 };
 
-// Create Apollo Server instance
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-});
-
-// Start the server
 async function startServer() {
-  const { url } = await startStandaloneServer(server, {
-    listen: { port, host },
-  });
+  const app = express();
 
-  console.log(`[ ready ] ${url}`);
-  console.log(`[ graphql ] ${url}graphql`);
+  // ApolloServer as middleware (REST+GraphQL)
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+  });
+  await server.start();
+  server.applyMiddleware({ app, path: '/graphql' });
+
+  app.listen(port, host, () => {
+    console.log(`[ ready ] http://${host}:${port}`);
+    console.log(`[ graphql ] http://${host}:${port}/graphql`);
+  });
 }
 
 startServer().catch((error) => {
