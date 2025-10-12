@@ -8,12 +8,18 @@ import Box from '@mui/material/Box';
 
 export function App() {
   return (
-    <Box>
-      <AppBar position="static" color="primary">
+    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+      <AppBar position="static" color="transparent" sx={{ backgroundColor: '#000 !important', boxShadow: 'none' }}>
         <Toolbar>
           <Box sx={{ flexGrow: 1 }}>
-            <Button color="inherit" component={Link} to="/">
-              Home
+            <Button color="inherit" component={Link} to="/" sx={{ p: 0, minWidth: 0 }}>
+              <img
+                src="/logo-64.png"
+                alt="Home"
+                width={40}
+                height={40}
+                style={{ display: 'block' }}
+              />
             </Button>
           </Box>
           <Button color="inherit" component={Link} to="/signup">
