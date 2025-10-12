@@ -18,13 +18,10 @@ const typeDefs = `#graphql
     url: String!
   }
 
-  type SignupResult {
-    message: String!
-    userSub: String
-  }
+
 
   type Mutation {
-    signup(username: String!, password: String!): SignupResult!
+    # signup removed; handled by frontend
   }
 `;
 
@@ -45,17 +42,7 @@ const videos = [
 ];
 
 // Resolvers
-import {
-  CognitoIdentityProviderClient,
-  SignUpCommand,
-} from '@aws-sdk/client-cognito-identity-provider';
 
-const COGNITO_CLIENT_ID = process.env.COGNITO_CLIENT_ID;
-if (!COGNITO_CLIENT_ID)
-  throw new Error('COGNITO_CLIENT_ID environment variable is not set.');
-
-const REGION = process.env.AWS_REGION || 'us-east-2';
-const cognito = new CognitoIdentityProviderClient({ region: REGION });
 
 const resolvers = {
   Query: {
@@ -63,26 +50,7 @@ const resolvers = {
     videos: () => videos,
   },
   Mutation: {
-    signup: async (
-      _: any,
-      { username, password }: { username: string; password: string }
-    ) => {
-      if (!username || !password) {
-        throw new Error('Username and password are required.');
-      }
-      try {
-        const command = new SignUpCommand({
-          ClientId: COGNITO_CLIENT_ID,
-          Username: username,
-          Password: password,
-          UserAttributes: [{ Name: 'preferred_username', Value: username }],
-        });
-        const response = await cognito.send(command);
-        return { message: 'Signup successful', userSub: response.UserSub };
-      } catch (error: any) {
-        throw new Error(error.message || 'Signup failed');
-      }
-    },
+    // signup removed; handled by frontend
   },
 };
 
