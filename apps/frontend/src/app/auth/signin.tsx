@@ -10,7 +10,7 @@ import Container from '@mui/material/Container';
 import Alert from '@mui/material/Alert';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { signIn } from 'aws-amplify/auth';
-import '../app/cognito-config';
+import '../cognito-config';
 
 export default function SignIn() {
   const location = useLocation();
@@ -83,5 +83,3 @@ export default function SignIn() {
     </Container>
   );
 }
-// ...existing code...
-// ...existing code...

@@ -1,7 +1,4 @@
-import { Route, Routes, Link, useNavigate } from 'react-router-dom';
-import Signup from './signup';
-import SignIn from './signin';
-import ConfirmSignUp from './confirm';
+import { Link, useNavigate, Outlet } from 'react-router-dom';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import Button from '@mui/material/Button';
@@ -30,16 +27,17 @@ export function App() {
     async function checkUser() {
       setChecking(true);
       try {
-          const currentUser = await getCurrentUser();
-          if (mounted) {
-            setSignedIn(true);
-            // Prefer email from signInDetails if available, fallback to username
-            setUser(
-              (currentUser.signInDetails as { loginId?: string } | undefined)?.loginId ||
+        const currentUser = await getCurrentUser();
+        if (mounted) {
+          setSignedIn(true);
+          // Prefer email from signInDetails if available, fallback to username
+          setUser(
+            (currentUser.signInDetails as { loginId?: string } | undefined)
+              ?.loginId ||
               currentUser.username ||
               null
-            );
-          }
+          );
+        }
       } catch {
         if (mounted) {
           setSignedIn(false);
@@ -50,7 +48,9 @@ export function App() {
       }
     }
     checkUser();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, [location]);
 
   const handleSignOut = async () => {
@@ -71,10 +71,19 @@ export function App() {
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
-      <AppBar position="static" color="transparent" sx={{ backgroundColor: '#000 !important', boxShadow: 'none' }}>
+      <AppBar
+        position="static"
+        color="transparent"
+        sx={{ backgroundColor: '#000 !important', boxShadow: 'none' }}
+      >
         <Toolbar>
           <Box sx={{ flexGrow: 1 }}>
-            <Button color="inherit" component={Link} to="/" sx={{ p: 0, minWidth: 0 }}>
+            <Button
+              color="inherit"
+              component={Link}
+              to="/"
+              sx={{ p: 0, minWidth: 0 }}
+            >
               <img
                 src="/logo-64.png"
                 alt="Home"
@@ -85,7 +94,12 @@ export function App() {
             </Button>
           </Box>
           {!checking && !signedIn && (
-            <Button color="inherit" component={Link} to="/signup" sx={{ mr: 1 }}>
+            <Button
+              color="inherit"
+              component={Link}
+              to="/signup"
+              sx={{ mr: 1 }}
+            >
               Sign Up
             </Button>
           )}
@@ -121,21 +135,8 @@ export function App() {
           )}
         </Toolbar>
       </AppBar>
-      <Routes>
-        <Route
-          path="/"
-          element={
-            <div style={{ textAlign: 'center', marginTop: '2rem' }}>
-              <Typography variant="h3" gutterBottom>
-                Welcome to Video Clips!
-              </Typography>
-            </div>
-          }
-        />
-  <Route path="/signup" element={<Signup />} />
-  <Route path="/signin" element={<SignIn />} />
-  <Route path="/confirm" element={<ConfirmSignUp />} />
-      </Routes>
+      {/* Main app content goes here. Routing is handled in main.tsx. */}
+      <Outlet />
     </Box>
   );
 }

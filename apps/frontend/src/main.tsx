@@ -4,9 +4,10 @@ import * as ReactDOM from 'react-dom/client';
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 import Root from './root';
 import App from './app/app';
-import Signup from './app/signup';
-import SignIn from './app/signin';
-import ConfirmSignUp from './app/confirm';
+import Signup from './app/auth/signup';
+import SignIn from './app/auth/signin';
+import ConfirmSignUp from './app/auth/confirm';
+import Home from './app/home';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import theme from './theme';
@@ -19,7 +20,7 @@ const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <App />,
+        element: <Home />,
       },
       {
         path: 'signup',
