@@ -26,7 +26,7 @@ export class VideoClipResolver {
 
   @Mutation(() => VideoClip)
   async createVideoClip(
-    @Arg("input") input: CreateVideoClipInput,
+    @Arg("input", () => CreateVideoClipInput) input: CreateVideoClipInput,
     @Ctx() ctx: Context
   ): Promise<VideoClip> {
     // Require authentication
