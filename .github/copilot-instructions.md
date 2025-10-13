@@ -1,132 +1,54 @@
 # Copilot Instructions for video-clips
 
-This repository is a monorepo for video clips applications and libraries, powered by [Nx](https://nx.dev).
+This repository is an Nx monorepo for video clips applications and infrastructure. Use these instructions to help AI coding agents be productive and follow project conventions.
 
-## Project Structure
+## Architecture Overview
 
-This is an Nx monorepo with the following structure:
+- **Monorepo managed by Nx**: All apps and libraries are in a single repo. Use Nx CLI (`npx nx ...`) for all builds, tests, and code generation.
+- **Apps**:
+  - `apps/frontend/`: React 19 app (Vite, React Router 6, TypeScript). Entry: `src/main.tsx`, main app: `src/app/app.tsx`.
+  - `apps/backend/`: Node.js backend (TypeScript, Express, Apollo GraphQL, planned). Entry: `src/main.ts`.
+  - `apps/cdk/`: AWS CDK app (TypeScript) for infrastructure. Entry: `bin/cdk.ts`, stacks in `lib/`.
+- **Shared code**: Place reusable code in `libs/` (currently empty, but intended for cross-app logic).
 
-- `apps/` - Application projects
-  - `frontend/` - React frontend application (Vite + React Router)
-  - `backend/` - Node.js backend with GraphQL API (to be added)
-  - `cdk/` - AWS CDK app for infrastructure as code
-- `libs/` - Shared library projects (currently empty)
+## Key Workflows
 
-## Technology Stack
+- **Start frontend**: `npx nx serve frontend` (or `npm start`)
+- **Build all projects**: `npm run build` or `npx nx build <project>`
+- **Test**: `npx nx test <project>` (Vitest for frontend, Jest for backend)
+- **Lint**: `npx nx lint <project>` (no linter configured by default)
+- **Generate code**: Use Nx generators, e.g. `npx nx g @nx/react:component my-component --project=frontend`
+- **Visualize dependencies**: `npx nx graph`
 
-### Frontend
-- **Framework**: React 19
-- **Build Tool**: Vite
-- **Routing**: React Router 6
-- **Testing**: Vitest with React Testing Library
-- **Language**: TypeScript
+## Project Conventions
 
+- **No linter**: Linting is disabled (`linter: none`). Use Prettier for formatting (`.prettierrc`).
+- **Testing**: Frontend uses Vitest + React Testing Library (`src/app/app.spec.tsx`). Backend uses Jest (`src/main.spec.ts`).
+- **Routing**: React Router 6 in frontend (`src/app/app.tsx`).
+- **Styling**: CSS modules and global styles in `src/` and `src/app/`.
+- **GraphQL**: Frontend GraphQL codegen in `src/app/gql/` (see `gql.ts`, `graphql.ts`).
+- **Infrastructure**: CDK stacks in `apps/cdk/lib/`. Deploy via CDK CLI or Nx.
+- **Ports**: Frontend runs on 4200, backend (when available) on 3000 (`/graphql`).
 
-### Backend (planned)
-- **Runtime**: Node.js
-- **Language**: TypeScript
-- **Framework**: Express.js
-- **GraphQL**: Apollo Server 5
-- **Build Tool**: esbuild (via Nx)
-- **Testing**: Jest
+## Nx-Specific Guidance
 
-### Infrastructure
-- **App**: AWS CDK (TypeScript)
-- **Location**: `apps/cdk`
-- **Purpose**: Infrastructure as code for AWS resources
+- **Always use Nx CLI** for builds, tests, and code generation. Avoid direct use of underlying tools (see `AGENTS.md`).
+- **Check project details**: `npx nx show project <name>`
+- **Use affected commands**: `npx nx affected:test` to test only changed projects.
+- **Generators**: Prefer Nx generators for new apps, libs, and components. Example:
+  - `npx nx g @nx/js:library my-lib`
+  - `npx nx g @nx/web:application my-web-app`
 
-## Development Commands
+## Integration & Patterns
 
-### Running Applications
-```bash
-# Start frontend (default)
-npm start
-# or
-npx nx serve frontend
+- **Frontend-backend integration**: Planned via GraphQL (Apollo). No direct API calls yet.
+- **CDK**: Infrastructure as code for AWS. Stacks are modular (`cdk-stack.ts`, `ses-stack.ts`).
+- **Shared code**: Place in `libs/` for reuse across apps.
 
-# Start backend (when available)
-npx nx serve backend
-```
+## References
 
-### Building
-```bash
-# Build all projects
-npm run build
+- See `README.md` and `AGENTS.md` for more details and up-to-date conventions.
+- Example config: `apps/frontend/vite.config.ts`, `apps/cdk/lib/cdk-stack.ts`
 
-# Build specific project
-npx nx build frontend
-```
-
-### Testing
-```bash
-# Run all tests
-npm test
-
-# Run tests for specific project
-npx nx test frontend
-
-# Run affected tests only
-npx nx affected:test
-```
-
-### Linting
-```bash
-# Lint all projects
-npm run lint
-
-# Lint specific project
-npx nx lint frontend
-```
-
-## Code Style
-
-- This project uses **Prettier** for code formatting
-- Configuration is in `.prettierrc`
-- No linter is configured (Nx generators set to `linter: none`)
-- Follow existing code conventions in the repository
-
-## Nx Conventions
-
-### Project Generators
-When creating new projects, use Nx generators:
-
-```bash
-
-# Create a new application
-npx nx g @nx/node:application my-app
-npx nx g @nx/web:application my-web-app
-npx nx g @nx/aws-cdk:application my-cdk-app
-
-# Create a new library
-npx nx g @nx/js:library my-lib
-
-# Create React components
-npx nx g @nx/react:component my-component
-```
-
-### Working with Nx
-- Use `npx nx show project <name>` to see project details
-- Use `npx nx graph` to visualize project dependencies
-- Use `npx nx affected` commands to work only with changed code
-- Nx caches build, lint, and test targets for better performance
-
-## Prerequisites
-
-- Node.js (v20 or higher)
-- npm (v10 or higher)
-
-## Important Notes
-
-- Always run `npm install` after cloning or pulling changes
-- The monorepo uses Nx's caching to speed up builds and tests
-- Frontend runs on port 4200 by default
-- Backend will run on port 3000 (GraphQL endpoint at `/graphql`)
-- Vite configuration is in `apps/frontend/vite.config.ts`
-
-## When Making Changes
-
-1. Use Nx commands (`npx nx`) for consistency with the monorepo setup
-2. Run affected tests before committing: `npx nx affected:test`
-3. Follow TypeScript best practices
-4. Keep components focused and reusable
-5. Place shared code in the `libs/` directory
+---
+If any section is unclear or missing, please provide feedback to improve these instructions.
