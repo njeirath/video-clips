@@ -2,6 +2,15 @@
 
 A monorepo for video clips applications and libraries, powered by [Nx](https://nx.dev).
 
+## Features
+
+- 🎬 **Video Clip Management**: Add, view, and manage video clips
+- 🔐 **Authentication**: AWS Cognito integration for secure user authentication
+- 📊 **OpenSearch Backend**: Scalable data storage using OpenSearch
+- 🚀 **GraphQL API**: Type-safe API with TypeGraphQL
+- ⚛️ **React Frontend**: Modern React 19 app with Material-UI
+- 🏗️ **Infrastructure as Code**: AWS CDK for cloud infrastructure
+
 ## Getting Started
 
 ### Prerequisites
@@ -37,7 +46,13 @@ npx nx serve frontend
 
 ### Backend
 
-A Node.js application with TypeScript that provides a GraphQL API using Apollo Server.
+A Node.js application with TypeScript that provides a GraphQL API using Apollo Server and TypeGraphQL.
+
+**Features:**
+- GraphQL API with type-safe resolvers
+- JWT-based authentication using AWS Cognito
+- OpenSearch integration for video clips storage
+- Video clip management (create, list)
 
 **Start the backend:**
 ```bash
@@ -54,13 +69,25 @@ The GraphQL endpoint will be available at `http://localhost:3000/graphql`.
   hello
 }
 
-# Get all videos
+# Get all video clips
 {
-  videos {
+  videoClips {
     id
-    title
+    name
     description
-    url
+    userId
+    createdAt
+  }
+}
+
+# Create a video clip (requires authentication)
+mutation CreateVideoClip($input: CreateVideoClipInput!) {
+  createVideoClip(input: $input) {
+    id
+    name
+    description
+    userId
+    createdAt
   }
 }
 ```
