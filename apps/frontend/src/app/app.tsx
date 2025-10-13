@@ -109,6 +109,16 @@ export function App() {
             </Button>
           )}
           {!checking && signedIn && (
+            <Button
+              color="inherit"
+              component={Link}
+              to="/add-clip"
+              sx={{ mr: 1 }}
+            >
+              Add Clip
+            </Button>
+          )}
+          {!checking && signedIn && (
             <>
               <IconButton
                 size="large"

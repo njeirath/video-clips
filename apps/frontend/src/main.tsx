@@ -8,6 +8,7 @@ import Signup from './app/auth/signup';
 import SignIn from './app/auth/signin';
 import ConfirmSignUp from './app/auth/confirm';
 import Home from './app/home';
+import AddVideoClip from './app/add-video-clip';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import theme from './theme';
@@ -33,6 +34,10 @@ const router = createBrowserRouter([
       {
         path: 'confirm',
         element: <ConfirmSignUp />,
+      },
+      {
+        path: 'add-clip',
+        element: <AddVideoClip />,
       },
     ],
   },

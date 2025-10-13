@@ -63,9 +63,12 @@
     "@graphql-codegen/typescript-react-apollo": "^4.3.3",
     "@mui/icons-material": "^7.3.4",
     "@mui/material": "^7.3.4",
+    "@opensearch-project/opensearch": "^3.5.1",
     "@types/aws-sdk": "^0.0.42",
+    "@types/uuid": "^10.0.0",
     "apollo-server-express": "^3.13.0",
     "aws-amplify": "^6.15.7",
+    "aws-jwt-verify": "^5.1.1",
     "aws-sdk": "^2.1692.0",
     "body-parser": "^2.2.0",
     "class-validator": "^0.14.2",
@@ -77,6 +80,7 @@
     "react-router-dom": "6.29.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
-    "type-graphql": "^2.0.0-rc.2"
+    "type-graphql": "^2.0.0-rc.2",
+    "uuid": "^13.0.0"
   }
 }
