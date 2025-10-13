@@ -1,6 +1,7 @@
 import { Route, Routes, Link, useNavigate } from 'react-router-dom';
 import Signup from './signup';
 import SignIn from './signin';
+import ConfirmSignUp from './confirm';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import Button from '@mui/material/Button';
@@ -29,11 +30,16 @@ export function App() {
     async function checkUser() {
       setChecking(true);
       try {
-        const currentUser = await getCurrentUser();
-        if (mounted) {
-          setSignedIn(true);
-          setUser(currentUser.username || null);
-        }
+          const currentUser = await getCurrentUser();
+          if (mounted) {
+            setSignedIn(true);
+            // Prefer email from signInDetails if available, fallback to username
+            setUser(
+              (currentUser.signInDetails as { loginId?: string } | undefined)?.loginId ||
+              currentUser.username ||
+              null
+            );
+          }
       } catch {
         if (mounted) {
           setSignedIn(false);
@@ -126,8 +132,9 @@ export function App() {
             </div>
           }
         />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/signin" element={<SignIn />} />
+  <Route path="/signup" element={<Signup />} />
+  <Route path="/signin" element={<SignIn />} />
+  <Route path="/confirm" element={<ConfirmSignUp />} />
       </Routes>
     </Box>
   );

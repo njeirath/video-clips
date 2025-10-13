@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { signUp } from 'aws-amplify/auth';
+import { useState, useRef, useEffect } from 'react';
+import { confirmSignUp, confirmSignIn } from 'aws-amplify/auth';
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
@@ -9,23 +9,44 @@ import Container from '@mui/material/Container';
 import Alert from '@mui/material/Alert';
 import CircularProgress from '@mui/material/CircularProgress';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
-export default function Signup() {
-  const [email, setEmail] = useState('');
+export default function ConfirmSignUp() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [email, setEmail] = useState(location.state?.email || '');
+  const [code, setCode] = useState('');
+  const codeInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    codeInputRef.current?.focus();
+  }, []);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const navigate = useNavigate();
+  const [success, setSuccess] = useState<string | null>(null);
+
+  // If cognitoUser is present, this is a sign-in confirmation, otherwise sign-up
+  const isSignIn = Boolean(location.state?.cognitoUser);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setSuccess(null);
     setLoading(true);
     try {
-  await signUp({ username: email, options: { userAttributes: { email } } });
-  navigate('/confirm', { state: { email } });
+      if (isSignIn) {
+        // Confirm sign in with the code (challengeResponse only)
+  await confirmSignIn({ challengeResponse: code });
+        setSuccess('Sign in successful! Redirecting...');
+        setTimeout(() => navigate('/'), 1200);
+      } else {
+        // Confirm sign up with the code
+        await confirmSignUp({ username: email, confirmationCode: code });
+  setSuccess('Confirmation successful! You can now sign in.');
+  setTimeout(() => navigate('/signin', { state: { email } }), 1200);
+      }
     } catch (err: any) {
-      setError(err.message || 'Sign up failed');
+      setError(err.message || 'Confirmation failed');
     } finally {
       setLoading(false);
     }
@@ -45,7 +66,7 @@ export default function Signup() {
           <LockOutlinedIcon />
         </Avatar>
         <Typography component="h1" variant="h5">
-          Sign Up
+          {isSignIn ? 'Enter One Time Password' : 'Confirm Sign Up'}
         </Typography>
         <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
           <TextField
@@ -56,13 +77,29 @@ export default function Signup() {
             label="Email Address"
             name="email"
             autoComplete="email"
-            autoFocus
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={e => setEmail(e.target.value)}
+            disabled={!!location.state?.email}
+          />
+          <TextField
+            margin="normal"
+            required
+            fullWidth
+            id="code"
+            label="Confirmation Code"
+            name="code"
+            inputRef={codeInputRef}
+            value={code}
+            onChange={e => setCode(e.target.value)}
           />
           {error && (
             <Alert severity="error" sx={{ mt: 2 }}>
               {error}
+            </Alert>
+          )}
+          {success && (
+            <Alert severity="success" sx={{ mt: 2 }}>
+              {success}
             </Alert>
           )}
           <Button
@@ -76,7 +113,7 @@ export default function Signup() {
             {loading ? (
               <CircularProgress size={24} color="inherit" />
             ) : (
-              'Sign Up'
+              'Confirm'
             )}
           </Button>
         </Box>

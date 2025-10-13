@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
@@ -12,8 +13,8 @@ import { signIn } from 'aws-amplify/auth';
 import '../app/cognito-config';
 
 export default function SignIn() {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const location = useLocation();
+  const [email, setEmail] = useState(location.state?.email || '');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -23,11 +24,11 @@ export default function SignIn() {
     setLoading(true);
     setError('');
     try {
-      await signIn({ username, password });
-      // Optionally store tokens or user info here
-      navigate('/');
+      // Request Cognito to send a one time password (OTP) to the user's email
+      const cognitoUser = await signIn({ username: email, options: {authFlowType: 'USER_AUTH', preferredChallenge: 'EMAIL_OTP'} });
+      navigate('/confirm', { state: { email, cognitoUser } });
     } catch (err: any) {
-      setError(err.message || 'Sign in failed');
+      setError(err.message || 'Failed to send OTP');
     } finally {
       setLoading(false);
     }
@@ -54,25 +55,13 @@ export default function SignIn() {
             margin="normal"
             required
             fullWidth
-            id="username"
-            label="Username"
-            name="username"
-            autoComplete="username"
+            id="email"
+            label="Email Address"
+            name="email"
+            autoComplete="email"
             autoFocus
-            value={username}
-            onChange={e => setUsername(e.target.value)}
-          />
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            name="password"
-            label="Password"
-            type="password"
-            id="password"
-            autoComplete="current-password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
+            value={email}
+            onChange={e => setEmail(e.target.value)}
           />
           {error && (
             <Alert severity="error" sx={{ mt: 2 }}>
@@ -87,10 +76,12 @@ export default function SignIn() {
             disabled={loading}
             sx={{ mt: 3, mb: 2 }}
           >
-            {loading ? 'Signing in...' : 'Sign In'}
+            {loading ? 'Continuing...' : 'Continue'}
           </Button>
         </Box>
       </Box>
     </Container>
   );
 }
+// ...existing code...
+// ...existing code...
