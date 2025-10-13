@@ -1,0 +1,35 @@
+type Query {
+  hello: String
+  videoClips: [VideoClip!]!
+  myVideoClips: [VideoClip!]!
+}
+
+type Mutation {
+  signup(username: String!, password: String!): SignupResult!
+  createVideoClip(input: CreateVideoClipInput!): VideoClip!
+}
+
+type VideoClip {
+  id: ID!
+  name: String!
+  description: String!
+  userId: String!
+  createdAt: String!
+}
+
+input CreateVideoClipInput {
+  name: String!
+  description: String!
+}
+
+type SignupResult {
+  message: String!
+  userSub: String
+}
+
+type Video {
+  id: ID!
+  title: String!
+  description: String
+  url: String!
+}

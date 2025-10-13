@@ -14,10 +14,10 @@ import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/
  * Learn more about it here: https://the-guild.dev/graphql/codegen/plugins/presets/preset-client#reducing-bundle-size
  */
 type Documents = {
-    "\n  mutation Signup($username: String!, $password: String!) {\n    signup(username: $username, password: $password) {\n      message\n      userSub\n    }\n  }\n": typeof types.SignupDocument,
+    "\n  mutation CreateVideoClip($input: CreateVideoClipInput!) {\n    createVideoClip(input: $input) {\n      id\n      name\n      description\n      userId\n      createdAt\n    }\n  }\n": typeof types.CreateVideoClipDocument,
 };
 const documents: Documents = {
-    "\n  mutation Signup($username: String!, $password: String!) {\n    signup(username: $username, password: $password) {\n      message\n      userSub\n    }\n  }\n": types.SignupDocument,
+    "\n  mutation CreateVideoClip($input: CreateVideoClipInput!) {\n    createVideoClip(input: $input) {\n      id\n      name\n      description\n      userId\n      createdAt\n    }\n  }\n": types.CreateVideoClipDocument,
 };
 
 /**
@@ -37,7 +37,7 @@ export function graphql(source: string): unknown;
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  mutation Signup($username: String!, $password: String!) {\n    signup(username: $username, password: $password) {\n      message\n      userSub\n    }\n  }\n"): (typeof documents)["\n  mutation Signup($username: String!, $password: String!) {\n    signup(username: $username, password: $password) {\n      message\n      userSub\n    }\n  }\n"];
+export function graphql(source: "\n  mutation CreateVideoClip($input: CreateVideoClipInput!) {\n    createVideoClip(input: $input) {\n      id\n      name\n      description\n      userId\n      createdAt\n    }\n  }\n"): (typeof documents)["\n  mutation CreateVideoClip($input: CreateVideoClipInput!) {\n    createVideoClip(input: $input) {\n      id\n      name\n      description\n      userId\n      createdAt\n    }\n  }\n"];
 
 export function graphql(source: string) {
   return (documents as any)[source] ?? {};
