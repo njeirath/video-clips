@@ -1,5 +1,5 @@
 # GraphQL Codegen configuration for frontend
-schema: http://localhost:3000/graphql
+schema: ./schema.graphql
 # Adjust the path above if your backend runs elsewhere
 
 documents: "apps/frontend/src/**/*.tsx"

@@ -1,11 +1,39 @@
-import { ApolloClient, InMemoryCache } from '@apollo/client';
+import { ApolloClient, InMemoryCache, createHttpLink } from '@apollo/client';
+import { setContext } from '@apollo/client/link/context';
 import { ApolloProvider } from '@apollo/client/react';
 import App from './app/app';
+import { fetchAuthSession } from 'aws-amplify/auth';
 
-import { HttpLink } from '@apollo/client';
+// Create HTTP link
+const httpLink = createHttpLink({
+  uri: 'http://localhost:3000/graphql',
+});
 
+// Create auth link to add bearer token to all requests
+const authLink = setContext(async (_, { headers }) => {
+  try {
+    const session = await fetchAuthSession();
+    const token = session.tokens?.idToken?.toString();
+
+    if (token) {
+      return {
+        headers: {
+          ...headers,
+          authorization: `Bearer ${token}`,
+        },
+      };
+    }
+  } catch (error) {
+    // User not authenticated, continue without token
+    console.debug('No authentication token available');
+  }
+
+  return { headers };
+});
+
+// Combine auth link and HTTP link
 const client = new ApolloClient({
-  link: new HttpLink({ uri: 'http://localhost:3000/graphql' }),
+  link: authLink.concat(httpLink),
   cache: new InMemoryCache(),
 });
 
