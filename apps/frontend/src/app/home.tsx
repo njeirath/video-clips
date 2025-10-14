@@ -36,7 +36,7 @@ export default function Home() {
   const [allClips, setAllClips] = useState<any[]>([]);
   const [hasMore, setHasMore] = useState(true);
   const observerTarget = useRef<HTMLDivElement>(null);
-  const debounceTimer = useRef<NodeJS.Timeout>();
+  const debounceTimer = useRef<NodeJS.Timeout | null>(null);
 
   const { data, loading, error, fetchMore } = useQuery(GET_VIDEO_CLIPS, {
     variables: {
@@ -45,14 +45,16 @@ export default function Home() {
       limit: ITEMS_PER_PAGE,
     },
     fetchPolicy: 'cache-and-network',
-    onCompleted: (data) => {
-      if (data?.videoClips) {
-        setAllClips(data.videoClips);
-        setOffset(data.videoClips.length);
-        setHasMore(data.videoClips.length >= ITEMS_PER_PAGE);
-      }
-    },
   });
+
+  // Ensure allClips is updated if data.videoClips changes (e.g., after cache update)
+  useEffect(() => {
+    if (data && Array.isArray(data.videoClips)) {
+      setAllClips(data.videoClips);
+      setOffset(data.videoClips.length);
+      setHasMore(data.videoClips.length >= ITEMS_PER_PAGE);
+    }
+  }, [data]);
 
   // Debounce search input
   useEffect(() => {
@@ -63,7 +65,6 @@ export default function Home() {
     debounceTimer.current = setTimeout(() => {
       setDebouncedSearch(searchInput);
       setOffset(0);
-      setAllClips([]);
     }, DEBOUNCE_DELAY);
 
     return () => {
@@ -188,9 +189,9 @@ export default function Home() {
         )}
 
         {allClips.length > 0 && (
-          <Grid container spacing={3}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24 }}>
             {allClips.map((clip) => (
-              <Grid item xs={12} sm={6} md={4} key={clip.id}>
+              <div style={{ flex: '1 0 30%', minWidth: 300, maxWidth: 400 }} key={clip.id}>
                 <Card
                   sx={{
                     height: '100%',
@@ -220,9 +221,9 @@ export default function Home() {
                     </Typography>
                   </CardContent>
                 </Card>
-              </Grid>
+              </div>
             ))}
-          </Grid>
+          </div>
         )}
 
         {/* Infinite scroll trigger */}
