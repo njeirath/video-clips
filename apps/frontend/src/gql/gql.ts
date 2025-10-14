@@ -15,11 +15,11 @@ import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/
  */
 type Documents = {
     "\n  mutation CreateVideoClip($input: CreateVideoClipInput!) {\n    createVideoClip(input: $input) {\n      id\n      name\n      description\n      userId\n      createdAt\n    }\n  }\n": typeof types.CreateVideoClipDocument,
-    "\n  query GetVideoClips {\n    videoClips {\n      id\n      name\n      description\n      userId\n      userEmail\n      createdAt\n    }\n  }\n": typeof types.GetVideoClipsDocument,
+    "\n  query GetVideoClips($searchQuery: String, $offset: Int, $limit: Int) {\n    videoClips(searchQuery: $searchQuery, offset: $offset, limit: $limit) {\n      id\n      name\n      description\n      userId\n      userEmail\n      createdAt\n    }\n  }\n": typeof types.GetVideoClipsDocument,
 };
 const documents: Documents = {
     "\n  mutation CreateVideoClip($input: CreateVideoClipInput!) {\n    createVideoClip(input: $input) {\n      id\n      name\n      description\n      userId\n      createdAt\n    }\n  }\n": types.CreateVideoClipDocument,
-    "\n  query GetVideoClips {\n    videoClips {\n      id\n      name\n      description\n      userId\n      userEmail\n      createdAt\n    }\n  }\n": types.GetVideoClipsDocument,
+    "\n  query GetVideoClips($searchQuery: String, $offset: Int, $limit: Int) {\n    videoClips(searchQuery: $searchQuery, offset: $offset, limit: $limit) {\n      id\n      name\n      description\n      userId\n      userEmail\n      createdAt\n    }\n  }\n": types.GetVideoClipsDocument,
 };
 
 /**
@@ -43,7 +43,7 @@ export function graphql(source: "\n  mutation CreateVideoClip($input: CreateVide
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  query GetVideoClips {\n    videoClips {\n      id\n      name\n      description\n      userId\n      userEmail\n      createdAt\n    }\n  }\n"): (typeof documents)["\n  query GetVideoClips {\n    videoClips {\n      id\n      name\n      description\n      userId\n      userEmail\n      createdAt\n    }\n  }\n"];
+export function graphql(source: "\n  query GetVideoClips($searchQuery: String, $offset: Int, $limit: Int) {\n    videoClips(searchQuery: $searchQuery, offset: $offset, limit: $limit) {\n      id\n      name\n      description\n      userId\n      userEmail\n      createdAt\n    }\n  }\n"): (typeof documents)["\n  query GetVideoClips($searchQuery: String, $offset: Int, $limit: Int) {\n    videoClips(searchQuery: $searchQuery, offset: $offset, limit: $limit) {\n      id\n      name\n      description\n      userId\n      userEmail\n      createdAt\n    }\n  }\n"];
 
 export function graphql(source: string) {
   return (documents as any)[source] ?? {};

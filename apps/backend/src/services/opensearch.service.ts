@@ -137,6 +137,51 @@ export class OpenSearchService {
       return [];
     }
   }
+
+  async searchVideoClips(
+    searchQuery?: string,
+    offset: number = 0,
+    limit: number = 12
+  ): Promise<{ clips: any[]; total: number }> {
+    try {
+      let query: any;
+      
+      if (searchQuery && searchQuery.trim()) {
+        // Use multi_match to search across name and description fields
+        query = {
+          multi_match: {
+            query: searchQuery.trim(),
+            fields: ["name^2", "description"], // Boost name matches
+            type: "best_fields",
+            fuzziness: "AUTO",
+          },
+        };
+      } else {
+        query = { match_all: {} };
+      }
+
+      const response = await this.client.search({
+        index: this.indexName,
+        body: {
+          query,
+          sort: [{ createdAt: { order: "desc" } }],
+          from: offset,
+          size: limit,
+        },
+      });
+
+      const clips = response.body.hits.hits.map((hit: any) => hit._source);
+      const total = typeof response.body.hits.total === 'number' 
+        ? response.body.hits.total 
+        : response.body.hits.total.value;
+
+      return { clips, total };
+    } catch (error) {
+      console.error("Error searching video clips from OpenSearch:", error);
+      // Return empty result if OpenSearch is not available
+      return { clips: [], total: 0 };
+    }
+  }
 }
 
 // Singleton instance

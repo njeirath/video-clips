@@ -13,8 +13,17 @@ export interface Context {
 @Resolver(() => VideoClip)
 export class VideoClipResolver {
   @Query(() => [VideoClip])
-  async videoClips(): Promise<VideoClip[]> {
-    return await openSearchService.getAllVideoClips();
+  async videoClips(
+    @Arg("searchQuery", { nullable: true }) searchQuery?: string,
+    @Arg("offset", { nullable: true, defaultValue: 0 }) offset?: number,
+    @Arg("limit", { nullable: true, defaultValue: 12 }) limit?: number
+  ): Promise<VideoClip[]> {
+    const result = await openSearchService.searchVideoClips(
+      searchQuery,
+      offset,
+      limit
+    );
+    return result.clips;
   }
 
   @Query(() => [VideoClip])

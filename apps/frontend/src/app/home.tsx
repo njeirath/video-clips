@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import Box from '@mui/material/Box';
@@ -14,8 +14,8 @@ import { useQuery } from '@apollo/client/react';
 import { graphql } from '../gql/gql';
 
 const GET_VIDEO_CLIPS = graphql(`
-  query GetVideoClips {
-    videoClips {
+  query GetVideoClips($searchQuery: String, $offset: Int, $limit: Int) {
+    videoClips(searchQuery: $searchQuery, offset: $offset, limit: $limit) {
       id
       name
       description
@@ -27,43 +27,86 @@ const GET_VIDEO_CLIPS = graphql(`
 `);
 
 const ITEMS_PER_PAGE = 12;
+const DEBOUNCE_DELAY = 500; // 500ms debounce
 
 export default function Home() {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [displayCount, setDisplayCount] = useState(ITEMS_PER_PAGE);
+  const [searchInput, setSearchInput] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [offset, setOffset] = useState(0);
+  const [allClips, setAllClips] = useState<any[]>([]);
+  const [hasMore, setHasMore] = useState(true);
   const observerTarget = useRef<HTMLDivElement>(null);
+  const debounceTimer = useRef<NodeJS.Timeout>();
 
-  const { data, loading, error } = useQuery(GET_VIDEO_CLIPS, {
+  const { data, loading, error, fetchMore } = useQuery(GET_VIDEO_CLIPS, {
+    variables: {
+      searchQuery: debouncedSearch || undefined,
+      offset: 0,
+      limit: ITEMS_PER_PAGE,
+    },
     fetchPolicy: 'cache-and-network',
+    onCompleted: (data) => {
+      if (data?.videoClips) {
+        setAllClips(data.videoClips);
+        setOffset(data.videoClips.length);
+        setHasMore(data.videoClips.length >= ITEMS_PER_PAGE);
+      }
+    },
   });
 
-  // Filter video clips based on search query
-  const filteredClips = useMemo(() => {
-    if (!data?.videoClips) return [];
-    
-    const query = searchQuery.toLowerCase().trim();
-    if (!query) return data.videoClips;
+  // Debounce search input
+  useEffect(() => {
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
 
-    return data.videoClips.filter(clip => 
-      clip.name.toLowerCase().includes(query) ||
-      clip.description.toLowerCase().includes(query)
-    );
-  }, [data?.videoClips, searchQuery]);
+    debounceTimer.current = setTimeout(() => {
+      setDebouncedSearch(searchInput);
+      setOffset(0);
+      setAllClips([]);
+    }, DEBOUNCE_DELAY);
 
-  // Get clips to display based on pagination
-  const displayedClips = useMemo(() => {
-    return filteredClips.slice(0, displayCount);
-  }, [filteredClips, displayCount]);
+    return () => {
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
+      }
+    };
+  }, [searchInput]);
 
-  const hasMore = displayedClips.length < filteredClips.length;
+  // Load more clips when scrolling
+  const loadMore = useCallback(async () => {
+    if (!hasMore || loading) return;
+
+    try {
+      const result = await fetchMore({
+        variables: {
+          searchQuery: debouncedSearch || undefined,
+          offset: offset,
+          limit: ITEMS_PER_PAGE,
+        },
+      });
+
+      if (result.data?.videoClips) {
+        const newClips = result.data.videoClips;
+        setAllClips((prev) => [...prev, ...newClips]);
+        setOffset((prev) => prev + newClips.length);
+        setHasMore(newClips.length >= ITEMS_PER_PAGE);
+      }
+    } catch (err) {
+      console.error('Error loading more clips:', err);
+    }
+  }, [hasMore, loading, fetchMore, debouncedSearch, offset]);
 
   // Infinite scroll implementation
-  const handleObserver = useCallback((entries: IntersectionObserverEntry[]) => {
-    const [entry] = entries;
-    if (entry.isIntersecting && hasMore) {
-      setDisplayCount(prev => prev + ITEMS_PER_PAGE);
-    }
-  }, [hasMore]);
+  const handleObserver = useCallback(
+    (entries: IntersectionObserverEntry[]) => {
+      const [entry] = entries;
+      if (entry.isIntersecting && hasMore && !loading) {
+        loadMore();
+      }
+    },
+    [hasMore, loading, loadMore]
+  );
 
   useEffect(() => {
     const element = observerTarget.current;
@@ -82,11 +125,6 @@ export default function Home() {
     };
   }, [handleObserver]);
 
-  // Reset display count when search query changes
-  useEffect(() => {
-    setDisplayCount(ITEMS_PER_PAGE);
-  }, [searchQuery]);
-
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
       {/* Sticky search bar */}
@@ -98,20 +136,17 @@ export default function Home() {
           bgcolor: 'background.paper',
           borderBottom: 1,
           borderColor: 'divider',
-          py: 2,
+          py: 3,
           boxShadow: 1,
         }}
       >
         <Container maxWidth="lg">
-          <Typography variant="h4" gutterBottom align="center" sx={{ mb: 2 }}>
-            Video Clips
-          </Typography>
           <TextField
             fullWidth
             variant="outlined"
             placeholder="Search video clips by name or keywords..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -130,7 +165,7 @@ export default function Home() {
 
       {/* Video clips list */}
       <Container maxWidth="lg" sx={{ py: 4 }}>
-        {loading && displayedClips.length === 0 && (
+        {loading && allClips.length === 0 && (
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
             <CircularProgress />
           </Box>
@@ -142,26 +177,27 @@ export default function Home() {
           </Alert>
         )}
 
-        {!loading && displayedClips.length === 0 && (
+        {!loading && allClips.length === 0 && (
           <Box sx={{ textAlign: 'center', py: 8 }}>
             <Typography variant="h6" color="text.secondary">
-              {searchQuery
-                ? `No video clips found matching "${searchQuery}"`
+              {searchInput
+                ? `No video clips found matching "${searchInput}"`
                 : 'No video clips available yet'}
             </Typography>
           </Box>
         )}
 
-        {displayedClips.length > 0 && (
+        {allClips.length > 0 && (
           <Grid container spacing={3}>
-            {displayedClips.map((clip) => (
+            {allClips.map((clip) => (
               <Grid item xs={12} sm={6} md={4} key={clip.id}>
-                <Card 
-                  sx={{ 
+                <Card
+                  sx={{
                     height: '100%',
                     display: 'flex',
                     flexDirection: 'column',
                     transition: 'transform 0.2s, box-shadow 0.2s',
+                    minHeight: 200,
                     '&:hover': {
                       transform: 'translateY(-4px)',
                       boxShadow: 4,
@@ -175,9 +211,9 @@ export default function Home() {
                     <Typography variant="body2" color="text.secondary">
                       {clip.description}
                     </Typography>
-                    <Typography 
-                      variant="caption" 
-                      color="text.secondary" 
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
                       sx={{ display: 'block', mt: 2 }}
                     >
                       Added: {new Date(clip.createdAt).toLocaleDateString()}
@@ -190,13 +226,13 @@ export default function Home() {
         )}
 
         {/* Infinite scroll trigger */}
-        {hasMore && (
-          <Box 
+        {hasMore && allClips.length > 0 && (
+          <Box
             ref={observerTarget}
-            sx={{ 
-              display: 'flex', 
-              justifyContent: 'center', 
-              py: 4 
+            sx={{
+              display: 'flex',
+              justifyContent: 'center',
+              py: 4,
             }}
           >
             <CircularProgress size={32} />
