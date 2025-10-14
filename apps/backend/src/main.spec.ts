@@ -1,4 +1,4 @@
-import { ApolloServer } from '@apollo/server';
+import { ApolloServer } from 'apollo-server-express';
 
 describe('GraphQL API', () => {
   let server: ApolloServer;
@@ -41,25 +41,19 @@ describe('GraphQL API', () => {
   });
 
   it('should respond to hello query', async () => {
-    const response = await server.executeOperation({
+    const response: any = await server.executeOperation({
       query: '{ hello }',
     });
 
-    expect(response.body.kind).toBe('single');
-    if (response.body.kind === 'single') {
-      expect(response.body.singleResult.data?.hello).toBe('Hello from GraphQL API!');
-    }
+    expect(response.data?.hello).toBe('Hello from GraphQL API!');
   });
 
   it('should respond to videos query', async () => {
-    const response = await server.executeOperation({
+    const response: any = await server.executeOperation({
       query: '{ videos { id title } }',
     });
 
-    expect(response.body.kind).toBe('single');
-    if (response.body.kind === 'single') {
-      expect(response.body.singleResult.data?.videos).toBeDefined();
-      expect(Array.isArray(response.body.singleResult.data?.videos)).toBe(true);
-    }
+    expect(response.data?.videos).toBeDefined();
+    expect(Array.isArray(response.data?.videos)).toBe(true);
   });
 });
