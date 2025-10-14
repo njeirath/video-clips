@@ -10,11 +10,30 @@ export class OpenSearchService {
     const host = process.env.OPENSEARCH_HOST || "localhost";
     const port = process.env.OPENSEARCH_PORT || "9200";
     const protocol = process.env.OPENSEARCH_PROTOCOL || "http";
+    const username = process.env.OPENSEARCH_USERNAME;
+    const password = process.env.OPENSEARCH_PASSWORD;
+    const isProduction = process.env.NODE_ENV === "production";
     
-    this.client = new Client({
+    const clientConfig: any = {
       node: `${protocol}://${host}:${port}`,
-      // For production with AWS OpenSearch, you would configure AWS SigV4 auth here
-    });
+    };
+
+    // Add basic auth if username and password are provided
+    if (username && password) {
+      clientConfig.auth = {
+        username,
+        password,
+      };
+    }
+
+    // In non-production environments, ignore certificate errors
+    if (!isProduction && protocol === "https") {
+      clientConfig.ssl = {
+        rejectUnauthorized: false,
+      };
+    }
+
+    this.client = new Client(clientConfig);
 
     this.initializeIndex();
   }
@@ -35,6 +54,7 @@ export class OpenSearchService {
                 name: { type: "text" },
                 description: { type: "text" },
                 userId: { type: "keyword" },
+                userEmail: { type: "keyword" },
                 createdAt: { type: "date" },
               },
             },
@@ -53,6 +73,7 @@ export class OpenSearchService {
     name: string;
     description: string;
     userId: string;
+    userEmail: string;
     createdAt: string;
   }) {
     try {

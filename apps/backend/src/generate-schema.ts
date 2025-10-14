@@ -2,12 +2,11 @@ import "reflect-metadata";
 import { buildSchema } from "type-graphql";
 import { printSchema } from "graphql";
 import { writeFileSync } from "fs";
-import { SampleResolver } from "./resolvers/sample-resolver";
-import { VideoClipResolver } from "./resolvers/video-clip.resolver";
+import { resolvers } from "./resolvers";
 
 async function generateSchema() {
   const schema = await buildSchema({
-    resolvers: [SampleResolver, VideoClipResolver],
+    resolvers: [...resolvers],
   });
 
   const schemaString = printSchema(schema);

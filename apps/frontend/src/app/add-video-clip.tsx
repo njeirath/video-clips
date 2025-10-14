@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useForm, Controller } from 'react-hook-form';
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
@@ -11,7 +12,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import VideoLibraryIcon from '@mui/icons-material/VideoLibrary';
 import { useMutation } from '@apollo/client/react';
 import { graphql } from '../gql/gql';
-import { getCurrentUser, fetchAuthSession } from 'aws-amplify/auth';
+import { getCurrentUser } from 'aws-amplify/auth';
 
 const CREATE_VIDEO_CLIP = graphql(`
   mutation CreateVideoClip($input: CreateVideoClipInput!) {
@@ -25,23 +26,32 @@ const CREATE_VIDEO_CLIP = graphql(`
   }
 `);
 
-export default function AddVideoClip() {
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
-  const [checkingAuth, setCheckingAuth] = useState(true);
-  const navigate = useNavigate();
+interface VideoClipFormData {
+  name: string;
+  description: string;
+}
 
-  const [createVideoClip] = useMutation(CREATE_VIDEO_CLIP);
+export default function AddVideoClip() {
+  const navigate = useNavigate();
+  const [createVideoClip, { loading, error: mutationError }] = useMutation(CREATE_VIDEO_CLIP);
+
+  const {
+    control,
+    handleSubmit,
+    formState: { errors, isSubmitting, isSubmitSuccessful },
+    reset,
+  } = useForm<VideoClipFormData>({
+    defaultValues: {
+      name: '',
+      description: '',
+    },
+  });
 
   // Check authentication on mount
   useEffect(() => {
     async function checkAuth() {
       try {
         await getCurrentUser();
-        setCheckingAuth(false);
       } catch {
         // User not authenticated, redirect to sign in
         navigate('/signin', { state: { from: '/add-clip' } });
@@ -50,66 +60,32 @@ export default function AddVideoClip() {
     checkAuth();
   }, [navigate]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setSuccess(null);
-    setLoading(true);
+  // Redirect after successful submission
+  useEffect(() => {
+    if (isSubmitSuccessful) {
+      const timer = setTimeout(() => {
+        navigate('/');
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [isSubmitSuccessful, navigate]);
 
+  const onSubmit = async (data: VideoClipFormData) => {
     try {
-      // Get the auth token
-      const session = await fetchAuthSession();
-      const token = session.tokens?.idToken?.toString();
-
-      if (!token) {
-        throw new Error('Not authenticated');
-      }
-
       await createVideoClip({
         variables: {
           input: {
-            name: name.trim(),
-            description: description.trim(),
-          },
-        },
-        context: {
-          headers: {
-            authorization: `Bearer ${token}`,
+            name: data.name.trim(),
+            description: data.description.trim(),
           },
         },
       });
-
-      setSuccess('Video clip added successfully!');
-      setName('');
-      setDescription('');
-      
-      // Redirect to home after 2 seconds
-      setTimeout(() => {
-        navigate('/');
-      }, 2000);
-    } catch (err: any) {
-      setError(err.message || 'Failed to add video clip');
-    } finally {
-      setLoading(false);
+      reset();
+    } catch (err) {
+      // Error handled by Apollo Client
+      console.error('Failed to create video clip:', err);
     }
   };
-
-  if (checkingAuth) {
-    return (
-      <Container component="main" maxWidth="xs">
-        <Box
-          sx={{
-            marginTop: 8,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-          }}
-        >
-          <CircularProgress />
-        </Box>
-      </Container>
-    );
-  }
 
   return (
     <Container component="main" maxWidth="xs">
@@ -127,40 +103,60 @@ export default function AddVideoClip() {
         <Typography component="h1" variant="h5">
           Add Video Clip
         </Typography>
-        <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            id="name"
-            label="Video Clip Name"
+        <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate sx={{ mt: 1 }}>
+          <Controller
             name="name"
-            autoFocus
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            disabled={loading}
+            control={control}
+            rules={{
+              required: 'Video clip name is required',
+              validate: (value) => value.trim().length > 0 || 'Video clip name cannot be empty',
+            }}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                margin="normal"
+                required
+                fullWidth
+                id="name"
+                label="Video Clip Name"
+                autoFocus
+                disabled={loading || isSubmitting}
+                error={!!errors.name}
+                helperText={errors.name?.message}
+              />
+            )}
           />
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            id="description"
-            label="Description"
+          <Controller
             name="description"
-            multiline
-            rows={4}
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            disabled={loading}
+            control={control}
+            rules={{
+              required: 'Description is required',
+              validate: (value) => value.trim().length > 0 || 'Description cannot be empty',
+            }}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                margin="normal"
+                required
+                fullWidth
+                id="description"
+                label="Description"
+                multiline
+                rows={4}
+                disabled={loading || isSubmitting}
+                error={!!errors.description}
+                helperText={errors.description?.message}
+              />
+            )}
           />
-          {error && (
+          {mutationError && (
             <Alert severity="error" sx={{ mt: 2 }}>
-              {error}
+              {mutationError.message || 'Failed to add video clip'}
             </Alert>
           )}
-          {success && (
+          {isSubmitSuccessful && (
             <Alert severity="success" sx={{ mt: 2 }}>
-              {success}
+              Video clip added successfully!
             </Alert>
           )}
           <Button
@@ -168,10 +164,10 @@ export default function AddVideoClip() {
             fullWidth
             variant="contained"
             color="primary"
-            disabled={loading || !name.trim() || !description.trim()}
+            disabled={loading || isSubmitting}
             sx={{ mt: 3, mb: 2 }}
           >
-            {loading ? (
+            {loading || isSubmitting ? (
               <CircularProgress size={24} color="inherit" />
             ) : (
               'Add Video Clip'
@@ -181,7 +177,7 @@ export default function AddVideoClip() {
             fullWidth
             variant="outlined"
             onClick={() => navigate('/')}
-            disabled={loading}
+            disabled={loading || isSubmitting}
           >
             Cancel
           </Button>

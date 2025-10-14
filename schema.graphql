@@ -14,6 +14,7 @@ type VideoClip {
   name: String!
   description: String!
   userId: String!
+  userEmail: String!
   createdAt: String!
 }
 

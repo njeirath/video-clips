@@ -3,8 +3,8 @@ import "reflect-metadata";
 import { ApolloServer } from "apollo-server-express";
 import express from "express";
 import { buildSchema } from "type-graphql";
-import { SampleResolver } from "./resolvers/sample-resolver";
-import { VideoClipResolver, Context } from "./resolvers/video-clip.resolver";
+import { resolvers } from "./resolvers";
+import { Context } from "./resolvers/video-clip.resolver";
 import { CognitoJwtVerifier } from "aws-jwt-verify";
 
 // Create Cognito JWT verifier
@@ -16,7 +16,7 @@ const verifier = CognitoJwtVerifier.create({
 
 async function bootstrap() {
   const schema = await buildSchema({
-    resolvers: [SampleResolver, VideoClipResolver],
+    resolvers: [...resolvers],
   });
 
   const server = new ApolloServer({
@@ -32,6 +32,7 @@ async function bootstrap() {
         const payload = await verifier.verify(token);
         return {
           userId: payload.sub,
+          userEmail: payload.email as string,
           user: payload,
         };
       } catch (error) {

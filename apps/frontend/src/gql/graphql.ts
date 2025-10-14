@@ -65,6 +65,7 @@ export type VideoClip = {
   description: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   name: Scalars['String']['output'];
+  userEmail: Scalars['String']['output'];
   userId: Scalars['String']['output'];
 };
 

@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from "uuid";
 // Context type for GraphQL requests
 export interface Context {
   userId?: string;
+  userEmail?: string;
   user?: any;
 }
 
@@ -34,6 +35,10 @@ export class VideoClipResolver {
       throw new Error("Not authenticated. Please sign in to add video clips.");
     }
 
+    if (!ctx.userEmail) {
+      throw new Error("User email not found in authentication token.");
+    }
+
     // Validate input
     if (!input.name || !input.name.trim()) {
       throw new Error("Name is required");
@@ -48,6 +53,7 @@ export class VideoClipResolver {
       name: input.name.trim(),
       description: input.description.trim(),
       userId: ctx.userId,
+      userEmail: ctx.userEmail,
       createdAt: new Date().toISOString(),
     };
 

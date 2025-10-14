@@ -15,6 +15,9 @@ export class VideoClip {
   userId: string;
 
   @Field(() => String)
+  userEmail: string;
+
+  @Field(() => String)
   createdAt: string;
 }
 
