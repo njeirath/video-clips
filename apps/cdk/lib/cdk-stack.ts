@@ -33,6 +33,18 @@ export class CdkStack extends cdk.Stack {
           abortIncompleteMultipartUploadAfter: cdk.Duration.days(7),
         },
       ],
+      cors: [
+        {
+          allowedMethods: [
+            s3.HttpMethods.GET,
+            s3.HttpMethods.PUT,
+            s3.HttpMethods.POST,
+          ],
+          allowedOrigins: ['*'],
+          allowedHeaders: ['*'],
+          exposedHeaders: ['ETag'],
+        },
+      ],
     });
 
     // CloudFront distribution in front of the S3 bucket
