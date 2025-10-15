@@ -1,4 +1,55 @@
-import { ObjectType, Field, ID, InputType } from "type-graphql";
+import { ObjectType, Field, ID, InputType, Int, Float, createUnionType } from "type-graphql";
+
+// Source types for video clips
+@ObjectType()
+export class ShowSource {
+  @Field(() => String)
+  title: string;
+
+  @Field(() => String, { nullable: true })
+  airDate?: string;
+
+  @Field(() => Int, { nullable: true })
+  season?: number;
+
+  @Field(() => Int, { nullable: true })
+  episode?: number;
+
+  @Field(() => Float, { nullable: true })
+  start?: number;
+
+  @Field(() => Float, { nullable: true })
+  end?: number;
+}
+
+@ObjectType()
+export class MovieSource {
+  @Field(() => String)
+  title: string;
+
+  @Field(() => String, { nullable: true })
+  releaseDate?: string;
+
+  @Field(() => Float, { nullable: true })
+  start?: number;
+
+  @Field(() => Float, { nullable: true })
+  end?: number;
+}
+
+export const VideoClipSource = createUnionType({
+  name: "VideoClipSource",
+  types: () => [ShowSource, MovieSource] as const,
+  resolveType: (value) => {
+    if ("season" in value || "episode" in value || "airDate" in value) {
+      return ShowSource;
+    }
+    if ("releaseDate" in value) {
+      return MovieSource;
+    }
+    return undefined;
+  },
+});
 
 @ObjectType()
 export class VideoClip {
@@ -23,8 +74,69 @@ export class VideoClip {
   @Field(() => String, { nullable: true })
   videoUrl?: string;
 
+  @Field(() => String, { nullable: true })
+  script?: string;
+
+  @Field(() => Float, { nullable: true })
+  duration?: number;
+
+  @Field(() => [String], { nullable: true })
+  actors?: string[];
+
+  @Field(() => [String], { nullable: true })
+  tags?: string[];
+
+  @Field(() => VideoClipSource, { nullable: true })
+  source?: typeof VideoClipSource;
+
   @Field(() => String)
   createdAt: string;
+}
+
+// Input types for source
+@InputType()
+export class ShowSourceInput {
+  @Field(() => String)
+  title: string;
+
+  @Field(() => String, { nullable: true })
+  airDate?: string;
+
+  @Field(() => Int, { nullable: true })
+  season?: number;
+
+  @Field(() => Int, { nullable: true })
+  episode?: number;
+
+  @Field(() => Float, { nullable: true })
+  start?: number;
+
+  @Field(() => Float, { nullable: true })
+  end?: number;
+}
+
+@InputType()
+export class MovieSourceInput {
+  @Field(() => String)
+  title: string;
+
+  @Field(() => String, { nullable: true })
+  releaseDate?: string;
+
+  @Field(() => Float, { nullable: true })
+  start?: number;
+
+  @Field(() => Float, { nullable: true })
+  end?: number;
+}
+
+@InputType()
+export class VideoClipSourceInput {
+  @Field(() => ShowSourceInput, { nullable: true })
+  show?: ShowSourceInput;
+
+  @Field(() => MovieSourceInput, { nullable: true })
+  movie?: MovieSourceInput;
 }
 
 @InputType()
@@ -40,6 +152,21 @@ export class CreateVideoClipInput {
 
   @Field(() => String, { nullable: true })
   videoUrl?: string;
+
+  @Field(() => String, { nullable: true })
+  script?: string;
+
+  @Field(() => Float, { nullable: true })
+  duration?: number;
+
+  @Field(() => [String], { nullable: true })
+  actors?: string[];
+
+  @Field(() => [String], { nullable: true })
+  tags?: string[];
+
+  @Field(() => VideoClipSourceInput, { nullable: true })
+  source?: VideoClipSourceInput;
 }
 
 @ObjectType()

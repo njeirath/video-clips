@@ -17,17 +17,36 @@ export type Scalars = {
 };
 
 export type CreateVideoClipInput = {
+  actors?: InputMaybe<Array<Scalars['String']['input']>>;
   description: Scalars['String']['input'];
+  duration?: InputMaybe<Scalars['Float']['input']>;
   name: Scalars['String']['input'];
   s3Key?: InputMaybe<Scalars['String']['input']>;
+  script?: InputMaybe<Scalars['String']['input']>;
+  source?: InputMaybe<VideoClipSourceInput>;
+  tags?: InputMaybe<Array<Scalars['String']['input']>>;
   videoUrl?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type MovieSource = {
+  __typename?: 'MovieSource';
+  end?: Maybe<Scalars['Float']['output']>;
+  releaseDate?: Maybe<Scalars['String']['output']>;
+  start?: Maybe<Scalars['Float']['output']>;
+  title: Scalars['String']['output'];
+};
+
+export type MovieSourceInput = {
+  end?: InputMaybe<Scalars['Float']['input']>;
+  releaseDate?: InputMaybe<Scalars['String']['input']>;
+  start?: InputMaybe<Scalars['Float']['input']>;
+  title: Scalars['String']['input'];
 };
 
 export type Mutation = {
   __typename?: 'Mutation';
   createVideoClip: VideoClip;
   generateUploadUrl: PresignedUrlResponse;
-  signup: SignupResult;
 };
 
 
@@ -41,12 +60,6 @@ export type MutationGenerateUploadUrlArgs = {
   fileName: Scalars['String']['input'];
 };
 
-
-export type MutationSignupArgs = {
-  password: Scalars['String']['input'];
-  username: Scalars['String']['input'];
-};
-
 export type PresignedUrlResponse = {
   __typename?: 'PresignedUrlResponse';
   s3Key: Scalars['String']['output'];
@@ -56,7 +69,7 @@ export type PresignedUrlResponse = {
 
 export type Query = {
   __typename?: 'Query';
-  hello?: Maybe<Scalars['String']['output']>;
+  hello: Scalars['String']['output'];
   myVideoClips: Array<VideoClip>;
   videoClips: Array<VideoClip>;
 };
@@ -68,30 +81,47 @@ export type QueryVideoClipsArgs = {
   searchQuery?: InputMaybe<Scalars['String']['input']>;
 };
 
-export type SignupResult = {
-  __typename?: 'SignupResult';
-  message: Scalars['String']['output'];
-  userSub?: Maybe<Scalars['String']['output']>;
+export type ShowSource = {
+  __typename?: 'ShowSource';
+  airDate?: Maybe<Scalars['String']['output']>;
+  end?: Maybe<Scalars['Float']['output']>;
+  episode?: Maybe<Scalars['Int']['output']>;
+  season?: Maybe<Scalars['Int']['output']>;
+  start?: Maybe<Scalars['Float']['output']>;
+  title: Scalars['String']['output'];
 };
 
-export type Video = {
-  __typename?: 'Video';
-  description?: Maybe<Scalars['String']['output']>;
-  id: Scalars['ID']['output'];
-  title: Scalars['String']['output'];
-  url: Scalars['String']['output'];
+export type ShowSourceInput = {
+  airDate?: InputMaybe<Scalars['String']['input']>;
+  end?: InputMaybe<Scalars['Float']['input']>;
+  episode?: InputMaybe<Scalars['Int']['input']>;
+  season?: InputMaybe<Scalars['Int']['input']>;
+  start?: InputMaybe<Scalars['Float']['input']>;
+  title: Scalars['String']['input'];
 };
 
 export type VideoClip = {
   __typename?: 'VideoClip';
+  actors?: Maybe<Array<Scalars['String']['output']>>;
   createdAt: Scalars['String']['output'];
   description: Scalars['String']['output'];
+  duration?: Maybe<Scalars['Float']['output']>;
   id: Scalars['ID']['output'];
   name: Scalars['String']['output'];
   s3Key?: Maybe<Scalars['String']['output']>;
+  script?: Maybe<Scalars['String']['output']>;
+  source?: Maybe<VideoClipSource>;
+  tags?: Maybe<Array<Scalars['String']['output']>>;
   userEmail: Scalars['String']['output'];
   userId: Scalars['String']['output'];
   videoUrl?: Maybe<Scalars['String']['output']>;
+};
+
+export type VideoClipSource = MovieSource | ShowSource;
+
+export type VideoClipSourceInput = {
+  movie?: InputMaybe<MovieSourceInput>;
+  show?: InputMaybe<ShowSourceInput>;
 };
 
 export type CreateVideoClipMutationVariables = Exact<{

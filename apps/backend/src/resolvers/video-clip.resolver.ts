@@ -68,6 +68,22 @@ export class VideoClipResolver {
       throw new Error('Description is required');
     }
 
+    // Convert source input to source object for storage
+    let source: any = undefined;
+    if (input.source) {
+      if (input.source.show) {
+        source = {
+          type: 'show',
+          ...input.source.show,
+        };
+      } else if (input.source.movie) {
+        source = {
+          type: 'movie',
+          ...input.source.movie,
+        };
+      }
+    }
+
     const videoClip = {
       id: uuidv4(),
       name: input.name.trim(),
@@ -76,6 +92,11 @@ export class VideoClipResolver {
       userEmail: ctx.userEmail,
       s3Key: input.s3Key,
       videoUrl: input.videoUrl,
+      script: input.script,
+      duration: input.duration,
+      actors: input.actors,
+      tags: input.tags,
+      source,
       createdAt: new Date().toISOString(),
     };
 

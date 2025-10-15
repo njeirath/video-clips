@@ -1,13 +1,7 @@
 type Query {
-  hello: String
-  videoClips(searchQuery: String, offset: Int, limit: Int): [VideoClip!]!
+  hello: String!
+  videoClips(limit: Int = 12, offset: Int = 0, searchQuery: String): [VideoClip!]!
   myVideoClips: [VideoClip!]!
-}
-
-type Mutation {
-  signup(username: String!, password: String!): SignupResult!
-  createVideoClip(input: CreateVideoClipInput!): VideoClip!
-  generateUploadUrl(fileName: String!, contentType: String!): PresignedUrlResponse!
 }
 
 type VideoClip {
@@ -18,7 +12,35 @@ type VideoClip {
   userEmail: String!
   s3Key: String
   videoUrl: String
+  script: String
+  duration: Float
+  actors: [String!]
+  tags: [String!]
+  source: VideoClipSource
   createdAt: String!
+}
+
+union VideoClipSource = ShowSource | MovieSource
+
+type ShowSource {
+  title: String!
+  airDate: String
+  season: Int
+  episode: Int
+  start: Float
+  end: Float
+}
+
+type MovieSource {
+  title: String!
+  releaseDate: String
+  start: Float
+  end: Float
+}
+
+type Mutation {
+  createVideoClip(input: CreateVideoClipInput!): VideoClip!
+  generateUploadUrl(contentType: String!, fileName: String!): PresignedUrlResponse!
 }
 
 input CreateVideoClipInput {
@@ -26,22 +48,36 @@ input CreateVideoClipInput {
   description: String!
   s3Key: String
   videoUrl: String
+  script: String
+  duration: Float
+  actors: [String!]
+  tags: [String!]
+  source: VideoClipSourceInput
+}
+
+input VideoClipSourceInput {
+  show: ShowSourceInput
+  movie: MovieSourceInput
+}
+
+input ShowSourceInput {
+  title: String!
+  airDate: String
+  season: Int
+  episode: Int
+  start: Float
+  end: Float
+}
+
+input MovieSourceInput {
+  title: String!
+  releaseDate: String
+  start: Float
+  end: Float
 }
 
 type PresignedUrlResponse {
   uploadUrl: String!
   s3Key: String!
   videoUrl: String!
-}
-
-type SignupResult {
-  message: String!
-  userSub: String
-}
-
-type Video {
-  id: ID!
-  title: String!
-  description: String
-  url: String!
 }

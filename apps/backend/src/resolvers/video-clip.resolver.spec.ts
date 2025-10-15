@@ -184,6 +184,92 @@ describe("VideoClipResolver", () => {
       expect(result.s3Key).toBe("videos/user-123/test.mp4");
       expect(result.videoUrl).toBe("https://cloudfront.example.com/videos/user-123/test.mp4");
     });
+
+    it("should create video clip with new optional fields", async () => {
+      const input: CreateVideoClipInput = {
+        name: "Test Video",
+        description: "Test Description",
+        script: "Hello, world!",
+        duration: 120.5,
+        actors: ["Actor 1", "Actor 2"],
+        tags: ["comedy", "action"],
+      };
+      const context: Context = {
+        userId: "test-user-123",
+        userEmail: "test@example.com",
+      };
+
+      const result = await resolver.createVideoClip(input, context);
+
+      expect(result.script).toBe("Hello, world!");
+      expect(result.duration).toBe(120.5);
+      expect(result.actors).toEqual(["Actor 1", "Actor 2"]);
+      expect(result.tags).toEqual(["comedy", "action"]);
+    });
+
+    it("should create video clip with show source", async () => {
+      const input: CreateVideoClipInput = {
+        name: "Test Video",
+        description: "Test Description",
+        source: {
+          show: {
+            title: "Test Show",
+            airDate: "2024-01-01",
+            season: 1,
+            episode: 5,
+            start: 10.5,
+            end: 30.5,
+          },
+        },
+      };
+      const context: Context = {
+        userId: "test-user-123",
+        userEmail: "test@example.com",
+      };
+
+      const result = await resolver.createVideoClip(input, context);
+
+      expect(result.source).toBeDefined();
+      expect(result.source).toMatchObject({
+        type: "show",
+        title: "Test Show",
+        airDate: "2024-01-01",
+        season: 1,
+        episode: 5,
+        start: 10.5,
+        end: 30.5,
+      });
+    });
+
+    it("should create video clip with movie source", async () => {
+      const input: CreateVideoClipInput = {
+        name: "Test Video",
+        description: "Test Description",
+        source: {
+          movie: {
+            title: "Test Movie",
+            releaseDate: "2023-06-15",
+            start: 45.0,
+            end: 90.0,
+          },
+        },
+      };
+      const context: Context = {
+        userId: "test-user-123",
+        userEmail: "test@example.com",
+      };
+
+      const result = await resolver.createVideoClip(input, context);
+
+      expect(result.source).toBeDefined();
+      expect(result.source).toMatchObject({
+        type: "movie",
+        title: "Test Movie",
+        releaseDate: "2023-06-15",
+        start: 45.0,
+        end: 90.0,
+      });
+    });
   });
 
   describe("generateUploadUrl mutation", () => {

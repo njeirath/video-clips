@@ -92,7 +92,30 @@ type VideoClip {
   userEmail: String!
   s3Key: String        # New field
   videoUrl: String     # New field
+  script: String       # Optional: Words spoken in the clip
+  duration: Float      # Optional: Duration in seconds
+  actors: [String!]    # Optional: List of actors
+  tags: [String!]      # Optional: List of tags
+  source: VideoClipSource  # Optional: Show or movie source info
   createdAt: String!
+}
+
+union VideoClipSource = ShowSource | MovieSource
+
+type ShowSource {
+  title: String!
+  airDate: String      # Optional: Episode air date
+  season: Int          # Optional: Season number
+  episode: Int         # Optional: Episode number
+  start: Float         # Optional: Start time in episode
+  end: Float           # Optional: End time in episode
+}
+
+type MovieSource {
+  title: String!
+  releaseDate: String  # Optional: Movie release date
+  start: Float         # Optional: Start time in movie
+  end: Float           # Optional: End time in movie
 }
 ```
 
@@ -103,6 +126,32 @@ input CreateVideoClipInput {
   description: String!
   s3Key: String        # New field
   videoUrl: String     # New field
+  script: String       # Optional: Words spoken in the clip
+  duration: Float      # Optional: Duration in seconds
+  actors: [String!]    # Optional: List of actors
+  tags: [String!]      # Optional: List of tags
+  source: VideoClipSourceInput  # Optional: Show or movie source info
+}
+
+input VideoClipSourceInput {
+  show: ShowSourceInput
+  movie: MovieSourceInput
+}
+
+input ShowSourceInput {
+  title: String!
+  airDate: String
+  season: Int
+  episode: Int
+  start: Float
+  end: Float
+}
+
+input MovieSourceInput {
+  title: String!
+  releaseDate: String
+  start: Float
+  end: Float
 }
 ```
 
