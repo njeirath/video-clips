@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Typography from '@mui/material/Typography';
@@ -15,7 +14,6 @@ import InputAdornment from '@mui/material/InputAdornment';
 import Button from '@mui/material/Button';
 import { useQuery } from '@apollo/client/react';
 import { graphql } from '../gql/gql';
-
 
 // VideoClipPlayer component: only loads video when play is clicked
 type VideoClipPlayerProps = {
@@ -86,15 +84,31 @@ function VideoClipPlayer({ clip }: VideoClipPlayerProps) {
                 </video>
               </Box>
             ) : (
-              <Box sx={{ mt: 2, position: 'relative', width: '100%', maxHeight: 200, background: '#000', borderRadius: 4, overflow: 'hidden' }}>
+              <Box
+                sx={{
+                  mt: 2,
+                  position: 'relative',
+                  width: '100%',
+                  maxHeight: 200,
+                  background: '#000',
+                  borderRadius: 4,
+                  overflow: 'hidden',
+                }}
+              >
                 {poster ? (
                   <img
                     src={poster}
                     alt={clip.name}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                    }}
                   />
                 ) : (
-                  <div style={{ width: '100%', height: 200, background: '#222' }} />
+                  <div
+                    style={{ width: '100%', height: 200, background: '#222' }}
+                  />
                 )}
                 <button
                   onClick={handlePlay}
@@ -119,7 +133,18 @@ function VideoClipPlayer({ clip }: VideoClipPlayerProps) {
               </Box>
             )
           ) : (
-            <Box sx={{ mt: 2, width: '100%', height: 200, background: '#eee', borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Box
+              sx={{
+                mt: 2,
+                width: '100%',
+                height: 200,
+                background: '#eee',
+                borderRadius: 4,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
               <Typography color="text.secondary">No video available</Typography>
             </Box>
           )}

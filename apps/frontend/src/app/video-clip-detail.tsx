@@ -77,7 +77,9 @@ export default function VideoClipDetail() {
   if (error) {
     return (
       <Container maxWidth="md" sx={{ mt: 4 }}>
-        <Alert severity="error">Error loading video clip: {error.message}</Alert>
+        <Alert severity="error">
+          Error loading video clip: {error.message}
+        </Alert>
       </Container>
     );
   }
@@ -101,10 +103,10 @@ export default function VideoClipDetail() {
 
   const hasVideo = !!clip.videoUrl;
   const poster = undefined; // TODO: Add thumbnailUrl to schema
-  
+
   // Build the full URL for this clip
   const clipUrl = `${window.location.origin}/clip/${clip.id}`;
-  
+
   // Determine the source title for better description
   let sourceInfo = '';
   if (clip.source) {
@@ -120,26 +122,25 @@ export default function VideoClipDetail() {
   }
 
   // Build description for meta tags
-  const metaDescription = clip.description || 
+  const metaDescription =
+    clip.description ||
     (sourceInfo ? `Video clip from ${sourceInfo}` : 'Video clip');
 
   // Build a more descriptive title
-  const metaTitle = sourceInfo 
-    ? `${clip.name} - ${sourceInfo}`
-    : clip.name;
+  const metaTitle = sourceInfo ? `${clip.name} - ${sourceInfo}` : clip.name;
 
   return (
     <>
       <Helmet>
         <title>{metaTitle}</title>
         <meta name="description" content={metaDescription} />
-        
+
         {/* Open Graph tags */}
         <meta property="og:title" content={metaTitle} />
         <meta property="og:description" content={metaDescription} />
         <meta property="og:url" content={clipUrl} />
         <meta property="og:type" content="video.other" />
-        
+
         {clip.videoUrl && (
           <>
             <meta property="og:video" content={clip.videoUrl} />
@@ -148,23 +149,32 @@ export default function VideoClipDetail() {
             <meta property="og:video:type" content="video/mp4" />
           </>
         )}
-        
+
         {/* TODO: Add og:image when thumbnailUrl is available in schema */}
-        <meta property="og:image" content={`${window.location.origin}/logo-512.png`} />
-        
+        <meta
+          property="og:image"
+          content={`${window.location.origin}/logo-512.png`}
+        />
+
         {/* Twitter Card tags */}
         <meta name="twitter:card" content="player" />
         <meta name="twitter:title" content={metaTitle} />
         <meta name="twitter:description" content={metaDescription} />
-        <meta name="twitter:image" content={`${window.location.origin}/logo-512.png`} />
-        
+        <meta
+          name="twitter:image"
+          content={`${window.location.origin}/logo-512.png`}
+        />
+
         {clip.videoUrl && (
           <>
             <meta name="twitter:player" content={clipUrl} />
             <meta name="twitter:player:width" content="1280" />
             <meta name="twitter:player:height" content="720" />
             <meta name="twitter:player:stream" content={clip.videoUrl} />
-            <meta name="twitter:player:stream:content_type" content="video/mp4" />
+            <meta
+              name="twitter:player:stream:content_type"
+              content="video/mp4"
+            />
           </>
         )}
       </Helmet>
@@ -185,7 +195,11 @@ export default function VideoClipDetail() {
             </Typography>
 
             {sourceInfo && (
-              <Typography variant="subtitle1" color="text.secondary" gutterBottom>
+              <Typography
+                variant="subtitle1"
+                color="text.secondary"
+                gutterBottom
+              >
                 From: {sourceInfo}
               </Typography>
             )}
@@ -294,7 +308,9 @@ export default function VideoClipDetail() {
                   justifyContent: 'center',
                 }}
               >
-                <Typography color="text.secondary">No video available</Typography>
+                <Typography color="text.secondary">
+                  No video available
+                </Typography>
               </Box>
             )}
 
@@ -366,7 +382,8 @@ export default function VideoClipDetail() {
               color="text.secondary"
               sx={{ display: 'block', mt: 3 }}
             >
-              Added: {new Date(clip.createdAt).toLocaleString()} by {clip.userEmail}
+              Added: {new Date(clip.createdAt).toLocaleString()} by{' '}
+              {clip.userEmail}
             </Typography>
           </CardContent>
         </Card>

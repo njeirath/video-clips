@@ -1,4 +1,3 @@
-
 import { StrictMode } from 'react';
 import * as ReactDOM from 'react-dom/client';
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
@@ -14,41 +13,43 @@ import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import theme from './theme';
 
-
-const router = createBrowserRouter([
+const router = createBrowserRouter(
+  [
+    {
+      path: '/',
+      element: <Root />, // Root wraps App with ApolloProvider
+      children: [
+        {
+          index: true,
+          element: <Home />,
+        },
+        {
+          path: 'signup',
+          element: <Signup />,
+        },
+        {
+          path: 'signin',
+          element: <SignIn />,
+        },
+        {
+          path: 'confirm',
+          element: <ConfirmSignUp />,
+        },
+        {
+          path: 'add-clip',
+          element: <AddVideoClip />,
+        },
+        {
+          path: 'clip/:id',
+          element: <VideoClipDetail />,
+        },
+      ],
+    },
+  ],
   {
-    path: '/',
-    element: <Root />, // Root wraps App with ApolloProvider
-    children: [
-      {
-        index: true,
-        element: <Home />,
-      },
-      {
-        path: 'signup',
-        element: <Signup />,
-      },
-      {
-        path: 'signin',
-        element: <SignIn />,
-      },
-      {
-        path: 'confirm',
-        element: <ConfirmSignUp />,
-      },
-      {
-        path: 'add-clip',
-        element: <AddVideoClip />,
-      },
-      {
-        path: 'clip/:id',
-        element: <VideoClipDetail />,
-      },
-    ],
-  },
-], {
-  future: { v7_relativeSplatPath: true },
-});
+    future: { v7_relativeSplatPath: true },
+  }
+);
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
