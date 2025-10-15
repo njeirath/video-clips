@@ -57,6 +57,23 @@ export class OpenSearchService {
                 userEmail: { type: "keyword" },
                 s3Key: { type: "keyword" },
                 videoUrl: { type: "keyword" },
+                script: { type: "text" },
+                duration: { type: "float" },
+                actors: { type: "keyword" },
+                tags: { type: "keyword" },
+                source: {
+                  type: "object",
+                  properties: {
+                    type: { type: "keyword" },
+                    title: { type: "text" },
+                    airDate: { type: "date" },
+                    season: { type: "integer" },
+                    episode: { type: "integer" },
+                    releaseDate: { type: "date" },
+                    start: { type: "float" },
+                    end: { type: "float" },
+                  },
+                },
                 createdAt: { type: "date" },
               },
             },
@@ -78,6 +95,11 @@ export class OpenSearchService {
     userEmail: string;
     s3Key?: string;
     videoUrl?: string;
+    script?: string;
+    duration?: number;
+    actors?: string[];
+    tags?: string[];
+    source?: any;
     createdAt: string;
   }) {
     try {
@@ -151,11 +173,11 @@ export class OpenSearchService {
       let query: any;
       
       if (searchQuery && searchQuery.trim()) {
-        // Use multi_match to search across name and description fields
+        // Use multi_match to search across name, description, script, actors, and tags fields
         query = {
           multi_match: {
             query: searchQuery.trim(),
-            fields: ["name^2", "description"], // Boost name matches
+            fields: ["name^2", "description", "script", "actors", "tags"], // Boost name matches
             type: "best_fields",
             fuzziness: "AUTO",
           },
