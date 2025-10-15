@@ -1,5 +1,6 @@
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import Box from '@mui/material/Box';
@@ -11,6 +12,7 @@ import Alert from '@mui/material/Alert';
 import Grid from '@mui/material/Grid';
 import SearchIcon from '@mui/icons-material/Search';
 import InputAdornment from '@mui/material/InputAdornment';
+import Button from '@mui/material/Button';
 import { useQuery } from '@apollo/client/react';
 import { graphql } from '../gql/gql';
 
@@ -59,7 +61,12 @@ function VideoClipPlayer({ clip }: VideoClipPlayerProps) {
       >
         <CardContent sx={{ flexGrow: 1 }}>
           <Typography variant="h6" component="h2" gutterBottom>
-            {clip.name}
+            <Link
+              to={`/clip/${clip.id}`}
+              style={{ textDecoration: 'none', color: 'inherit' }}
+            >
+              {clip.name}
+            </Link>
           </Typography>
           <Typography variant="body2" color="text.secondary">
             {clip.description}
@@ -123,6 +130,16 @@ function VideoClipPlayer({ clip }: VideoClipPlayerProps) {
           >
             Added: {new Date(clip.createdAt).toLocaleDateString()}
           </Typography>
+          <Button
+            component={Link}
+            to={`/clip/${clip.id}`}
+            variant="outlined"
+            size="small"
+            sx={{ mt: 2 }}
+            fullWidth
+          >
+            View Details
+          </Button>
         </CardContent>
       </Card>
     </div>
