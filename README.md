@@ -11,6 +11,7 @@ A monorepo for video clips applications and libraries, powered by [Nx](https://n
 - 🚀 **GraphQL API**: Type-safe API with TypeGraphQL
 - ⚛️ **React Frontend**: Modern React 19 app with Material-UI
 - 🏗️ **Infrastructure as Code**: AWS CDK for cloud infrastructure
+- 🔗 **Rich Link Previews**: Open Graph and Twitter Card meta tags for social sharing
 
 ## Getting Started
 
@@ -40,10 +41,19 @@ This repository uses Nx as a build system with a focus on monorepo development:
 
 A React application built with Vite and React Router.
 
+**Features:**
+- Individual video clip pages at `/clip/:id`
+- Dynamic Open Graph and Twitter Card meta tags for rich previews in messaging apps
+- Video playback on demand
+- Search and filter functionality
+
 **Start the frontend:**
 ```bash
 npx nx serve frontend
 ```
+
+**Rich Link Previews:**
+The frontend includes support for Open Graph and Twitter Card meta tags that enable rich link previews when sharing video clips on social media and messaging apps. See [docs/OPEN_GRAPH_META_TAGS.md](docs/OPEN_GRAPH_META_TAGS.md) for details.
 
 ### Backend
 
