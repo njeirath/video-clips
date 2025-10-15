@@ -2,12 +2,15 @@
 import * as cdk from 'aws-cdk-lib';
 import { CdkStack } from '../lib/cdk-stack';
 import { SesStack } from '../lib/ses-stack';
+import { AcmStack } from '../lib/acm-stack';
 
+const usEast1Env = { account: '910246205140', region: 'us-east-1' };
 const env = { account: '910246205140', region: 'us-east-2' };
 
 const app = new cdk.App();
 
 new SesStack(app, 'Ses', { env });
+const acm = new AcmStack(app, 'Acm', { env: usEast1Env });
 
 new CdkStack(app, 'Dev', {
   env,

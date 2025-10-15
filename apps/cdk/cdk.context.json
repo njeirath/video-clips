@@ -2,5 +2,9 @@
   "hosted-zone:account=910246205140:domainName=vidclip.co:region=us-east-2": {
     "Id": "/hostedzone/Z0505536GEAM1GBEAPWB",
     "Name": "vidclip.co."
+  },
+  "hosted-zone:account=910246205140:domainName=vidclip.co:region=us-east-1": {
+    "Id": "/hostedzone/Z0505536GEAM1GBEAPWB",
+    "Name": "vidclip.co."
   }
 }
