@@ -7,8 +7,9 @@ import {
   Authorized,
   Int,
 } from 'type-graphql';
-import { VideoClip, CreateVideoClipInput } from '../types/video-clip';
+import { VideoClip, CreateVideoClipInput, PresignedUrlResponse } from '../types/video-clip';
 import { openSearchService } from '../services/opensearch.service';
+import { s3Service } from '../services/s3.service';
 import { v4 as uuidv4 } from 'uuid';
 
 // Context type for GraphQL requests
@@ -73,11 +74,40 @@ export class VideoClipResolver {
       description: input.description.trim(),
       userId: ctx.userId,
       userEmail: ctx.userEmail,
+      s3Key: input.s3Key,
+      videoUrl: input.videoUrl,
       createdAt: new Date().toISOString(),
     };
 
     await openSearchService.createVideoClip(videoClip);
 
     return videoClip;
+  }
+
+  @Mutation(() => PresignedUrlResponse)
+  async generateUploadUrl(
+    @Arg('fileName', () => String) fileName: string,
+    @Arg('contentType', () => String) contentType: string,
+    @Ctx() ctx: Context
+  ): Promise<PresignedUrlResponse> {
+    // Require authentication
+    if (!ctx.userId) {
+      throw new Error('Not authenticated. Please sign in to upload videos.');
+    }
+
+    try {
+      const result = await s3Service.generatePresignedUploadUrl(
+        ctx.userId,
+        fileName,
+        contentType
+      );
+
+      return result;
+    } catch (error) {
+      console.error('Error generating presigned URL:', error);
+      throw new Error(
+        error instanceof Error ? error.message : 'Failed to generate upload URL'
+      );
+    }
   }
 }

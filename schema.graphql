@@ -7,6 +7,7 @@ type Query {
 type Mutation {
   signup(username: String!, password: String!): SignupResult!
   createVideoClip(input: CreateVideoClipInput!): VideoClip!
+  generateUploadUrl(fileName: String!, contentType: String!): PresignedUrlResponse!
 }
 
 type VideoClip {
@@ -15,12 +16,22 @@ type VideoClip {
   description: String!
   userId: String!
   userEmail: String!
+  s3Key: String
+  videoUrl: String
   createdAt: String!
 }
 
 input CreateVideoClipInput {
   name: String!
   description: String!
+  s3Key: String
+  videoUrl: String
+}
+
+type PresignedUrlResponse {
+  uploadUrl: String!
+  s3Key: String!
+  videoUrl: String!
 }
 
 type SignupResult {
