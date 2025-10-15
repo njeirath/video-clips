@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 import Avatar from '@mui/material/Avatar';
@@ -9,7 +9,9 @@ import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import Alert from '@mui/material/Alert';
 import CircularProgress from '@mui/material/CircularProgress';
+import LinearProgress from '@mui/material/LinearProgress';
 import VideoLibraryIcon from '@mui/icons-material/VideoLibrary';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { useMutation } from '@apollo/client/react';
 import { graphql } from '../gql/gql';
 import { getCurrentUser } from 'aws-amplify/auth';
@@ -26,20 +28,37 @@ const CREATE_VIDEO_CLIP = graphql(`
   }
 `);
 
+const GENERATE_UPLOAD_URL = graphql(`
+  mutation GenerateUploadUrl($fileName: String!, $contentType: String!) {
+    generateUploadUrl(fileName: $fileName, contentType: $contentType) {
+      uploadUrl
+      s3Key
+      videoUrl
+    }
+  }
+`);
+
 interface VideoClipFormData {
   name: string;
   description: string;
+  videoFile?: File;
 }
 
 export default function AddVideoClip() {
   const navigate = useNavigate();
   const [createVideoClip, { loading, error: mutationError }] = useMutation(CREATE_VIDEO_CLIP);
+  const [generateUploadUrl] = useMutation(GENERATE_UPLOAD_URL);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   const {
     control,
     handleSubmit,
     formState: { errors, isSubmitting, isSubmitSuccessful },
     reset,
+    setValue,
   } = useForm<VideoClipFormData>({
     defaultValues: {
       name: '',
@@ -72,18 +91,96 @@ export default function AddVideoClip() {
 
   const onSubmit = async (data: VideoClipFormData) => {
     try {
+      setUploadError(null);
+      let s3Key: string | undefined;
+      let videoUrl: string | undefined;
+
+      // Upload video file if selected
+      if (selectedFile) {
+        setUploading(true);
+        setUploadProgress(0);
+
+        try {
+          // Get presigned URL from backend
+          const { data: urlData } = await generateUploadUrl({
+            variables: {
+              fileName: selectedFile.name,
+              contentType: selectedFile.type,
+            },
+          });
+
+          if (!urlData?.generateUploadUrl) {
+            throw new Error('Failed to get upload URL');
+          }
+
+          const { uploadUrl, s3Key: key, videoUrl: url } = urlData.generateUploadUrl;
+          s3Key = key;
+          videoUrl = url;
+
+          // Upload file directly to S3 using presigned URL
+          const uploadResponse = await fetch(uploadUrl, {
+            method: 'PUT',
+            body: selectedFile,
+            headers: {
+              'Content-Type': selectedFile.type,
+            },
+          });
+
+          if (!uploadResponse.ok) {
+            throw new Error(`Upload failed with status: ${uploadResponse.status}`);
+          }
+
+          setUploadProgress(100);
+        } catch (err) {
+          console.error('Failed to upload video:', err);
+          setUploadError(err instanceof Error ? err.message : 'Failed to upload video');
+          setUploading(false);
+          return;
+        } finally {
+          setUploading(false);
+        }
+      }
+
+      // Create video clip with metadata
       await createVideoClip({
         variables: {
           input: {
             name: data.name.trim(),
             description: data.description.trim(),
+            s3Key,
+            videoUrl,
           },
         },
       });
       reset();
+      setSelectedFile(null);
+      setUploadProgress(0);
     } catch (err) {
       // Error handled by Apollo Client
       console.error('Failed to create video clip:', err);
+    }
+  };
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Validate file type
+      const allowedTypes = ['video/mp4', 'video/quicktime', 'video/x-msvideo', 'video/x-matroska', 'video/webm'];
+      if (!allowedTypes.includes(file.type)) {
+        setUploadError('Invalid file type. Please select a valid video file (MP4, MOV, AVI, MKV, or WebM).');
+        return;
+      }
+
+      // Validate file size (max 500MB)
+      const maxSize = 500 * 1024 * 1024; // 500MB
+      if (file.size > maxSize) {
+        setUploadError('File is too large. Maximum file size is 500MB.');
+        return;
+      }
+
+      setSelectedFile(file);
+      setUploadError(null);
+      setValue('videoFile', file);
     }
   };
 
@@ -120,7 +217,7 @@ export default function AddVideoClip() {
                 id="name"
                 label="Video Clip Name"
                 autoFocus
-                disabled={loading || isSubmitting}
+                disabled={loading || isSubmitting || uploading}
                 error={!!errors.name}
                 helperText={errors.name?.message}
               />
@@ -143,12 +240,58 @@ export default function AddVideoClip() {
                 label="Description"
                 multiline
                 rows={4}
-                disabled={loading || isSubmitting}
+                disabled={loading || isSubmitting || uploading}
                 error={!!errors.description}
                 helperText={errors.description?.message}
               />
             )}
           />
+
+          {/* File Upload Section */}
+          <Box sx={{ mt: 3, mb: 2 }}>
+            <Typography variant="subtitle1" gutterBottom>
+              Video File (Optional)
+            </Typography>
+            <input
+              accept="video/*"
+              style={{ display: 'none' }}
+              id="video-file-input"
+              type="file"
+              onChange={handleFileSelect}
+              disabled={loading || isSubmitting || uploading}
+            />
+            <label htmlFor="video-file-input">
+              <Button
+                variant="outlined"
+                component="span"
+                startIcon={<CloudUploadIcon />}
+                disabled={loading || isSubmitting || uploading}
+                fullWidth
+                sx={{ mb: 1 }}
+              >
+                {selectedFile ? 'Change Video File' : 'Select Video File'}
+              </Button>
+            </label>
+            {selectedFile && (
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                Selected: {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
+              </Typography>
+            )}
+            {uploading && (
+              <Box sx={{ mt: 2 }}>
+                <Typography variant="body2" color="text.secondary" gutterBottom>
+                  Uploading video... {uploadProgress}%
+                </Typography>
+                <LinearProgress variant="determinate" value={uploadProgress} />
+              </Box>
+            )}
+          </Box>
+
+          {uploadError && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {uploadError}
+            </Alert>
+          )}
           {mutationError && (
             <Alert severity="error" sx={{ mt: 2 }}>
               {mutationError.message || 'Failed to add video clip'}
@@ -164,10 +307,10 @@ export default function AddVideoClip() {
             fullWidth
             variant="contained"
             color="primary"
-            disabled={loading || isSubmitting}
+            disabled={loading || isSubmitting || uploading}
             sx={{ mt: 3, mb: 2 }}
           >
-            {loading || isSubmitting ? (
+            {loading || isSubmitting || uploading ? (
               <CircularProgress size={24} color="inherit" />
             ) : (
               'Add Video Clip'
@@ -177,7 +320,7 @@ export default function AddVideoClip() {
             fullWidth
             variant="outlined"
             onClick={() => navigate('/')}
-            disabled={loading || isSubmitting}
+            disabled={loading || isSubmitting || uploading}
           >
             Cancel
           </Button>

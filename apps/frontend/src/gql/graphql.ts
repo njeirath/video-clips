@@ -19,11 +19,14 @@ export type Scalars = {
 export type CreateVideoClipInput = {
   description: Scalars['String']['input'];
   name: Scalars['String']['input'];
+  s3Key?: InputMaybe<Scalars['String']['input']>;
+  videoUrl?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type Mutation = {
   __typename?: 'Mutation';
   createVideoClip: VideoClip;
+  generateUploadUrl: PresignedUrlResponse;
   signup: SignupResult;
 };
 
@@ -33,9 +36,22 @@ export type MutationCreateVideoClipArgs = {
 };
 
 
+export type MutationGenerateUploadUrlArgs = {
+  contentType: Scalars['String']['input'];
+  fileName: Scalars['String']['input'];
+};
+
+
 export type MutationSignupArgs = {
   password: Scalars['String']['input'];
   username: Scalars['String']['input'];
+};
+
+export type PresignedUrlResponse = {
+  __typename?: 'PresignedUrlResponse';
+  s3Key: Scalars['String']['output'];
+  uploadUrl: Scalars['String']['output'];
+  videoUrl: Scalars['String']['output'];
 };
 
 export type Query = {
@@ -72,8 +88,10 @@ export type VideoClip = {
   description: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   name: Scalars['String']['output'];
+  s3Key?: Maybe<Scalars['String']['output']>;
   userEmail: Scalars['String']['output'];
   userId: Scalars['String']['output'];
+  videoUrl?: Maybe<Scalars['String']['output']>;
 };
 
 export type CreateVideoClipMutationVariables = Exact<{

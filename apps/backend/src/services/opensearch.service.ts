@@ -55,6 +55,8 @@ export class OpenSearchService {
                 description: { type: "text" },
                 userId: { type: "keyword" },
                 userEmail: { type: "keyword" },
+                s3Key: { type: "keyword" },
+                videoUrl: { type: "keyword" },
                 createdAt: { type: "date" },
               },
             },
@@ -74,6 +76,8 @@ export class OpenSearchService {
     description: string;
     userId: string;
     userEmail: string;
+    s3Key?: string;
+    videoUrl?: string;
     createdAt: string;
   }) {
     try {

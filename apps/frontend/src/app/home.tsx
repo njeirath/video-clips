@@ -21,6 +21,7 @@ const GET_VIDEO_CLIPS = graphql(`
       description
       userId
       userEmail
+      videoUrl
       createdAt
     }
   }
@@ -212,6 +213,17 @@ export default function Home() {
                     <Typography variant="body2" color="text.secondary">
                       {clip.description}
                     </Typography>
+                    {clip.videoUrl && (
+                      <Box sx={{ mt: 2 }}>
+                        <video
+                          controls
+                          style={{ width: '100%', maxHeight: 200, borderRadius: 4 }}
+                          src={clip.videoUrl}
+                        >
+                          Your browser does not support the video tag.
+                        </video>
+                      </Box>
+                    )}
                     <Typography
                       variant="caption"
                       color="text.secondary"

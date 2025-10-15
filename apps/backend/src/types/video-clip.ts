@@ -17,6 +17,12 @@ export class VideoClip {
   @Field(() => String)
   userEmail: string;
 
+  @Field(() => String, { nullable: true })
+  s3Key?: string;
+
+  @Field(() => String, { nullable: true })
+  videoUrl?: string;
+
   @Field(() => String)
   createdAt: string;
 }
@@ -28,4 +34,23 @@ export class CreateVideoClipInput {
 
   @Field(() => String)
   description: string;
+
+  @Field(() => String, { nullable: true })
+  s3Key?: string;
+
+  @Field(() => String, { nullable: true })
+  videoUrl?: string;
 }
+
+@ObjectType()
+export class PresignedUrlResponse {
+  @Field(() => String)
+  uploadUrl: string;
+
+  @Field(() => String)
+  s3Key: string;
+
+  @Field(() => String)
+  videoUrl: string;
+}
+
