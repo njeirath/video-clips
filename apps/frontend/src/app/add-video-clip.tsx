@@ -12,6 +12,12 @@ import CircularProgress from '@mui/material/CircularProgress';
 import LinearProgress from '@mui/material/LinearProgress';
 import VideoLibraryIcon from '@mui/icons-material/VideoLibrary';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import Chip from '@mui/material/Chip';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import Divider from '@mui/material/Divider';
 import { useMutation } from '@apollo/client/react';
 import { graphql } from '../gql/gql';
 import { getCurrentUser } from 'aws-amplify/auth';
@@ -42,6 +48,21 @@ interface VideoClipFormData {
   name: string;
   description: string;
   videoFile?: File;
+  script?: string;
+  duration?: number;
+  actors?: string;
+  tags?: string;
+  sourceType?: 'none' | 'show' | 'movie';
+  showTitle?: string;
+  showAirDate?: string;
+  showSeason?: number;
+  showEpisode?: number;
+  showStart?: number;
+  showEnd?: number;
+  movieTitle?: string;
+  movieReleaseDate?: string;
+  movieStart?: number;
+  movieEnd?: number;
 }
 
 export default function AddVideoClip() {
@@ -59,12 +80,30 @@ export default function AddVideoClip() {
     formState: { errors, isSubmitting, isSubmitSuccessful },
     reset,
     setValue,
+    watch,
   } = useForm<VideoClipFormData>({
     defaultValues: {
       name: '',
       description: '',
+      script: '',
+      duration: undefined,
+      actors: '',
+      tags: '',
+      sourceType: 'none',
+      showTitle: '',
+      showAirDate: '',
+      showSeason: undefined,
+      showEpisode: undefined,
+      showStart: undefined,
+      showEnd: undefined,
+      movieTitle: '',
+      movieReleaseDate: '',
+      movieStart: undefined,
+      movieEnd: undefined,
     },
   });
+
+  const sourceType = watch('sourceType');
 
   // Check authentication on mount
   useEffect(() => {
@@ -141,6 +180,39 @@ export default function AddVideoClip() {
         }
       }
 
+      // Parse actors and tags from comma-separated strings
+      const actors = data.actors?.trim() 
+        ? data.actors.split(',').map(a => a.trim()).filter(a => a.length > 0)
+        : undefined;
+      
+      const tags = data.tags?.trim()
+        ? data.tags.split(',').map(t => t.trim()).filter(t => t.length > 0)
+        : undefined;
+
+      // Build source object based on sourceType
+      let source = undefined;
+      if (data.sourceType === 'show' && data.showTitle?.trim()) {
+        source = {
+          show: {
+            title: data.showTitle.trim(),
+            airDate: data.showAirDate?.trim() || undefined,
+            season: data.showSeason || undefined,
+            episode: data.showEpisode || undefined,
+            start: data.showStart || undefined,
+            end: data.showEnd || undefined,
+          },
+        };
+      } else if (data.sourceType === 'movie' && data.movieTitle?.trim()) {
+        source = {
+          movie: {
+            title: data.movieTitle.trim(),
+            releaseDate: data.movieReleaseDate?.trim() || undefined,
+            start: data.movieStart || undefined,
+            end: data.movieEnd || undefined,
+          },
+        };
+      }
+
       // Create video clip with metadata
       await createVideoClip({
         variables: {
@@ -149,6 +221,11 @@ export default function AddVideoClip() {
             description: data.description.trim(),
             s3Key,
             videoUrl,
+            script: data.script?.trim() || undefined,
+            duration: data.duration || undefined,
+            actors,
+            tags,
+            source,
           },
         },
       });
@@ -185,7 +262,7 @@ export default function AddVideoClip() {
   };
 
   return (
-    <Container component="main" maxWidth="xs">
+    <Container component="main" maxWidth="md">
       <Box
         sx={{
           marginTop: 8,
@@ -247,7 +324,318 @@ export default function AddVideoClip() {
             )}
           />
 
+          {/* Optional Fields Section */}
+          <Divider sx={{ mt: 4, mb: 3 }}>
+            <Typography variant="subtitle2" color="text.secondary">
+              Optional Information
+            </Typography>
+          </Divider>
+
+          {/* Script Field */}
+          <Controller
+            name="script"
+            control={control}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                margin="normal"
+                fullWidth
+                id="script"
+                label="Script"
+                placeholder="Words spoken in the clip"
+                multiline
+                rows={3}
+                disabled={loading || isSubmitting || uploading}
+                helperText="The dialogue or words spoken in the clip"
+              />
+            )}
+          />
+
+          {/* Duration Field */}
+          <Controller
+            name="duration"
+            control={control}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                margin="normal"
+                fullWidth
+                id="duration"
+                label="Duration (seconds)"
+                type="number"
+                placeholder="e.g., 30.5"
+                disabled={loading || isSubmitting || uploading}
+                helperText="Duration of the clip in seconds"
+                inputProps={{ step: 0.1, min: 0 }}
+                onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+              />
+            )}
+          />
+
+          {/* Actors Field */}
+          <Controller
+            name="actors"
+            control={control}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                margin="normal"
+                fullWidth
+                id="actors"
+                label="Actors"
+                placeholder="e.g., Tom Hanks, Meg Ryan"
+                disabled={loading || isSubmitting || uploading}
+                helperText="Comma-separated list of actors appearing in the clip"
+              />
+            )}
+          />
+
+          {/* Tags Field */}
+          <Controller
+            name="tags"
+            control={control}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                margin="normal"
+                fullWidth
+                id="tags"
+                label="Tags"
+                placeholder="e.g., comedy, action, drama"
+                disabled={loading || isSubmitting || uploading}
+                helperText="Comma-separated tags for categorization"
+              />
+            )}
+          />
+
+          {/* Source Type Selection */}
+          <Divider sx={{ mt: 4, mb: 3 }}>
+            <Typography variant="subtitle2" color="text.secondary">
+              Source Information
+            </Typography>
+          </Divider>
+
+          <Controller
+            name="sourceType"
+            control={control}
+            render={({ field }) => (
+              <FormControl fullWidth margin="normal">
+                <InputLabel id="source-type-label">Source Type</InputLabel>
+                <Select
+                  {...field}
+                  labelId="source-type-label"
+                  id="sourceType"
+                  label="Source Type"
+                  disabled={loading || isSubmitting || uploading}
+                >
+                  <MenuItem value="none">None</MenuItem>
+                  <MenuItem value="show">TV Show/Series</MenuItem>
+                  <MenuItem value="movie">Movie</MenuItem>
+                </Select>
+              </FormControl>
+            )}
+          />
+
+          {/* Show Source Fields */}
+          {sourceType === 'show' && (
+            <Box sx={{ mt: 2, p: 2, bgcolor: 'background.default', borderRadius: 1 }}>
+              <Typography variant="subtitle2" gutterBottom>
+                TV Show Details
+              </Typography>
+              <Controller
+                name="showTitle"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    margin="normal"
+                    fullWidth
+                    id="showTitle"
+                    label="Show Title"
+                    placeholder="e.g., The Office"
+                    disabled={loading || isSubmitting || uploading}
+                  />
+                )}
+              />
+              <Controller
+                name="showAirDate"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    margin="normal"
+                    fullWidth
+                    id="showAirDate"
+                    label="Air Date"
+                    type="date"
+                    disabled={loading || isSubmitting || uploading}
+                    InputLabelProps={{ shrink: true }}
+                  />
+                )}
+              />
+              <Box sx={{ display: 'flex', gap: 2 }}>
+                <Controller
+                  name="showSeason"
+                  control={control}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      margin="normal"
+                      fullWidth
+                      id="showSeason"
+                      label="Season"
+                      type="number"
+                      placeholder="e.g., 1"
+                      disabled={loading || isSubmitting || uploading}
+                      inputProps={{ min: 1 }}
+                      onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                    />
+                  )}
+                />
+                <Controller
+                  name="showEpisode"
+                  control={control}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      margin="normal"
+                      fullWidth
+                      id="showEpisode"
+                      label="Episode"
+                      type="number"
+                      placeholder="e.g., 5"
+                      disabled={loading || isSubmitting || uploading}
+                      inputProps={{ min: 1 }}
+                      onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                    />
+                  )}
+                />
+              </Box>
+              <Box sx={{ display: 'flex', gap: 2 }}>
+                <Controller
+                  name="showStart"
+                  control={control}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      margin="normal"
+                      fullWidth
+                      id="showStart"
+                      label="Start Time (seconds)"
+                      type="number"
+                      placeholder="e.g., 120.5"
+                      disabled={loading || isSubmitting || uploading}
+                      inputProps={{ step: 0.1, min: 0 }}
+                      onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                    />
+                  )}
+                />
+                <Controller
+                  name="showEnd"
+                  control={control}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      margin="normal"
+                      fullWidth
+                      id="showEnd"
+                      label="End Time (seconds)"
+                      type="number"
+                      placeholder="e.g., 145.8"
+                      disabled={loading || isSubmitting || uploading}
+                      inputProps={{ step: 0.1, min: 0 }}
+                      onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                    />
+                  )}
+                />
+              </Box>
+            </Box>
+          )}
+
+          {/* Movie Source Fields */}
+          {sourceType === 'movie' && (
+            <Box sx={{ mt: 2, p: 2, bgcolor: 'background.default', borderRadius: 1 }}>
+              <Typography variant="subtitle2" gutterBottom>
+                Movie Details
+              </Typography>
+              <Controller
+                name="movieTitle"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    margin="normal"
+                    fullWidth
+                    id="movieTitle"
+                    label="Movie Title"
+                    placeholder="e.g., The Princess Bride"
+                    disabled={loading || isSubmitting || uploading}
+                  />
+                )}
+              />
+              <Controller
+                name="movieReleaseDate"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    margin="normal"
+                    fullWidth
+                    id="movieReleaseDate"
+                    label="Release Date"
+                    type="date"
+                    disabled={loading || isSubmitting || uploading}
+                    InputLabelProps={{ shrink: true }}
+                  />
+                )}
+              />
+              <Box sx={{ display: 'flex', gap: 2 }}>
+                <Controller
+                  name="movieStart"
+                  control={control}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      margin="normal"
+                      fullWidth
+                      id="movieStart"
+                      label="Start Time (seconds)"
+                      type="number"
+                      placeholder="e.g., 3456.2"
+                      disabled={loading || isSubmitting || uploading}
+                      inputProps={{ step: 0.1, min: 0 }}
+                      onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                    />
+                  )}
+                />
+                <Controller
+                  name="movieEnd"
+                  control={control}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      margin="normal"
+                      fullWidth
+                      id="movieEnd"
+                      label="End Time (seconds)"
+                      type="number"
+                      placeholder="e.g., 3489.7"
+                      disabled={loading || isSubmitting || uploading}
+                      inputProps={{ step: 0.1, min: 0 }}
+                      onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                    />
+                  )}
+                />
+              </Box>
+            </Box>
+          )}
+
           {/* File Upload Section */}
+          <Divider sx={{ mt: 4, mb: 3 }}>
+            <Typography variant="subtitle2" color="text.secondary">
+              Video File
+            </Typography>
+          </Divider>
           <Box sx={{ mt: 3, mb: 2 }}>
             <Typography variant="subtitle1" gutterBottom>
               Video File (Optional)
