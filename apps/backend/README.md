@@ -19,6 +19,8 @@ This is a Node.js backend application built with TypeScript that provides a Grap
 - ✅ JWT-based authentication using AWS Cognito
 - ✅ Video clip management with OpenSearch backend
 - ✅ User-specific video clip creation (authenticated users only)
+- ✅ S3 presigned URL generation for secure video uploads
+- ✅ Video file storage with CloudFront delivery
 
 ## Getting Started
 
@@ -41,6 +43,11 @@ OPENSEARCH_PROTOCOL=http
 # Cognito Configuration (defaults to production pool if not set)
 COGNITO_USER_POOL_ID=us-east-2_CV9d0tKnO
 COGNITO_CLIENT_ID=4lk87f6cg3o2dr9sbsldkv8ntq
+
+# S3 Configuration (for video uploads)
+AWS_REGION=us-east-2
+S3_VIDEO_BUCKET=dev-video-clips-storage
+CLOUDFRONT_DOMAIN=d1234567890abc.cloudfront.net
 ```
 
 **Note**: The app works without OpenSearch for development. It will log connection errors but continue to function.
@@ -86,6 +93,8 @@ type VideoClip {
   name: String!
   description: String!
   userId: String!
+  s3Key: String
+  videoUrl: String
   createdAt: String!
 }
 ```
@@ -95,6 +104,17 @@ type VideoClip {
 input CreateVideoClipInput {
   name: String!
   description: String!
+  s3Key: String
+  videoUrl: String
+}
+```
+
+#### PresignedUrlResponse
+```graphql
+type PresignedUrlResponse {
+  uploadUrl: String!
+  s3Key: String!
+  videoUrl: String!
 }
 ```
 
@@ -291,8 +311,8 @@ apps/backend/
 
 - ✅ ~~Add mutations for creating video clips~~ (COMPLETED)
 - ✅ ~~Add authentication and authorization~~ (COMPLETED)
+- ✅ ~~Implement file upload for actual video content~~ (COMPLETED)
 - Add update and delete mutations for video clips
-- Implement file upload for actual video content
 - Add pagination and filtering for video queries
 - Add subscriptions for real-time updates
 - Add AWS OpenSearch Service integration for production

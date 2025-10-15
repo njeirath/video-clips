@@ -5,6 +5,7 @@ A monorepo for video clips applications and libraries, powered by [Nx](https://n
 ## Features
 
 - 🎬 **Video Clip Management**: Add, view, and manage video clips
+- 📹 **Video File Upload**: Upload video files directly to S3 with CloudFront delivery
 - 🔐 **Authentication**: AWS Cognito integration for secure user authentication
 - 📊 **OpenSearch Backend**: Scalable data storage using OpenSearch
 - 🚀 **GraphQL API**: Type-safe API with TypeGraphQL
@@ -53,6 +54,8 @@ A Node.js application with TypeScript that provides a GraphQL API using Apollo S
 - JWT-based authentication using AWS Cognito
 - OpenSearch integration for video clips storage
 - Video clip management (create, list)
+- S3 presigned URL generation for secure video uploads
+- Video file storage with CloudFront delivery
 
 **Start the backend:**
 ```bash
@@ -87,7 +90,18 @@ mutation CreateVideoClip($input: CreateVideoClipInput!) {
     name
     description
     userId
+    s3Key
+    videoUrl
     createdAt
+  }
+}
+
+# Generate presigned URL for video upload (requires authentication)
+mutation GenerateUploadUrl($fileName: String!, $contentType: String!) {
+  generateUploadUrl(fileName: $fileName, contentType: $contentType) {
+    uploadUrl
+    s3Key
+    videoUrl
   }
 }
 ```
