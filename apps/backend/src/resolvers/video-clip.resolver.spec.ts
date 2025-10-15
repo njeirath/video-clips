@@ -8,6 +8,7 @@ jest.mock("../services/opensearch.service", () => ({
     createVideoClip: jest.fn().mockResolvedValue({}),
     getAllVideoClips: jest.fn().mockResolvedValue([]),
     getVideoClipsByUser: jest.fn().mockResolvedValue([]),
+    searchVideoClips: jest.fn().mockResolvedValue({ clips: [], total: 0 }),
   },
 }));
 
