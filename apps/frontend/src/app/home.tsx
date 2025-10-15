@@ -1,4 +1,5 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import Box from '@mui/material/Box';
@@ -12,6 +13,121 @@ import SearchIcon from '@mui/icons-material/Search';
 import InputAdornment from '@mui/material/InputAdornment';
 import { useQuery } from '@apollo/client/react';
 import { graphql } from '../gql/gql';
+
+
+// VideoClipPlayer component: only loads video when play is clicked
+type VideoClipPlayerProps = {
+  clip: {
+    id: string;
+    name: string;
+    description?: string;
+    videoUrl: string;
+    createdAt: string;
+    // Optionally add thumbnailUrl if available in your backend
+    thumbnailUrl?: string;
+  };
+};
+
+function VideoClipPlayer({ clip }: VideoClipPlayerProps) {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  const handlePlay = () => {
+    setIsPlaying(true);
+    setTimeout(() => {
+      videoRef.current?.play();
+    }, 0);
+  };
+
+  // fallback thumbnail (optional): use a static image or color if not present
+  const poster = clip.thumbnailUrl || undefined;
+  const hasVideo = !!clip.videoUrl;
+  return (
+    <div style={{ flex: '1 0 30%', minWidth: 300, maxWidth: 400 }}>
+      <Card
+        sx={{
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          transition: 'transform 0.2s, box-shadow 0.2s',
+          minHeight: 200,
+          '&:hover': {
+            transform: 'translateY(-4px)',
+            boxShadow: 4,
+          },
+        }}
+      >
+        <CardContent sx={{ flexGrow: 1 }}>
+          <Typography variant="h6" component="h2" gutterBottom>
+            {clip.name}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {clip.description}
+          </Typography>
+          {hasVideo ? (
+            isPlaying ? (
+              <Box sx={{ mt: 2 }}>
+                <video
+                  ref={videoRef}
+                  controls
+                  style={{ width: '100%', maxHeight: 200, borderRadius: 4 }}
+                  src={clip.videoUrl}
+                  poster={poster}
+                  autoPlay
+                >
+                  Your browser does not support the video tag.
+                </video>
+              </Box>
+            ) : (
+              <Box sx={{ mt: 2, position: 'relative', width: '100%', maxHeight: 200, background: '#000', borderRadius: 4, overflow: 'hidden' }}>
+                {poster ? (
+                  <img
+                    src={poster}
+                    alt={clip.name}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                ) : (
+                  <div style={{ width: '100%', height: 200, background: '#222' }} />
+                )}
+                <button
+                  onClick={handlePlay}
+                  style={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    fontSize: 32,
+                    background: 'rgba(0,0,0,0.5)',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '50%',
+                    width: 64,
+                    height: 64,
+                    cursor: 'pointer',
+                  }}
+                  aria-label={`Play ${clip.name}`}
+                >
+                  ▶
+                </button>
+              </Box>
+            )
+          ) : (
+            <Box sx={{ mt: 2, width: '100%', height: 200, background: '#eee', borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Typography color="text.secondary">No video available</Typography>
+            </Box>
+          )}
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ display: 'block', mt: 2 }}
+          >
+            Added: {new Date(clip.createdAt).toLocaleDateString()}
+          </Typography>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
 
 const GET_VIDEO_CLIPS = graphql(`
   query GetVideoClips($searchQuery: String, $offset: Int, $limit: Int) {
@@ -192,48 +308,7 @@ export default function Home() {
         {allClips.length > 0 && (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24 }}>
             {allClips.map((clip) => (
-              <div style={{ flex: '1 0 30%', minWidth: 300, maxWidth: 400 }} key={clip.id}>
-                <Card
-                  sx={{
-                    height: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    transition: 'transform 0.2s, box-shadow 0.2s',
-                    minHeight: 200,
-                    '&:hover': {
-                      transform: 'translateY(-4px)',
-                      boxShadow: 4,
-                    },
-                  }}
-                >
-                  <CardContent sx={{ flexGrow: 1 }}>
-                    <Typography variant="h6" component="h2" gutterBottom>
-                      {clip.name}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {clip.description}
-                    </Typography>
-                    {clip.videoUrl && (
-                      <Box sx={{ mt: 2 }}>
-                        <video
-                          controls
-                          style={{ width: '100%', maxHeight: 200, borderRadius: 4 }}
-                          src={clip.videoUrl}
-                        >
-                          Your browser does not support the video tag.
-                        </video>
-                      </Box>
-                    )}
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      sx={{ display: 'block', mt: 2 }}
-                    >
-                      Added: {new Date(clip.createdAt).toLocaleDateString()}
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </div>
+              <VideoClipPlayer key={clip.id} clip={clip} />
             ))}
           </div>
         )}
