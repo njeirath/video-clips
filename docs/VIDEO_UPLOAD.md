@@ -168,26 +168,14 @@ Tests include:
 ### Prerequisites
 
 1. AWS account with appropriate permissions
-2. CDK CLI installed
+2. S3 bucket and CloudFront distribution already provisioned (via CDK or AWS Console)
 3. Environment variables configured
 
-### Deploy S3 and CloudFront
+### Configure Backend Environment Variables
 
-```bash
-cd apps/cdk
-cdk deploy DevStorage
-```
-
-This will create:
-- S3 bucket: `dev-video-clips-storage`
-- CloudFront distribution
-- CloudFront Origin Access Identity
-
-### Update Environment Variables
-
-After deployment, update your backend `.env` file with:
-- `S3_VIDEO_BUCKET`: Output from CDK deployment
-- `CLOUDFRONT_DOMAIN`: Output from CDK deployment
+Update your backend `.env` file with the S3 and CloudFront details:
+- `S3_VIDEO_BUCKET`: Name of the S3 bucket for video storage
+- `CLOUDFRONT_DOMAIN`: CloudFront distribution domain name
 
 ## Monitoring
 
