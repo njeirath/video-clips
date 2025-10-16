@@ -1,6 +1,10 @@
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { v4 as uuidv4 } from 'uuid';
+import { customAlphabet } from 'nanoid';
+import Handlebars from 'handlebars';
+import * as fs from 'fs';
+import * as path from 'path';
 
 export class S3Service {
   private s3Client: S3Client;
@@ -79,6 +83,90 @@ export class S3Service {
       s3Key,
       videoUrl,
     };
+  }
+
+  /**
+   * Generate and upload a static HTML file with Open Graph meta tags for a video clip
+   * @param clipData - Video clip data including name, description, videoUrl, etc.
+   * @returns The CloudFront URL to the static HTML page
+   */
+  async generateSharePage(clipData: {
+    id: string;
+    name: string;
+    description: string;
+    videoUrl?: string;
+    source?: any;
+  }): Promise<string> {
+    // Generate a short alphanumeric ID (8 characters, URL-safe)
+    const nanoid = customAlphabet('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz', 8);
+    const shortId = nanoid();
+    const s3Key = `s/${shortId}`;
+
+    // Build the title with source information
+    let metaTitle = clipData.name;
+    if (clipData.source) {
+      const source = clipData.source;
+      if (source.type === 'show' && source.title) {
+        metaTitle = `${clipData.name} - ${source.title}`;
+        if (source.season) {
+          metaTitle += ` S${source.season}`;
+          if (source.episode) {
+            metaTitle += `E${source.episode}`;
+          }
+        }
+      } else if (source.type === 'movie' && source.title) {
+        metaTitle = `${clipData.name} - ${source.title}`;
+      }
+    }
+
+    // Build the description
+    const metaDescription = clipData.description || 'Video clip';
+
+    // Get the share URL
+    const shareUrl = this.cloudFrontDomain
+      ? `https://${this.cloudFrontDomain}/${s3Key}`
+      : `https://${this.bucketName}.s3.${process.env.AWS_REGION || 'us-east-2'}.amazonaws.com/${s3Key}`;
+
+    // Fallback image (app logo)
+    const fallbackImage = this.cloudFrontDomain
+      ? `https://${this.cloudFrontDomain}/logo-512.png`
+      : '/logo-512.png';
+
+    // Read and compile the Handlebars template
+    // In production: dist/backend/apps/backend/src/services/ -> dist/backend/templates/
+    // In development: apps/backend/src/services/ -> apps/backend/src/templates/
+    let templatePath: string;
+    if (process.env.NODE_ENV === 'production' || __dirname.includes('dist/backend')) {
+      // Production: dist/backend/templates/share-page.hbs
+      templatePath = path.join(__dirname, '../templates/share-page.hbs');
+    } else {
+      // Development: Relative path to templates folder
+      templatePath = path.join(__dirname, '../templates/share-page.hbs');
+    }
+    const templateSource = fs.readFileSync(templatePath, 'utf-8');
+    const template = Handlebars.compile(templateSource);
+
+    // Render the HTML with template data
+    const htmlContent = template({
+      metaTitle,
+      metaDescription,
+      shareUrl,
+      videoUrl: clipData.videoUrl,
+      fallbackImage,
+    });
+
+    // Upload the HTML file to S3
+    const command = new PutObjectCommand({
+      Bucket: this.bucketName,
+      Key: s3Key,
+      Body: htmlContent,
+      ContentType: 'text/html',
+      CacheControl: 'public, max-age=31536000', // Cache for 1 year
+    });
+
+    await this.s3Client.send(command);
+
+    return shareUrl;
   }
 }
 

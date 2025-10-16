@@ -12,6 +12,7 @@ type VideoClip {
   userEmail: String!
   s3Key: String
   videoUrl: String
+  shareUrl: String
   script: String
   duration: Float
   actors: [String!]

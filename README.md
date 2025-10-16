@@ -11,6 +11,7 @@ A monorepo for video clips applications and libraries, powered by [Nx](https://n
 - 🚀 **GraphQL API**: Type-safe API with TypeGraphQL
 - ⚛️ **React Frontend**: Modern React 19 app with Material-UI
 - 🏗️ **Infrastructure as Code**: AWS CDK for cloud infrastructure
+- 🔗 **Rich Link Previews**: Open Graph and Twitter Card meta tags for social sharing
 
 ## Getting Started
 
@@ -40,6 +41,12 @@ This repository uses Nx as a build system with a focus on monorepo development:
 
 A React application built with Vite and React Router.
 
+**Features:**
+- Video clip browsing and search
+- Share button to copy shareable links with rich preview support
+- Video playback on demand
+- Real-time search with debouncing
+
 **Start the frontend:**
 ```bash
 npx nx serve frontend
@@ -56,6 +63,7 @@ A Node.js application with TypeScript that provides a GraphQL API using Apollo S
 - Video clip management (create, list)
 - S3 presigned URL generation for secure video uploads
 - Video file storage with CloudFront delivery
+- **Automatic generation of static HTML pages with Open Graph and Twitter Card meta tags for rich link previews**
 
 **Start the backend:**
 ```bash
@@ -63,6 +71,9 @@ npx nx serve backend
 ```
 
 The GraphQL endpoint will be available at `http://localhost:3000/graphql`.
+
+**Rich Link Previews:**
+When creating a video clip, the backend automatically generates a static HTML page with Open Graph and Twitter Card meta tags. This page is uploaded to S3 and served via CloudFront, enabling rich previews in messaging apps and social media platforms without requiring JavaScript execution. See [docs/OPEN_GRAPH_META_TAGS.md](docs/OPEN_GRAPH_META_TAGS.md) for details.
 
 **Example GraphQL queries:**
 

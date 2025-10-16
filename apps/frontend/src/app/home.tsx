@@ -10,7 +10,11 @@ import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
 import Grid from '@mui/material/Grid';
 import SearchIcon from '@mui/icons-material/Search';
+import ShareIcon from '@mui/icons-material/Share';
 import InputAdornment from '@mui/material/InputAdornment';
+import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
+import Snackbar from '@mui/material/Snackbar';
 import { useQuery } from '@apollo/client/react';
 import { graphql } from '../gql/gql';
 
@@ -22,6 +26,7 @@ type VideoClipPlayerProps = {
     name: string;
     description?: string;
     videoUrl: string;
+    shareUrl?: string;
     createdAt: string;
     // Optionally add thumbnailUrl if available in your backend
     thumbnailUrl?: string;
@@ -30,6 +35,7 @@ type VideoClipPlayerProps = {
 
 function VideoClipPlayer({ clip }: VideoClipPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [copySuccess, setCopySuccess] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const handlePlay = () => {
@@ -37,6 +43,21 @@ function VideoClipPlayer({ clip }: VideoClipPlayerProps) {
     setTimeout(() => {
       videoRef.current?.play();
     }, 0);
+  };
+
+  const handleShare = async () => {
+    if (clip.shareUrl) {
+      try {
+        await navigator.clipboard.writeText(clip.shareUrl);
+        setCopySuccess(true);
+      } catch (err) {
+        console.error('Failed to copy share URL:', err);
+      }
+    }
+  };
+
+  const handleCloseSnackbar = () => {
+    setCopySuccess(false);
   };
 
   // fallback thumbnail (optional): use a static image or color if not present
@@ -58,9 +79,18 @@ function VideoClipPlayer({ clip }: VideoClipPlayerProps) {
         }}
       >
         <CardContent sx={{ flexGrow: 1 }}>
-          <Typography variant="h6" component="h2" gutterBottom>
-            {clip.name}
-          </Typography>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <Typography variant="h6" component="h2" gutterBottom sx={{ flex: 1 }}>
+              {clip.name}
+            </Typography>
+            {clip.shareUrl && (
+              <Tooltip title="Copy share link">
+                <IconButton onClick={handleShare} size="small" color="primary">
+                  <ShareIcon />
+                </IconButton>
+              </Tooltip>
+            )}
+          </Box>
           <Typography variant="body2" color="text.secondary">
             {clip.description}
           </Typography>
@@ -125,6 +155,12 @@ function VideoClipPlayer({ clip }: VideoClipPlayerProps) {
           </Typography>
         </CardContent>
       </Card>
+      <Snackbar
+        open={copySuccess}
+        autoHideDuration={3000}
+        onClose={handleCloseSnackbar}
+        message="Share link copied to clipboard!"
+      />
     </div>
   );
 }
@@ -138,6 +174,7 @@ const GET_VIDEO_CLIPS = graphql(`
       userId
       userEmail
       videoUrl
+      shareUrl
       createdAt
     }
   }
