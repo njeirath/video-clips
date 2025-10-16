@@ -2,6 +2,9 @@ import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { v4 as uuidv4 } from 'uuid';
 import { customAlphabet } from 'nanoid';
+import Handlebars from 'handlebars';
+import * as fs from 'fs';
+import * as path from 'path';
 
 export class S3Service {
   private s3Client: S3Client;
@@ -129,48 +132,28 @@ export class S3Service {
       ? `https://${this.cloudFrontDomain}/logo-512.png`
       : '/logo-512.png';
 
-    // Generate the HTML content with Open Graph and Twitter Card meta tags
-    const htmlContent = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <title>${this.escapeHtml(metaTitle)}</title>
-  <meta name="description" content="${this.escapeHtml(metaDescription)}" />
-  
-  <!-- Open Graph meta tags -->
-  <meta property="og:title" content="${this.escapeHtml(metaTitle)}" />
-  <meta property="og:description" content="${this.escapeHtml(metaDescription)}" />
-  <meta property="og:url" content="${shareUrl}" />
-  <meta property="og:type" content="video.other" />
-  ${clipData.videoUrl ? `<meta property="og:video" content="${clipData.videoUrl}" />
-  <meta property="og:video:url" content="${clipData.videoUrl}" />
-  <meta property="og:video:secure_url" content="${clipData.videoUrl}" />
-  <meta property="og:video:type" content="video/mp4" />` : ''}
-  <meta property="og:image" content="${fallbackImage}" />
-  
-  <!-- Twitter Card meta tags -->
-  <meta name="twitter:card" content="${clipData.videoUrl ? 'player' : 'summary'}" />
-  <meta name="twitter:title" content="${this.escapeHtml(metaTitle)}" />
-  <meta name="twitter:description" content="${this.escapeHtml(metaDescription)}" />
-  <meta name="twitter:image" content="${fallbackImage}" />
-  ${clipData.videoUrl ? `<meta name="twitter:player" content="${shareUrl}" />
-  <meta name="twitter:player:width" content="1280" />
-  <meta name="twitter:player:height" content="720" />
-  <meta name="twitter:player:stream" content="${clipData.videoUrl}" />
-  <meta name="twitter:player:stream:content_type" content="video/mp4" />` : ''}
-  
-  <meta http-equiv="refresh" content="0; url=/" />
-</head>
-<body>
-  <h1>${this.escapeHtml(metaTitle)}</h1>
-  <p>${this.escapeHtml(metaDescription)}</p>
-  ${clipData.videoUrl ? `<video controls style="width: 100%; max-width: 800px;">
-    <source src="${clipData.videoUrl}" type="video/mp4" />
-    Your browser does not support the video tag.
-  </video>` : '<p>No video available</p>'}
-  <p><a href="/">View all clips</a></p>
-</body>
-</html>`;
+    // Read and compile the Handlebars template
+    // In production: dist/backend/apps/backend/src/services/ -> dist/backend/templates/
+    // In development: apps/backend/src/services/ -> apps/backend/src/templates/
+    let templatePath: string;
+    if (process.env.NODE_ENV === 'production' || __dirname.includes('dist/backend')) {
+      // Production: Go up to dist/backend then into templates
+      templatePath = path.join(__dirname, '../../../../../templates/share-page.hbs');
+    } else {
+      // Development: Relative path to templates folder
+      templatePath = path.join(__dirname, '../templates/share-page.hbs');
+    }
+    const templateSource = fs.readFileSync(templatePath, 'utf-8');
+    const template = Handlebars.compile(templateSource);
+
+    // Render the HTML with template data
+    const htmlContent = template({
+      metaTitle,
+      metaDescription,
+      shareUrl,
+      videoUrl: clipData.videoUrl,
+      fallbackImage,
+    });
 
     // Upload the HTML file to S3
     const command = new PutObjectCommand({
@@ -184,20 +167,6 @@ export class S3Service {
     await this.s3Client.send(command);
 
     return shareUrl;
-  }
-
-  /**
-   * Escape HTML special characters
-   */
-  private escapeHtml(text: string): string {
-    const map: { [key: string]: string } = {
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;',
-      '"': '&quot;',
-      "'": '&#039;',
-    };
-    return text.replace(/[&<>"']/g, (m) => map[m]);
   }
 }
 

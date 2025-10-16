@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>{{metaTitle}}</title>
+  <meta name="description" content="{{metaDescription}}" />
+  
+  <!-- Open Graph meta tags -->
+  <meta property="og:title" content="{{metaTitle}}" />
+  <meta property="og:description" content="{{metaDescription}}" />
+  <meta property="og:url" content="{{shareUrl}}" />
+  <meta property="og:type" content="video.other" />
+  {{#if videoUrl}}
+  <meta property="og:video" content="{{videoUrl}}" />
+  <meta property="og:video:url" content="{{videoUrl}}" />
+  <meta property="og:video:secure_url" content="{{videoUrl}}" />
+  <meta property="og:video:type" content="video/mp4" />
+  {{/if}}
+  <meta property="og:image" content="{{fallbackImage}}" />
+  
+  <!-- Twitter Card meta tags -->
+  <meta name="twitter:card" content="{{#if videoUrl}}player{{else}}summary{{/if}}" />
+  <meta name="twitter:title" content="{{metaTitle}}" />
+  <meta name="twitter:description" content="{{metaDescription}}" />
+  <meta name="twitter:image" content="{{fallbackImage}}" />
+  {{#if videoUrl}}
+  <meta name="twitter:player" content="{{shareUrl}}" />
+  <meta name="twitter:player:width" content="1280" />
+  <meta name="twitter:player:height" content="720" />
+  <meta name="twitter:player:stream" content="{{videoUrl}}" />
+  <meta name="twitter:player:stream:content_type" content="video/mp4" />
+  {{/if}}
+  
+  <meta http-equiv="refresh" content="0; url=/" />
+</head>
+<body>
+  <h1>{{metaTitle}}</h1>
+  <p>{{metaDescription}}</p>
+  {{#if videoUrl}}
+  <video controls style="width: 100%; max-width: 800px;">
+    <source src="{{videoUrl}}" type="video/mp4" />
+    Your browser does not support the video tag.
+  </video>
+  {{else}}
+  <p>No video available</p>
+  {{/if}}
+  <p><a href="/">View all clips</a></p>
+</body>
+</html>
