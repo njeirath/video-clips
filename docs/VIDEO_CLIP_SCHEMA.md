@@ -48,15 +48,15 @@ Example:
 "duration": 120.5
 ```
 
-### actors (Array of Strings)
-List of actors who appear in the clip. Useful for:
-- Searching clips by actor
-- Organizing clips by cast
+### characters (Array of Strings)
+List of characters who appear in the clip. Useful for:
+- Searching clips by character
+- Organizing clips by characters
 - Discovering related clips
 
 Example:
 ```json
-"actors": ["Mandy Patinkin", "Cary Elwes"]
+"characters": ["Inigo Montoya", "The Man in Black"]
 ```
 
 ### tags (Array of Strings)
@@ -68,6 +68,30 @@ List of tags relevant to the clip. Useful for:
 Example:
 ```json
 "tags": ["comedy", "action", "revenge", "sword-fighting"]
+```
+
+### thumbnailUrl (String)
+URL to a preview image for the video clip. Useful for:
+- Displaying thumbnail previews in lists and grids
+- Social media sharing with Open Graph images
+- Improving visual browsing experience
+
+Example:
+```json
+"thumbnailUrl": "https://cdn.example.com/previews/clip-123.jpg"
+```
+
+### blurhash (String)
+Compact representation of the thumbnail for fast placeholder rendering. Useful for:
+- Showing blurred placeholders while images load
+- Improving perceived performance
+- Creating visually appealing loading states
+
+Learn more about BlurHash: https://blurha.sh/
+
+Example:
+```json
+"blurhash": "U1F5E9kCj@ay~qj[ayj[ayj[ayj["
 ```
 
 ## Source Information
@@ -180,8 +204,10 @@ input CreateVideoClipInput {
   videoUrl: String
   script: String
   duration: Float
-  actors: [String!]
+  characters: [String!]
   tags: [String!]
+  thumbnailUrl: String
+  blurhash: String
   source: VideoClipSourceInput
 }
 
@@ -237,8 +263,10 @@ mutation {
     videoUrl: "https://cdn.example.com/videos/user-123/clip-789.mp4"
     script: "Hello. My name is Inigo Montoya. You killed my father. Prepare to die."
     duration: 33.5
-    actors: ["Mandy Patinkin", "Christopher Guest"]
+    characters: ["Inigo Montoya", "The Man in Black"]
     tags: ["action", "sword-fight", "revenge", "classic"]
+    thumbnailUrl: "https://cdn.example.com/previews/clip-princess-bride-duel.jpg"
+    blurhash: "U1F5E9kCj@ay~qj[ayj[ayj[ayj["
     source: {
       movie: {
         title: "The Princess Bride"
@@ -252,8 +280,10 @@ mutation {
     name
     script
     duration
-    actors
+    characters
     tags
+    thumbnailUrl
+    blurhash
     source {
       ... on MovieSource {
         title
@@ -275,7 +305,7 @@ mutation {
     description: "Michael hosts the Dundies awards"
     script: "And the Dundie goes to..."
     duration: 45.2
-    actors: ["Steve Carell", "Jenna Fischer"]
+    characters: ["Michael Scott", "Pam Beesly"]
     tags: ["comedy", "office-party", "awards"]
     source: {
       show: {
@@ -309,10 +339,10 @@ The video clip search functionality includes the new enrichment fields:
 - **name**: Boosted 2x in search relevance
 - **description**: Standard search relevance
 - **script**: Standard search relevance
-- **actors**: Standard search relevance
+- **characters**: Standard search relevance
 - **tags**: Standard search relevance
 
-This allows users to search for clips by dialogue, actors, or tags in addition to the clip name and description.
+This allows users to search for clips by dialogue, characters, or tags in addition to the clip name and description.
 
 ## OpenSearch Index Mappings
 
@@ -329,8 +359,10 @@ The OpenSearch index includes the following field mappings:
   "videoUrl": { "type": "keyword" },
   "script": { "type": "text" },
   "duration": { "type": "float" },
-  "actors": { "type": "keyword" },
+  "characters": { "type": "keyword" },
   "tags": { "type": "keyword" },
+  "thumbnailUrl": { "type": "keyword" },
+  "blurhash": { "type": "keyword" },
   "source": {
     "type": "object",
     "properties": {
@@ -350,7 +382,7 @@ The OpenSearch index includes the following field mappings:
 
 ## Notes
 
-- All new fields (script, duration, actors, tags, source) are **optional** to maintain backward compatibility
+- All new fields (script, duration, characters, tags, source, thumbnailUrl, blurhash) are **optional** to maintain backward compatibility
 - The source field uses a union type to support both show and movie sources
 - When providing a source, you must specify either `show` OR `movie`, not both
 - Time values (start, end, duration) are in seconds and support decimal precision

@@ -15,8 +15,10 @@ type VideoClip {
   shareUrl: String
   script: String
   duration: Float
-  actors: [String!]
+  characters: [String!]
   tags: [String!]
+  thumbnailUrl: String
+  blurhash: String
   source: VideoClipSource
   createdAt: String!
 }
@@ -51,8 +53,10 @@ input CreateVideoClipInput {
   videoUrl: String
   script: String
   duration: Float
-  actors: [String!]
+  characters: [String!]
   tags: [String!]
+  thumbnailUrl: String
+  blurhash: String
   source: VideoClipSourceInput
 }
 

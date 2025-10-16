@@ -50,8 +50,10 @@ interface VideoClipFormData {
   videoFile?: File;
   script?: string;
   duration?: number;
-  actors?: string;
+  characters?: string;
   tags?: string;
+  thumbnailUrl?: string;
+  blurhash?: string;
   sourceType?: 'none' | 'show' | 'movie';
   showTitle?: string;
   showAirDate?: string;
@@ -87,8 +89,10 @@ export default function AddVideoClip() {
       description: '',
       script: '',
       duration: undefined,
-      actors: '',
+      characters: '',
       tags: '',
+      thumbnailUrl: '',
+      blurhash: '',
       sourceType: 'none',
       showTitle: '',
       showAirDate: '',
@@ -180,9 +184,9 @@ export default function AddVideoClip() {
         }
       }
 
-      // Parse actors and tags from comma-separated strings
-      const actors = data.actors?.trim() 
-        ? data.actors.split(',').map(a => a.trim()).filter(a => a.length > 0)
+      // Parse characters and tags from comma-separated strings
+      const characters = data.characters?.trim() 
+        ? data.characters.split(',').map(a => a.trim()).filter(a => a.length > 0)
         : undefined;
       
       const tags = data.tags?.trim()
@@ -223,8 +227,10 @@ export default function AddVideoClip() {
             videoUrl,
             script: data.script?.trim() || undefined,
             duration: data.duration || undefined,
-            actors,
+            characters,
             tags,
+            thumbnailUrl: data.thumbnailUrl?.trim() || undefined,
+            blurhash: data.blurhash?.trim() || undefined,
             source,
           },
         },
@@ -372,20 +378,20 @@ export default function AddVideoClip() {
             )}
           />
 
-          {/* Actors Field */}
+          {/* Characters Field */}
           <Controller
-            name="actors"
+            name="characters"
             control={control}
             render={({ field }) => (
               <TextField
                 {...field}
                 margin="normal"
                 fullWidth
-                id="actors"
-                label="Actors"
-                placeholder="e.g., Tom Hanks, Meg Ryan"
+                id="characters"
+                label="Characters"
+                placeholder="e.g., Inigo Montoya, The Man in Black"
                 disabled={loading || isSubmitting || uploading}
-                helperText="Comma-separated list of actors appearing in the clip"
+                helperText="Comma-separated list of characters appearing in the clip"
               />
             )}
           />
@@ -404,6 +410,42 @@ export default function AddVideoClip() {
                 placeholder="e.g., comedy, action, drama"
                 disabled={loading || isSubmitting || uploading}
                 helperText="Comma-separated tags for categorization"
+              />
+            )}
+          />
+
+          {/* Thumbnail URL Field */}
+          <Controller
+            name="thumbnailUrl"
+            control={control}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                margin="normal"
+                fullWidth
+                id="thumbnailUrl"
+                label="Thumbnail URL"
+                placeholder="e.g., https://cdn.example.com/previews/clip-123.jpg"
+                disabled={loading || isSubmitting || uploading}
+                helperText="URL to a preview image for the video clip"
+              />
+            )}
+          />
+
+          {/* BlurHash Field */}
+          <Controller
+            name="blurhash"
+            control={control}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                margin="normal"
+                fullWidth
+                id="blurhash"
+                label="BlurHash"
+                placeholder="e.g., U1F5E9kCj@ay~qj[ayj[ayj[ayj["
+                disabled={loading || isSubmitting || uploading}
+                helperText="Compact representation of thumbnail for fast placeholder rendering"
               />
             )}
           />

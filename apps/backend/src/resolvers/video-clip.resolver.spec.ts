@@ -194,7 +194,7 @@ describe("VideoClipResolver", () => {
         description: "Test Description",
         script: "Hello, world!",
         duration: 120.5,
-        actors: ["Actor 1", "Actor 2"],
+        characters: ["Character 1", "Character 2"],
         tags: ["comedy", "action"],
       };
       const context: Context = {
@@ -206,7 +206,7 @@ describe("VideoClipResolver", () => {
 
       expect(result.script).toBe("Hello, world!");
       expect(result.duration).toBe(120.5);
-      expect(result.actors).toEqual(["Actor 1", "Actor 2"]);
+      expect(result.characters).toEqual(["Character 1", "Character 2"]);
       expect(result.tags).toEqual(["comedy", "action"]);
     });
 
