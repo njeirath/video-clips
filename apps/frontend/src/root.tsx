@@ -1,7 +1,6 @@
 import { ApolloClient, InMemoryCache, createHttpLink } from '@apollo/client';
 import { setContext } from '@apollo/client/link/context';
 import { ApolloProvider } from '@apollo/client/react';
-import { HelmetProvider } from 'react-helmet-async';
 import App from './app/app';
 import { fetchAuthSession } from 'aws-amplify/auth';
 
@@ -40,11 +39,9 @@ const client = new ApolloClient({
 
 export function Root() {
   return (
-    <HelmetProvider>
-      <ApolloProvider client={client}>
-        <App />
-      </ApolloProvider>
-    </HelmetProvider>
+    <ApolloProvider client={client}>
+      <App />
+    </ApolloProvider>
   );
 }
 

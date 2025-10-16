@@ -20,6 +20,9 @@ jest.mock("../services/s3.service", () => ({
       s3Key: "videos/user-123/test-video.mp4",
       videoUrl: "https://cloudfront.example.com/videos/user-123/test-video.mp4",
     }),
+    generateSharePage: jest.fn().mockResolvedValue(
+      "https://cloudfront.example.com/s/abc123"
+    ),
   },
 }));
 

@@ -75,6 +75,9 @@ export class VideoClip {
   videoUrl?: string;
 
   @Field(() => String, { nullable: true })
+  shareUrl?: string;
+
+  @Field(() => String, { nullable: true })
   script?: string;
 
   @Field(() => Float, { nullable: true })

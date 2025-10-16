@@ -110,6 +110,7 @@ export type VideoClip = {
   name: Scalars['String']['output'];
   s3Key?: Maybe<Scalars['String']['output']>;
   script?: Maybe<Scalars['String']['output']>;
+  shareUrl?: Maybe<Scalars['String']['output']>;
   source?: Maybe<VideoClipSource>;
   tags?: Maybe<Array<Scalars['String']['output']>>;
   userEmail: Scalars['String']['output'];

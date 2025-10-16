@@ -84,14 +84,26 @@ export class VideoClipResolver {
       }
     }
 
+    const clipId = uuidv4();
+
+    // Generate the static HTML share page with Open Graph meta tags
+    const shareUrl = await s3Service.generateSharePage({
+      id: clipId,
+      name: input.name.trim(),
+      description: input.description.trim(),
+      videoUrl: input.videoUrl,
+      source,
+    });
+
     const videoClip = {
-      id: uuidv4(),
+      id: clipId,
       name: input.name.trim(),
       description: input.description.trim(),
       userId: ctx.userId,
       userEmail: ctx.userEmail,
       s3Key: input.s3Key,
       videoUrl: input.videoUrl,
+      shareUrl,
       script: input.script,
       duration: input.duration,
       actors: input.actors,
