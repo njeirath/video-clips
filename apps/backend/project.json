@@ -21,7 +21,7 @@
           {
             "input": "apps/backend/src/templates",
             "glob": "**/*",
-            "output": "templates"
+            "output": "apps/backend/src/templates"
           }
         ],
         "generatePackageJson": true,

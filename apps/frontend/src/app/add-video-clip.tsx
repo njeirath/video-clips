@@ -118,15 +118,15 @@ export default function AddVideoClip() {
     checkAuth();
   }, [navigate]);
 
-  // Redirect after successful submission
+  // Redirect after successful submission (only if no error)
   useEffect(() => {
-    if (isSubmitSuccessful) {
+    if (isSubmitSuccessful && !mutationError) {
       const timer = setTimeout(() => {
         navigate('/');
       }, 2000);
       return () => clearTimeout(timer);
     }
-  }, [isSubmitSuccessful, navigate]);
+  }, [isSubmitSuccessful, mutationError, navigate]);
 
   const onSubmit = async (data: VideoClipFormData) => {
     try {

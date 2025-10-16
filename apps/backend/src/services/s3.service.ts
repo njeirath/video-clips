@@ -137,8 +137,8 @@ export class S3Service {
     // In development: apps/backend/src/services/ -> apps/backend/src/templates/
     let templatePath: string;
     if (process.env.NODE_ENV === 'production' || __dirname.includes('dist/backend')) {
-      // Production: Go up to dist/backend then into templates
-      templatePath = path.join(__dirname, '../../../../../templates/share-page.hbs');
+      // Production: dist/backend/templates/share-page.hbs
+      templatePath = path.join(__dirname, '../templates/share-page.hbs');
     } else {
       // Development: Relative path to templates folder
       templatePath = path.join(__dirname, '../templates/share-page.hbs');
