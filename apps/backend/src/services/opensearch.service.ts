@@ -59,8 +59,10 @@ export class OpenSearchService {
                 videoUrl: { type: "keyword" },
                 script: { type: "text" },
                 duration: { type: "float" },
-                actors: { type: "keyword" },
+                characters: { type: "keyword" },
                 tags: { type: "keyword" },
+                thumbnailUrl: { type: "keyword" },
+                blurhash: { type: "keyword" },
                 source: {
                   type: "object",
                   properties: {
@@ -97,8 +99,10 @@ export class OpenSearchService {
     videoUrl?: string;
     script?: string;
     duration?: number;
-    actors?: string[];
+    characters?: string[];
     tags?: string[];
+    thumbnailUrl?: string;
+    blurhash?: string;
     source?: any;
     createdAt: string;
   }) {
@@ -173,11 +177,11 @@ export class OpenSearchService {
       let query: any;
       
       if (searchQuery && searchQuery.trim()) {
-        // Use multi_match to search across name, description, script, actors, and tags fields
+        // Use multi_match to search across name, description, script, characters, and tags fields
         query = {
           multi_match: {
             query: searchQuery.trim(),
-            fields: ["name^2", "description", "script", "actors", "tags"], // Boost name matches
+            fields: ["name^2", "description", "script", "characters", "tags"], // Boost name matches
             type: "best_fields",
             fuzziness: "AUTO",
           },

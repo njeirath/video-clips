@@ -106,8 +106,10 @@ export class VideoClipResolver {
       shareUrl,
       script: input.script,
       duration: input.duration,
-      actors: input.actors,
+      characters: input.characters,
       tags: input.tags,
+      thumbnailUrl: input.thumbnailUrl,
+      blurhash: input.blurhash,
       source,
       createdAt: new Date().toISOString(),
     };

@@ -17,7 +17,8 @@ export type Scalars = {
 };
 
 export type CreateVideoClipInput = {
-  actors?: InputMaybe<Array<Scalars['String']['input']>>;
+  blurhash?: InputMaybe<Scalars['String']['input']>;
+  characters?: InputMaybe<Array<Scalars['String']['input']>>;
   description: Scalars['String']['input'];
   duration?: InputMaybe<Scalars['Float']['input']>;
   name: Scalars['String']['input'];
@@ -25,6 +26,7 @@ export type CreateVideoClipInput = {
   script?: InputMaybe<Scalars['String']['input']>;
   source?: InputMaybe<VideoClipSourceInput>;
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
+  thumbnailUrl?: InputMaybe<Scalars['String']['input']>;
   videoUrl?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -102,7 +104,8 @@ export type ShowSourceInput = {
 
 export type VideoClip = {
   __typename?: 'VideoClip';
-  actors?: Maybe<Array<Scalars['String']['output']>>;
+  blurhash?: Maybe<Scalars['String']['output']>;
+  characters?: Maybe<Array<Scalars['String']['output']>>;
   createdAt: Scalars['String']['output'];
   description: Scalars['String']['output'];
   duration?: Maybe<Scalars['Float']['output']>;
@@ -113,6 +116,7 @@ export type VideoClip = {
   shareUrl?: Maybe<Scalars['String']['output']>;
   source?: Maybe<VideoClipSource>;
   tags?: Maybe<Array<Scalars['String']['output']>>;
+  thumbnailUrl?: Maybe<Scalars['String']['output']>;
   userEmail: Scalars['String']['output'];
   userId: Scalars['String']['output'];
   videoUrl?: Maybe<Scalars['String']['output']>;

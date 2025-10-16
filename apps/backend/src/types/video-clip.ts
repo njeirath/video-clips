@@ -84,10 +84,16 @@ export class VideoClip {
   duration?: number;
 
   @Field(() => [String], { nullable: true })
-  actors?: string[];
+  characters?: string[];
 
   @Field(() => [String], { nullable: true })
   tags?: string[];
+
+  @Field(() => String, { nullable: true })
+  thumbnailUrl?: string;
+
+  @Field(() => String, { nullable: true })
+  blurhash?: string;
 
   @Field(() => VideoClipSource, { nullable: true })
   source?: typeof VideoClipSource;
@@ -163,10 +169,16 @@ export class CreateVideoClipInput {
   duration?: number;
 
   @Field(() => [String], { nullable: true })
-  actors?: string[];
+  characters?: string[];
 
   @Field(() => [String], { nullable: true })
   tags?: string[];
+
+  @Field(() => String, { nullable: true })
+  thumbnailUrl?: string;
+
+  @Field(() => String, { nullable: true })
+  blurhash?: string;
 
   @Field(() => VideoClipSourceInput, { nullable: true })
   source?: VideoClipSourceInput;
