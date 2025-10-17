@@ -35,15 +35,26 @@ export class S3Service {
    * @param userId - The ID of the user uploading the file
    * @param fileName - Original file name
    * @param contentType - MIME type of the file
-   * @returns Object containing uploadUrl, s3Key, and videoUrl
+   * @param thumbnailFileName - Optional thumbnail file name
+   * @param thumbnailContentType - Optional thumbnail MIME type
+   * @returns Object containing uploadUrl, s3Key, videoUrl, and optionally thumbnail URLs
    */
   async generatePresignedUploadUrl(
     userId: string,
     fileName: string,
-    contentType: string
-  ): Promise<{ uploadUrl: string; s3Key: string; videoUrl: string }> {
+    contentType: string,
+    thumbnailFileName?: string,
+    thumbnailContentType?: string
+  ): Promise<{
+    uploadUrl: string;
+    s3Key: string;
+    videoUrl: string;
+    thumbnailUploadUrl?: string;
+    thumbnailS3Key?: string;
+    thumbnailUrl?: string;
+  }> {
     // Validate content type
-    const allowedTypes = [
+    const allowedVideoTypes = [
       'video/mp4',
       'video/quicktime',
       'video/x-msvideo',
@@ -51,18 +62,25 @@ export class S3Service {
       'video/webm',
     ];
 
-    if (!allowedTypes.includes(contentType)) {
+    const allowedImageTypes = [
+      'image/png',
+      'image/jpeg',
+      'image/jpg',
+      'image/webp',
+    ];
+
+    if (!allowedVideoTypes.includes(contentType)) {
       throw new Error(
-        `Invalid content type: ${contentType}. Allowed types: ${allowedTypes.join(', ')}`
+        `Invalid content type: ${contentType}. Allowed types: ${allowedVideoTypes.join(', ')}`
       );
     }
 
-    // Generate a unique S3 key
+    // Generate a unique S3 key for video
     const fileExtension = fileName.split('.').pop() || 'mp4';
     const uniqueId = uuidv4();
     const s3Key = `videos/${userId}/${uniqueId}.${fileExtension}`;
 
-    // Create the presigned URL for PUT operation
+    // Create the presigned URL for PUT operation (video)
     const command = new PutObjectCommand({
       Bucket: this.bucketName,
       Key: s3Key,
@@ -78,11 +96,54 @@ export class S3Service {
       ? `https://${this.cloudFrontDomain}/${s3Key}`
       : `https://${this.bucketName}.s3.${process.env.AWS_REGION || 'us-east-2'}.amazonaws.com/${s3Key}`;
 
-    return {
+    const result: {
+      uploadUrl: string;
+      s3Key: string;
+      videoUrl: string;
+      thumbnailUploadUrl?: string;
+      thumbnailS3Key?: string;
+      thumbnailUrl?: string;
+    } = {
       uploadUrl,
       s3Key,
       videoUrl,
     };
+
+    // Generate thumbnail presigned URL if requested
+    if (thumbnailFileName && thumbnailContentType) {
+      if (!allowedImageTypes.includes(thumbnailContentType)) {
+        throw new Error(
+          `Invalid thumbnail content type: ${thumbnailContentType}. Allowed types: ${allowedImageTypes.join(', ')}`
+        );
+      }
+
+      const thumbnailExtension = thumbnailFileName.split('.').pop() || 'png';
+      const thumbnailS3Key = `thumbnails/${userId}/${uniqueId}.${thumbnailExtension}`;
+
+      const thumbnailCommand = new PutObjectCommand({
+        Bucket: this.bucketName,
+        Key: thumbnailS3Key,
+        ContentType: thumbnailContentType,
+      });
+
+      const thumbnailUploadUrl = await getSignedUrl(
+        this.s3Client,
+        thumbnailCommand,
+        {
+          expiresIn: 3600, // URL expires in 1 hour
+        }
+      );
+
+      const thumbnailUrl = this.cloudFrontDomain
+        ? `https://${this.cloudFrontDomain}/${thumbnailS3Key}`
+        : `https://${this.bucketName}.s3.${process.env.AWS_REGION || 'us-east-2'}.amazonaws.com/${thumbnailS3Key}`;
+
+      result.thumbnailUploadUrl = thumbnailUploadUrl;
+      result.thumbnailS3Key = thumbnailS3Key;
+      result.thumbnailUrl = thumbnailUrl;
+    }
+
+    return result;
   }
 
   /**

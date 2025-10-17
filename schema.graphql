@@ -43,7 +43,7 @@ type MovieSource {
 
 type Mutation {
   createVideoClip(input: CreateVideoClipInput!): VideoClip!
-  generateUploadUrl(contentType: String!, fileName: String!): PresignedUrlResponse!
+  generateUploadUrl(contentType: String!, fileName: String!, thumbnailContentType: String, thumbnailFileName: String): PresignedUrlResponse!
 }
 
 input CreateVideoClipInput {
@@ -85,4 +85,7 @@ type PresignedUrlResponse {
   uploadUrl: String!
   s3Key: String!
   videoUrl: String!
+  thumbnailUploadUrl: String
+  thumbnailS3Key: String
+  thumbnailUrl: String
 }
