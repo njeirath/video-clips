@@ -165,6 +165,42 @@ npx nx g @nx/web:application my-app
 npx nx g @nx/js:library my-lib
 ```
 
+## Backend Scripts
+
+### Cleanup S3 Script
+
+This script helps you identify and optionally clean up unused S3 objects related to video clips.
+
+**Build the backend first:**
+```bash
+npx nx build backend
+```
+
+**Run the cleanup script (dry run):**
+```bash
+ENV_PATH=apps/backend/.env node dist/backend/apps/backend/scripts/cleanup-s3.js --dry-run
+```
+
+- Remove `--dry-run` to actually delete unused S3 objects.
+
+### Process Clips Script
+
+This script processes a CSV of video clips, downloads source files, trims videos, generates thumbnails and blurhashes, uploads to S3, and registers clips in the backend.
+
+**Build the backend first:**
+```bash
+npx nx build backend
+```
+
+**Run the process-clips script:**
+```bash
+node dist/backend/apps/backend/scripts/process-clips.js
+```
+
+- Make sure your `.env` file is configured with the necessary credentials and endpoints.
+- The script expects the CSV file at `apps/backend/Video Clips - Sheet1.csv`.
+- See comments in `apps/backend/scripts/process-clips.ts` for configuration details.
+
 ## Learn More
 
 - [Nx Documentation](https://nx.dev)
