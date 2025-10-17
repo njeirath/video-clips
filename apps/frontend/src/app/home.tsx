@@ -175,6 +175,7 @@ const GET_VIDEO_CLIPS = graphql(`
       userEmail
       videoUrl
       shareUrl
+      thumbnailUrl
       createdAt
     }
   }
