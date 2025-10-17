@@ -8,6 +8,7 @@ import { encode } from 'blurhash';
 import { GraphQLClient, gql } from 'graphql-request';
 import axios from 'axios';
 import readline from 'readline';
+import process from 'process';
 
 const CSV_PATH =
   '/Users/nakuljeirath/dev/work/video-clips/apps/backend/Video Clips - Sheet1.csv';
@@ -24,7 +25,7 @@ const REMOTE_USER = 'nakul';
 const GRAPHQL_ENDPOINT = 'http://localhost:3000/graphql'; // TODO: set actual endpoint
 const GRAPHQL_AUTH_TOKEN = process.env.GRAPHQL_AUTH_TOKEN || '';
 
-async function processCSV(passphrase: string) {
+async function processCSV(passphrase: string, rowArg?: string) {
   if (!fs.existsSync(LOCAL_VIDEO_DIR))
     fs.mkdirSync(LOCAL_VIDEO_DIR, { recursive: true });
   if (!fs.existsSync(LOCAL_THUMB_DIR))
@@ -51,6 +52,34 @@ async function processCSV(passphrase: string) {
     rows.push(row);
   }
 
+  // Parse rowArg to determine which rows to process
+  let selectedRows: any[] = [];
+  if (rowArg) {
+    const rangeMatch = rowArg.match(/^(\d+)-(\d+)$/);
+    if (rangeMatch) {
+      const start = parseInt(rangeMatch[1], 10);
+      const end = parseInt(rangeMatch[2], 10);
+      if (start > 0 && end >= start && end <= rows.length) {
+        selectedRows = rows.slice(start - 1, end);
+      }
+    } else {
+      const singleMatch = rowArg.match(/^(\d+)$/);
+      if (singleMatch) {
+        const idx = parseInt(singleMatch[1], 10);
+        if (idx > 0 && idx <= rows.length) {
+          selectedRows = [rows[idx - 1]];
+        }
+      }
+    }
+    if (selectedRows.length === 0) {
+      console.error(`Invalid row argument: ${rowArg}`);
+      ssh.dispose();
+      return;
+    }
+  } else {
+    selectedRows = rows;
+  }
+
   let lastSource = null;
   let localSource = null;
   // GraphQL query to check if a video clip with the given name exists
@@ -63,7 +92,7 @@ async function processCSV(passphrase: string) {
     }
   `;
 
-  for (const row of rows) {
+  for (const row of selectedRows) {
     const currentIndex = rows.indexOf(row) + 1;
     console.log(`Processing ${currentIndex} of ${rows.length}`);
     const {
@@ -239,8 +268,17 @@ function askPassphrase(): Promise<string> {
   });
 }
 
+
+// Parse named argument --row-range=<value>
+let rowArg: string | undefined = undefined;
+for (const arg of process.argv.slice(2)) {
+  if (arg.startsWith('--row-range=')) {
+    rowArg = arg.replace('--row-range=', '');
+    break;
+  }
+}
 askPassphrase()
-  .then((passphrase) => processCSV(passphrase))
+  .then((passphrase) => processCSV(passphrase, rowArg))
   .catch((err) => {
     console.error(err);
     process.exit(1);
