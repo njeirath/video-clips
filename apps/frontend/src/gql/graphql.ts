@@ -60,11 +60,16 @@ export type MutationCreateVideoClipArgs = {
 export type MutationGenerateUploadUrlArgs = {
   contentType: Scalars['String']['input'];
   fileName: Scalars['String']['input'];
+  thumbnailContentType?: InputMaybe<Scalars['String']['input']>;
+  thumbnailFileName?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type PresignedUrlResponse = {
   __typename?: 'PresignedUrlResponse';
   s3Key: Scalars['String']['output'];
+  thumbnailS3Key?: Maybe<Scalars['String']['output']>;
+  thumbnailUploadUrl?: Maybe<Scalars['String']['output']>;
+  thumbnailUrl?: Maybe<Scalars['String']['output']>;
   uploadUrl: Scalars['String']['output'];
   videoUrl: Scalars['String']['output'];
 };

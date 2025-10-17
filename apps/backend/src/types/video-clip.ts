@@ -194,5 +194,14 @@ export class PresignedUrlResponse {
 
   @Field(() => String)
   videoUrl: string;
+
+  @Field(() => String, { nullable: true })
+  thumbnailUploadUrl?: string;
+
+  @Field(() => String, { nullable: true })
+  thumbnailS3Key?: string;
+
+  @Field(() => String, { nullable: true })
+  thumbnailUrl?: string;
 }
 

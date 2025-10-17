@@ -123,7 +123,11 @@ export class VideoClipResolver {
   async generateUploadUrl(
     @Arg('fileName', () => String) fileName: string,
     @Arg('contentType', () => String) contentType: string,
-    @Ctx() ctx: Context
+    @Ctx() ctx: Context,
+    @Arg('thumbnailFileName', () => String, { nullable: true })
+    thumbnailFileName?: string,
+    @Arg('thumbnailContentType', () => String, { nullable: true })
+    thumbnailContentType?: string
   ): Promise<PresignedUrlResponse> {
     // Require authentication
     if (!ctx.userId) {
@@ -134,7 +138,9 @@ export class VideoClipResolver {
       const result = await s3Service.generatePresignedUploadUrl(
         ctx.userId,
         fileName,
-        contentType
+        contentType,
+        thumbnailFileName,
+        thumbnailContentType
       );
 
       return result;

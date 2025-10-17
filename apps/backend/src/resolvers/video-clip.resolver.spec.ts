@@ -300,5 +300,38 @@ describe("VideoClipResolver", () => {
       expect(result.s3Key).toBeDefined();
       expect(result.videoUrl).toBeDefined();
     });
+
+    it("should generate presigned URLs for both video and thumbnail", async () => {
+      const context: Context = {
+        userId: "test-user-123",
+        userEmail: "test@example.com",
+      };
+
+      // Mock the S3 service to return thumbnail URLs
+      const { s3Service } = require("../services/s3.service");
+      s3Service.generatePresignedUploadUrl.mockResolvedValueOnce({
+        uploadUrl: "https://example.com/presigned-upload-url",
+        s3Key: "videos/user-123/test-video.mp4",
+        videoUrl: "https://cloudfront.example.com/videos/user-123/test-video.mp4",
+        thumbnailUploadUrl: "https://example.com/presigned-thumbnail-url",
+        thumbnailS3Key: "thumbnails/user-123/test-video.png",
+        thumbnailUrl: "https://cloudfront.example.com/thumbnails/user-123/test-video.png",
+      });
+
+      const result = await resolver.generateUploadUrl(
+        "test.mp4",
+        "video/mp4",
+        context,
+        "test.png",
+        "image/png"
+      );
+
+      expect(result.uploadUrl).toBeDefined();
+      expect(result.s3Key).toBeDefined();
+      expect(result.videoUrl).toBeDefined();
+      expect(result.thumbnailUploadUrl).toBeDefined();
+      expect(result.thumbnailS3Key).toBeDefined();
+      expect(result.thumbnailUrl).toBeDefined();
+    });
   });
 });

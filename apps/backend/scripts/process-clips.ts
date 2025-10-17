@@ -170,23 +170,44 @@ async function processCSV(passphrase: string, rowArg?: string) {
     );
     console.log(`Blurhash: ${blurhash}`);
 
-    // 5. Upload video to S3 using presigned URL
+    // 5. Upload video and thumbnail to S3 using presigned URLs
     const generateUploadUrlMutation = gql`
-      mutation GenerateUploadUrl($fileName: String!, $contentType: String!) {
-        generateUploadUrl(fileName: $fileName, contentType: $contentType) {
+      mutation GenerateUploadUrl(
+        $fileName: String!
+        $contentType: String!
+        $thumbnailFileName: String
+        $thumbnailContentType: String
+      ) {
+        generateUploadUrl(
+          fileName: $fileName
+          contentType: $contentType
+          thumbnailFileName: $thumbnailFileName
+          thumbnailContentType: $thumbnailContentType
+        ) {
           uploadUrl
           s3Key
           videoUrl
+          thumbnailUploadUrl
+          thumbnailS3Key
+          thumbnailUrl
         }
       }
     `;
     const fileName = `${name}.mp4`;
     const contentType = 'video/mp4';
+    const thumbnailFileName = `${name}.jpg`;
+    const thumbnailContentType = 'image/jpeg';
+    
     const { generateUploadUrl } = await client.request(
       generateUploadUrlMutation,
-      { fileName, contentType }
+      {
+        fileName,
+        contentType,
+        thumbnailFileName,
+        thumbnailContentType,
+      }
     );
-    console.log(generateUploadUrl);
+    console.log('Generated upload URLs:', generateUploadUrl);
 
     // 5.2 Upload video to S3
     const videoData = fs.readFileSync(trimmedVideo);
@@ -199,9 +220,22 @@ async function processCSV(passphrase: string, rowArg?: string) {
     });
     const s3Key = generateUploadUrl.s3Key;
     const videoUrl = generateUploadUrl.videoUrl;
+    console.log('Video uploaded successfully');
 
-    // 5.3 Upload thumbnail to S3 (optional, if needed)
-    const thumbnailUrl = undefined; // Set if you upload thumbnail
+    // 5.3 Upload thumbnail to S3
+    let thumbnailUrl = undefined;
+    if (generateUploadUrl.thumbnailUploadUrl && fs.existsSync(thumbnail)) {
+      const thumbnailData = fs.readFileSync(thumbnail);
+      await axios.put(generateUploadUrl.thumbnailUploadUrl, thumbnailData, {
+        headers: {
+          'Content-Type': thumbnailContentType,
+        },
+        maxContentLength: Infinity,
+        maxBodyLength: Infinity,
+      });
+      thumbnailUrl = generateUploadUrl.thumbnailUrl;
+      console.log('Thumbnail uploaded successfully');
+    }
 
     // 5.4 Create video clip
     const createVideoClipMutation = gql`

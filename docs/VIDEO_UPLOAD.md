@@ -194,10 +194,67 @@ Monitor the following metrics:
 - CloudFront caching reduces S3 GET requests
 - Videos are stored in a single region to minimize transfer costs
 
+## Thumbnail Upload
+
+The application now supports uploading thumbnails alongside video files using the same presigned URL approach.
+
+### Supported Thumbnail Formats
+
+The following image formats are supported for thumbnails:
+
+- **PNG** (`image/png`)
+- **JPEG** (`image/jpeg` or `image/jpg`)
+- **WebP** (`image/webp`)
+
+### Thumbnail Upload Flow
+
+1. **Frontend requests presigned URLs** for both video and thumbnail
+   ```graphql
+   mutation GenerateUploadUrl(
+     $fileName: String!
+     $contentType: String!
+     $thumbnailFileName: String
+     $thumbnailContentType: String
+   ) {
+     generateUploadUrl(
+       fileName: $fileName
+       contentType: $contentType
+       thumbnailFileName: $thumbnailFileName
+       thumbnailContentType: $thumbnailContentType
+     ) {
+       uploadUrl
+       s3Key
+       videoUrl
+       thumbnailUploadUrl
+       thumbnailS3Key
+       thumbnailUrl
+     }
+   }
+   ```
+
+2. **Backend generates presigned URLs** for both video and thumbnail (if provided)
+3. **Frontend uploads both files directly to S3** using their respective presigned URLs
+4. **Frontend creates video clip** with both video and thumbnail URLs
+
+### S3 Bucket Structure for Thumbnails
+
+Thumbnails are stored in S3 with the following key structure:
+
+```
+thumbnails/{userId}/{uniqueId}.{extension}
+```
+
+Example:
+```
+thumbnails/550e8400-e29b-41d4-a716-446655440000/a1b2c3d4-e5f6-7890-abcd-ef1234567890.png
+```
+
+The `uniqueId` for thumbnails matches the video's `uniqueId` to maintain the relationship between video and thumbnail files.
+
 ## Future Enhancements
 
 - [ ] Video transcoding (convert to multiple formats/resolutions)
-- [ ] Thumbnail generation
+- [ ] Automatic thumbnail generation from video
 - [ ] Progress callbacks during upload
 - [ ] Resumable uploads for large files
 - [ ] Video compression before upload
