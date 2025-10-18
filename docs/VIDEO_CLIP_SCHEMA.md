@@ -12,10 +12,13 @@ The video clip model supports comprehensive metadata about video clips, includin
 
 - **id** (ID!): Unique identifier for the video clip
 - **name** (String!): Name/title of the video clip
-- **description** (String!): Description of the video clip content
 - **userId** (String!): ID of the user who created the clip
 - **userEmail** (String!): Email of the user who created the clip
 - **createdAt** (String!): ISO 8601 timestamp of when the clip was created
+
+### Optional Core Fields
+
+- **description** (String): Description of the video clip content
 
 ### Optional Video Storage Fields
 
@@ -162,7 +165,7 @@ Example:
 type VideoClip {
   id: ID!
   name: String!
-  description: String!
+  description: String
   userId: String!
   userEmail: String!
   s3Key: String
@@ -199,7 +202,7 @@ type MovieSource {
 ```graphql
 input CreateVideoClipInput {
   name: String!
-  description: String!
+  description: String
   s3Key: String
   videoUrl: String
   script: String
@@ -241,12 +244,29 @@ input MovieSourceInput {
 mutation {
   createVideoClip(input: {
     name: "Funny Moment"
+    s3Key: "videos/user-123/clip-456.mp4"
+    videoUrl: "https://cdn.example.com/videos/user-123/clip-456.mp4"
+  }) {
+    id
+    name
+    createdAt
+  }
+}
+```
+
+### Creating a Clip with Description
+
+```graphql
+mutation {
+  createVideoClip(input: {
+    name: "Funny Moment"
     description: "A hilarious scene from the movie"
     s3Key: "videos/user-123/clip-456.mp4"
     videoUrl: "https://cdn.example.com/videos/user-123/clip-456.mp4"
   }) {
     id
     name
+    description
     createdAt
   }
 }
@@ -382,7 +402,8 @@ The OpenSearch index includes the following field mappings:
 
 ## Notes
 
-- All new fields (script, duration, characters, tags, source, thumbnailUrl, blurhash) are **optional** to maintain backward compatibility
+- The **description** field is now **optional** (as of the latest update) to allow clips without descriptions
+- All other enrichment fields (script, duration, characters, tags, source, thumbnailUrl, blurhash) are **optional** to maintain backward compatibility
 - The source field uses a union type to support both show and movie sources
 - When providing a source, you must specify either `show` OR `movie`, not both
 - Time values (start, end, duration) are in seconds and support decimal precision
