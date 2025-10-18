@@ -100,6 +100,12 @@ export class VideoClip {
 
   @Field(() => String)
   createdAt: string;
+
+  @Field(() => String, { nullable: true })
+  updatedAt?: string;
+
+  @Field(() => String, { nullable: true })
+  updatedBy?: string;
 }
 
 // Input types for source
@@ -179,6 +185,33 @@ export class CreateVideoClipInput {
 
   @Field(() => String, { nullable: true })
   blurhash?: string;
+
+  @Field(() => VideoClipSourceInput, { nullable: true })
+  source?: VideoClipSourceInput;
+}
+
+@InputType()
+export class UpdateVideoClipInput {
+  @Field(() => String)
+  id: string;
+
+  @Field(() => String, { nullable: true })
+  description?: string;
+
+  @Field(() => String, { nullable: true })
+  shareUrl?: string;
+
+  @Field(() => String, { nullable: true })
+  script?: string;
+
+  @Field(() => Float, { nullable: true })
+  duration?: number;
+
+  @Field(() => [String], { nullable: true })
+  characters?: string[];
+
+  @Field(() => [String], { nullable: true })
+  tags?: string[];
 
   @Field(() => VideoClipSourceInput, { nullable: true })
   source?: VideoClipSourceInput;
