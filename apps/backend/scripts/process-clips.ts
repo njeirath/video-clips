@@ -16,6 +16,10 @@ const LOCAL_VIDEO_DIR = path.resolve(
   __dirname,
   '/Users/nakuljeirath/dev/work/video-clips/apps/backend/tmp/videos'
 );
+const LOCAL_SOURCE_DIR = path.resolve(
+  __dirname,
+  '/Users/nakuljeirath/dev/work/video-clips/apps/backend/tmp/sources'
+);
 const LOCAL_THUMB_DIR = path.resolve(
   __dirname,
   '/Users/nakuljeirath/dev/work/video-clips/apps/backend/tmp/thumbnails'
@@ -28,6 +32,8 @@ const GRAPHQL_AUTH_TOKEN = process.env.GRAPHQL_AUTH_TOKEN || '';
 async function processCSV(passphrase: string, rowArg?: string) {
   if (!fs.existsSync(LOCAL_VIDEO_DIR))
     fs.mkdirSync(LOCAL_VIDEO_DIR, { recursive: true });
+  if (!fs.existsSync(LOCAL_SOURCE_DIR))
+    fs.mkdirSync(LOCAL_SOURCE_DIR, { recursive: true });
   if (!fs.existsSync(LOCAL_THUMB_DIR))
     fs.mkdirSync(LOCAL_THUMB_DIR, { recursive: true });
 
@@ -82,6 +88,32 @@ async function processCSV(passphrase: string, rowArg?: string) {
 
   let lastSource = null;
   let localSource = null;
+  // Helper: parse time strings like "00:17:20.3" or "17:20.3" or plain seconds
+  function parseTimeToSeconds(timeStr?: string): number | undefined {
+    if (!timeStr) return undefined;
+    const s = String(timeStr).trim();
+    // If numeric (seconds) already
+    if (/^\d+(\.\d+)?$/.test(s)) return Number(s);
+    // Matches HH:MM:SS(.ms) or MM:SS(.ms)
+    const parts = s.split(':').map((p) => p.trim());
+    if (parts.length === 0) return undefined;
+    let seconds = 0;
+    if (parts.length === 3) {
+      const hours = Number(parts[0]);
+      const minutes = Number(parts[1]);
+      const secs = Number(parts[2]);
+      if (isNaN(hours) || isNaN(minutes) || isNaN(secs)) return undefined;
+      seconds = hours * 3600 + minutes * 60 + secs;
+    } else if (parts.length === 2) {
+      const minutes = Number(parts[0]);
+      const secs = Number(parts[1]);
+      if (isNaN(minutes) || isNaN(secs)) return undefined;
+      seconds = minutes * 60 + secs;
+    } else {
+      return undefined;
+    }
+    return seconds;
+  }
   // GraphQL query to check if a video clip with the given name exists
   const getVideoClipByNameQuery = gql`
     query GetVideoClipByName($searchQuery: String!) {
@@ -117,6 +149,24 @@ async function processCSV(passphrase: string, rowArg?: string) {
       continue;
     }
 
+    // Parse start/end times (they may be in hh:mm:ss.ms format)
+    const parsedStart = parseTimeToSeconds(Start);
+    const parsedEnd = parseTimeToSeconds(End);
+    if (typeof parsedStart === 'undefined' || typeof parsedEnd === 'undefined') {
+      console.error(
+        `Invalid Start/End time formats for clip '${name}': Start='${Start}', End='${End}' - skipping`
+      );
+      skipped += 1;
+      continue;
+    }
+    if (parsedStart >= parsedEnd) {
+      console.error(
+        `Start must be less than End for clip '${name}': start=${parsedStart}, end=${parsedEnd} - skipping`
+      );
+      skipped += 1;
+      continue;
+    }
+
     // Clean the name for file usage
     const cleanName = name
       .toLowerCase()
@@ -145,12 +195,13 @@ async function processCSV(passphrase: string, rowArg?: string) {
     }
 
     if (source !== lastSource) {
-      localSource = path.join(LOCAL_VIDEO_DIR, path.basename(source));
+      // keep original downloaded source files separate from trimmed output videos
+      localSource = path.join(LOCAL_SOURCE_DIR, path.basename(source));
       if (!fs.existsSync(localSource)) {
         console.log(`SCP ${source} to ${localSource}`);
         await ssh.getFile(localSource, source);
       } else {
-        console.log(`Source already downloaded: ${localSource}`);
+        console.log(`Source already downloaded in sources dir: ${localSource}`);
       }
       lastSource = source;
     }
@@ -158,16 +209,20 @@ async function processCSV(passphrase: string, rowArg?: string) {
     const thumbnail = path.join(LOCAL_THUMB_DIR, `${cleanName}.jpg`);
 
     // 2. ffmpeg trim
-    console.log(`Trimming video: ${localSource} -> ${trimmedVideo}`);
-    execSync(
-      `ffmpeg -y -i "${localSource}" -ss ${Start} -to ${End} -c:v libx264 -profile:v high -pix_fmt yuv420p -c:a copy -b:a 128k -movflags +faststart "${trimmedVideo}"`
-    );
+    if (!fs.existsSync(trimmedVideo)) {
+      console.log(`Trimming video: ${localSource} -> ${trimmedVideo}`);
+      execSync(
+        `ffmpeg -y -i "${localSource}" -ss ${Start} -to ${End} -c:v libx264 -profile:v high -pix_fmt yuv420p -c:a copy -b:a 128k -movflags +faststart "${trimmedVideo}"`
+      );
+    }
 
     // 3. ffmpeg thumbnail
-    console.log(`Extracting thumbnail: ${trimmedVideo} -> ${thumbnail}`);
-    execSync(
-      `ffmpeg -y -i "${trimmedVideo}" -frames:v 1 -q:v 2 "${thumbnail}"`
-    );
+    if (!fs.existsSync(thumbnail)) {
+      console.log(`Extracting thumbnail: ${trimmedVideo} -> ${thumbnail}`);
+      execSync(
+        `ffmpeg -y -i "${trimmedVideo}" -frames:v 1 -q:v 2 "${thumbnail}"`
+      );
+    }
 
     // 4. Compute blurhash
     const image = await sharp(thumbnail)
@@ -259,6 +314,37 @@ async function processCSV(passphrase: string, rowArg?: string) {
         }
       }
     `;
+    // Build source input based on CSV fields. Schema expects a VideoClipSourceInput
+    // which has either a 'show' or 'movie' object. Use parsedStart/parsedEnd.
+    let sourceInput: any = undefined;
+    // If Season or Episode present, treat as ShowSource
+    const seasonNum = Season ? Number(Season) : undefined;
+    const episodeNum = Episode ? Number(Episode) : undefined;
+
+    if (Season || Episode || Show) {
+      // Prefer explicit Show field if present
+      sourceInput = {
+        show: {
+          title: Show || path.basename(source, path.extname(source)),
+          airDate: undefined,
+          season: isNaN(seasonNum) ? undefined : seasonNum,
+          episode: isNaN(episodeNum) ? undefined : episodeNum,
+          start: parsedStart,
+          end: parsedEnd,
+        },
+      };
+    } else if (source) {
+      // Fallback: treat as movie/source file
+      sourceInput = {
+        movie: {
+          title: path.basename(source, path.extname(source)),
+          releaseDate: undefined,
+          start: parsedStart,
+          end: parsedEnd,
+        },
+      };
+    }
+
     const input = {
       name,
       description: description || script,
@@ -269,7 +355,7 @@ async function processCSV(passphrase: string, rowArg?: string) {
       s3Key,
       videoUrl,
       thumbnailUrl,
-      // Add other fields as needed (duration, source, etc.)
+      source: sourceInput,
     };
     await client.request(createVideoClipMutation, { input });
     console.log(`Uploaded and saved clip: ${name}`);
