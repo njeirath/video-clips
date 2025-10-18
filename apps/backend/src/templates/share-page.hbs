@@ -16,13 +16,13 @@
   <meta property="og:video:secure_url" content="{{videoUrl}}" />
   <meta property="og:video:type" content="video/mp4" />
   {{/if}}
-  <meta property="og:image" content="{{fallbackImage}}" />
+  <meta property="og:image" content="{{#if thumbnailUrl}}{{thumbnailUrl}}{{else}}{{fallbackImage}}{{/if}}" />
   
   <!-- Twitter Card meta tags -->
   <meta name="twitter:card" content="{{#if videoUrl}}player{{else}}summary{{/if}}" />
   <meta name="twitter:title" content="{{metaTitle}}" />
   <meta name="twitter:description" content="{{metaDescription}}" />
-  <meta name="twitter:image" content="{{fallbackImage}}" />
+  <meta name="twitter:image" content="{{#if thumbnailUrl}}{{thumbnailUrl}}{{else}}{{fallbackImage}}{{/if}}" />
   {{#if videoUrl}}
   <meta name="twitter:player" content="{{shareUrl}}" />
   <meta name="twitter:player:width" content="1280" />
