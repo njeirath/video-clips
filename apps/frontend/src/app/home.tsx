@@ -220,7 +220,7 @@ export default function Home() {
   const observerTarget = useRef<HTMLDivElement>(null);
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
 
-  const { data, loading, error, fetchMore } = useQuery(GET_VIDEO_CLIPS, {
+  const { data, loading, error, fetchMore, refetch } = useQuery(GET_VIDEO_CLIPS, {
     variables: {
       searchQuery: debouncedSearch || undefined,
       offset: 0,
@@ -242,8 +242,30 @@ export default function Home() {
 
   // Reset when sort or filter changes
   useEffect(() => {
+    // don't clear the list immediately — refetch and replace when results arrive to avoid showing
+    // the empty-state while the network request is in-flight
     setOffset(0);
-    setAllClips([]);
+    // trigger a refetch to get the newly-sorted/filtered data and update the list when it returns
+    refetch({
+      searchQuery: debouncedSearch || undefined,
+      offset: 0,
+      limit: ITEMS_PER_PAGE,
+      sortBy: sortBy,
+      filterShow: filterShow !== 'all' ? filterShow : undefined,
+    }).then((result: any) => {
+      if (result?.data?.videoClips) {
+        setAllClips(result.data.videoClips);
+        setOffset(result.data.videoClips.length);
+        setHasMore(result.data.videoClips.length >= ITEMS_PER_PAGE);
+      } else {
+        // no data — clear the list
+        setAllClips([]);
+        setHasMore(false);
+      }
+    }).catch((err: any) => {
+      console.error('Refetch error after sort/filter change:', err);
+      // keep existing list in case of error
+    });
   }, [sortBy, filterShow]);
 
   // Debounce search input
