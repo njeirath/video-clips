@@ -167,18 +167,9 @@ describe('Home - Sorting and Filtering', () => {
     });
   });
 
-  it('shows message when no clips match the filter', async () => {
+  it('filters clips correctly by show', async () => {
     const user = userEvent.setup();
     
-    // Use the original mock data
-    const { useQuery } = await import('@apollo/client/react');
-    vi.mocked(useQuery).mockReturnValue({
-      data: { videoClips: mockVideoClips },
-      loading: false,
-      error: null,
-      fetchMore: vi.fn(),
-    } as any);
-
     render(
       <BrowserRouter>
         <Home />
