@@ -374,7 +374,7 @@ async function processCSV(passphrase: string, rowArg?: string) {
 
     const input = {
       name,
-      description: description || script,
+      description: description,
       script,
       characters: splitCsvArray(characters),
       tags: splitCsvArray(tags),

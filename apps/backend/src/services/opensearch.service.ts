@@ -51,7 +51,14 @@ export class OpenSearchService {
             mappings: {
               properties: {
                 id: { type: "keyword" },
-                name: { type: "text" },
+                name: { 
+                  type: "text",
+                  fields: {
+                    keyword: {
+                      type: "keyword"
+                    }
+                  }
+                },
                 description: { type: "text" },
                 userId: { type: "keyword" },
                 userEmail: { type: "keyword" },
@@ -200,12 +207,46 @@ export class OpenSearchService {
   async searchVideoClips(
     searchQuery?: string,
     offset: number = 0,
-    limit: number = 12
+    limit: number = 12,
+    sortBy?: string,
+    filterShow?: string
   ): Promise<{ clips: any[]; total: number }> {
     try {
       let query: any;
       
-      if (searchQuery && searchQuery.trim()) {
+      // Build the query with optional show filter
+      if (filterShow && filterShow.trim()) {
+        // Filter by show title
+        const showFilter = {
+          bool: {
+            must: [
+              { term: { 'source.type': 'show' } },
+              { match: { 'source.title': filterShow.trim() } }
+            ]
+          }
+        };
+
+        // If there's also a search query, combine them
+        if (searchQuery && searchQuery.trim()) {
+          query = {
+            bool: {
+              must: [
+                {
+                  multi_match: {
+                    query: searchQuery.trim(),
+                    fields: ["name^2", "description", "script", "characters", "tags"],
+                    type: "best_fields",
+                    fuzziness: "AUTO",
+                  },
+                },
+                showFilter
+              ]
+            }
+          };
+        } else {
+          query = showFilter;
+        }
+      } else if (searchQuery && searchQuery.trim()) {
         // Use multi_match to search across name, description, script, characters, and tags fields
         query = {
           multi_match: {
@@ -219,11 +260,20 @@ export class OpenSearchService {
         query = { match_all: {} };
       }
 
+      // Determine sort order
+      let sort: any[];
+      if (sortBy === 'name') {
+        sort = [{ 'name.keyword': { order: 'asc' } }];
+      } else {
+        // Default: sort by createdAt descending
+        sort = [{ createdAt: { order: 'desc' } }];
+      }
+
       const response = await this.client.search({
         index: this.indexName,
         body: {
           query,
-          sort: [{ createdAt: { order: "desc" } }],
+          sort,
           from: offset,
           size: limit,
         },

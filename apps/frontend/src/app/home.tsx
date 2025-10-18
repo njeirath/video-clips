@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import Box from '@mui/material/Box';
@@ -15,6 +15,10 @@ import InputAdornment from '@mui/material/InputAdornment';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
 import Snackbar from '@mui/material/Snackbar';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
 import { useQuery } from '@apollo/client/react';
 import { graphql } from '../gql/gql';
 import { useNavigate } from 'react-router-dom';
@@ -175,8 +179,8 @@ function VideoClipPlayer({ clip }: VideoClipPlayerProps) {
 }
 
 const GET_VIDEO_CLIPS = graphql(`
-  query GetVideoClips($searchQuery: String, $offset: Int, $limit: Int) {
-    videoClips(searchQuery: $searchQuery, offset: $offset, limit: $limit) {
+  query GetVideoClips($searchQuery: String, $offset: Int, $limit: Int, $sortBy: String, $filterShow: String) {
+    videoClips(searchQuery: $searchQuery, offset: $offset, limit: $limit, sortBy: $sortBy, filterShow: $filterShow) {
       id
       name
       description
@@ -186,6 +190,16 @@ const GET_VIDEO_CLIPS = graphql(`
       shareUrl
       thumbnailUrl
       createdAt
+      source {
+        ... on ShowSource {
+          title
+          season
+          episode
+        }
+        ... on MovieSource {
+          title
+        }
+      }
     }
   }
 `);
@@ -193,20 +207,26 @@ const GET_VIDEO_CLIPS = graphql(`
 const ITEMS_PER_PAGE = 12;
 const DEBOUNCE_DELAY = 500; // 500ms debounce
 
+type SortOption = 'createdAt' | 'name';
+
 export default function Home() {
   const [searchInput, setSearchInput] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [offset, setOffset] = useState(0);
   const [allClips, setAllClips] = useState<any[]>([]);
   const [hasMore, setHasMore] = useState(true);
+  const [sortBy, setSortBy] = useState<SortOption>('createdAt');
+  const [filterShow, setFilterShow] = useState<string>('all');
   const observerTarget = useRef<HTMLDivElement>(null);
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
 
-  const { data, loading, error, fetchMore } = useQuery(GET_VIDEO_CLIPS, {
+  const { data, loading, error, fetchMore, refetch } = useQuery(GET_VIDEO_CLIPS, {
     variables: {
       searchQuery: debouncedSearch || undefined,
       offset: 0,
       limit: ITEMS_PER_PAGE,
+      sortBy: sortBy,
+      filterShow: filterShow !== 'all' ? filterShow : undefined,
     },
     fetchPolicy: 'cache-and-network',
   });
@@ -219,6 +239,34 @@ export default function Home() {
       setHasMore(data.videoClips.length >= ITEMS_PER_PAGE);
     }
   }, [data]);
+
+  // Reset when sort or filter changes
+  useEffect(() => {
+    // don't clear the list immediately — refetch and replace when results arrive to avoid showing
+    // the empty-state while the network request is in-flight
+    setOffset(0);
+    // trigger a refetch to get the newly-sorted/filtered data and update the list when it returns
+    refetch({
+      searchQuery: debouncedSearch || undefined,
+      offset: 0,
+      limit: ITEMS_PER_PAGE,
+      sortBy: sortBy,
+      filterShow: filterShow !== 'all' ? filterShow : undefined,
+    }).then((result: any) => {
+      if (result?.data?.videoClips) {
+        setAllClips(result.data.videoClips);
+        setOffset(result.data.videoClips.length);
+        setHasMore(result.data.videoClips.length >= ITEMS_PER_PAGE);
+      } else {
+        // no data — clear the list
+        setAllClips([]);
+        setHasMore(false);
+      }
+    }).catch((err: any) => {
+      console.error('Refetch error after sort/filter change:', err);
+      // keep existing list in case of error
+    });
+  }, [sortBy, filterShow]);
 
   // Debounce search input
   useEffect(() => {
@@ -248,6 +296,8 @@ export default function Home() {
           searchQuery: debouncedSearch || undefined,
           offset: offset,
           limit: ITEMS_PER_PAGE,
+          sortBy: sortBy,
+          filterShow: filterShow !== 'all' ? filterShow : undefined,
         },
       });
 
@@ -260,7 +310,7 @@ export default function Home() {
     } catch (err) {
       console.error('Error loading more clips:', err);
     }
-  }, [hasMore, loading, fetchMore, debouncedSearch, offset]);
+  }, [hasMore, loading, fetchMore, debouncedSearch, offset, sortBy, filterShow]);
 
   // Infinite scroll implementation
   const handleObserver = useCallback(
@@ -289,6 +339,17 @@ export default function Home() {
       }
     };
   }, [handleObserver]);
+
+  // Extract unique show titles from all clips
+  const availableShows = useMemo(() => {
+    const showSet = new Set<string>();
+    allClips.forEach((clip) => {
+      if (clip.source && clip.source.__typename === 'ShowSource') {
+        showSet.add(clip.source.title);
+      }
+    });
+    return Array.from(showSet).sort();
+  }, [allClips]);
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
@@ -323,8 +384,51 @@ export default function Home() {
               maxWidth: 600,
               mx: 'auto',
               display: 'block',
+              mb: 2,
             }}
           />
+          
+          {/* Sorting and Filtering Controls */}
+          <Box
+            sx={{
+              display: 'flex',
+              gap: 2,
+              justifyContent: 'center',
+              flexWrap: 'wrap',
+            }}
+          >
+            <FormControl sx={{ minWidth: 200 }} size="small">
+              <InputLabel id="sort-label">Sort By</InputLabel>
+              <Select
+                labelId="sort-label"
+                id="sort-select"
+                value={sortBy}
+                label="Sort By"
+                onChange={(e) => setSortBy(e.target.value as SortOption)}
+              >
+                <MenuItem value="createdAt">Date Added (Newest First)</MenuItem>
+                <MenuItem value="name">Name (A-Z)</MenuItem>
+              </Select>
+            </FormControl>
+
+            <FormControl sx={{ minWidth: 200 }} size="small">
+              <InputLabel id="filter-label">Filter by Show</InputLabel>
+              <Select
+                labelId="filter-label"
+                id="filter-select"
+                value={filterShow}
+                label="Filter by Show"
+                onChange={(e) => setFilterShow(e.target.value)}
+              >
+                <MenuItem value="all">All Shows</MenuItem>
+                {availableShows.map((show) => (
+                  <MenuItem key={show} value={show}>
+                    {show}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
         </Container>
       </Box>
 
@@ -345,8 +449,8 @@ export default function Home() {
         {!loading && allClips.length === 0 && (
           <Box sx={{ textAlign: 'center', py: 8 }}>
             <Typography variant="h6" color="text.secondary">
-              {searchInput
-                ? `No video clips found matching "${searchInput}"`
+              {searchInput || filterShow !== 'all'
+                ? 'No video clips match the selected filters'
                 : 'No video clips available yet'}
             </Typography>
           </Box>
