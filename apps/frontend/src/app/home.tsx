@@ -17,6 +17,7 @@ import Tooltip from '@mui/material/Tooltip';
 import Snackbar from '@mui/material/Snackbar';
 import { useQuery } from '@apollo/client/react';
 import { graphql } from '../gql/gql';
+import { useNavigate } from 'react-router-dom';
 
 
 // VideoClipPlayer component: only loads video when play is clicked
@@ -37,6 +38,7 @@ function VideoClipPlayer({ clip }: VideoClipPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const navigate = useNavigate();
 
   const handlePlay = () => {
     setIsPlaying(true);
@@ -45,7 +47,8 @@ function VideoClipPlayer({ clip }: VideoClipPlayerProps) {
     }, 0);
   };
 
-  const handleShare = async () => {
+  const handleShare = async (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click
     if (clip.shareUrl) {
       try {
         await navigator.clipboard.writeText(clip.shareUrl);
@@ -60,18 +63,24 @@ function VideoClipPlayer({ clip }: VideoClipPlayerProps) {
     setCopySuccess(false);
   };
 
+  const handleCardClick = () => {
+    navigate(`/clip/${clip.id}`);
+  };
+
   // fallback thumbnail (optional): use a static image or color if not present
   const poster = clip.thumbnailUrl || undefined;
   const hasVideo = !!clip.videoUrl;
   return (
     <div style={{ flex: '1 0 30%', minWidth: 300, maxWidth: 400 }}>
       <Card
+        onClick={handleCardClick}
         sx={{
           height: '100%',
           display: 'flex',
           flexDirection: 'column',
           transition: 'transform 0.2s, box-shadow 0.2s',
           minHeight: 200,
+          cursor: 'pointer',
           '&:hover': {
             transform: 'translateY(-4px)',
             boxShadow: 4,
