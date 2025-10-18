@@ -92,6 +92,7 @@ export class VideoClipResolver {
       name: input.name.trim(),
       description: input.description.trim(),
       videoUrl: input.videoUrl,
+      thumbnailUrl: input.thumbnailUrl,
       source,
     });
 

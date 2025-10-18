@@ -148,7 +148,7 @@ export class S3Service {
 
   /**
    * Generate and upload a static HTML file with Open Graph meta tags for a video clip
-   * @param clipData - Video clip data including name, description, videoUrl, etc.
+   * @param clipData - Video clip data including name, description, videoUrl, thumbnailUrl, etc.
    * @returns The CloudFront URL to the static HTML page
    */
   async generateSharePage(clipData: {
@@ -156,6 +156,7 @@ export class S3Service {
     name: string;
     description: string;
     videoUrl?: string;
+    thumbnailUrl?: string;
     source?: any;
   }): Promise<string> {
     // Generate a short alphanumeric ID (8 characters, URL-safe)
@@ -213,6 +214,7 @@ export class S3Service {
       metaDescription,
       shareUrl,
       videoUrl: clipData.videoUrl,
+      thumbnailUrl: clipData.thumbnailUrl,
       fallbackImage,
     });
 
