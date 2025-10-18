@@ -114,6 +114,15 @@ async function processCSV(passphrase: string, rowArg?: string) {
     }
     return seconds;
   }
+  // Helper: split comma-separated CSV fields into string[] (trimmed), return undefined if empty
+  function splitCsvArray(field?: string): string[] | undefined {
+    if (!field) return undefined;
+    const parts = String(field)
+      .split(',')
+      .map((p) => p.trim())
+      .filter((p) => p.length > 0);
+    return parts.length > 0 ? parts : undefined;
+  }
   // GraphQL query to check if a video clip with the given name exists
   const getVideoClipByNameQuery = gql`
     query GetVideoClipByName($searchQuery: String!) {
@@ -152,7 +161,10 @@ async function processCSV(passphrase: string, rowArg?: string) {
     // Parse start/end times (they may be in hh:mm:ss.ms format)
     const parsedStart = parseTimeToSeconds(Start);
     const parsedEnd = parseTimeToSeconds(End);
-    if (typeof parsedStart === 'undefined' || typeof parsedEnd === 'undefined') {
+    if (
+      typeof parsedStart === 'undefined' ||
+      typeof parsedEnd === 'undefined'
+    ) {
       console.error(
         `Invalid Start/End time formats for clip '${name}': Start='${Start}', End='${End}' - skipping`
       );
@@ -194,38 +206,51 @@ async function processCSV(passphrase: string, rowArg?: string) {
       continue;
     }
 
+    // Check if we can skip downloading the source when the trimmed video + thumbnail already exist
+    const trimmedVideoPath = path.join(LOCAL_VIDEO_DIR, `${cleanName}.mp4`);
+    const thumbnailPath = path.join(LOCAL_THUMB_DIR, `${cleanName}.jpg`);
+
     if (source !== lastSource) {
-      // keep original downloaded source files separate from trimmed output videos
-      localSource = path.join(LOCAL_SOURCE_DIR, path.basename(source));
-      if (!fs.existsSync(localSource)) {
-        console.log(`SCP ${source} to ${localSource}`);
-        await ssh.getFile(localSource, source);
+      // If both trimmed video and thumbnail already exist, skip fetching the source
+      if (fs.existsSync(trimmedVideoPath) && fs.existsSync(thumbnailPath)) {
+        console.log(
+          `Trimmed video and thumbnail already present for '${cleanName}', skipping source download`
+        );
+        // Do NOT set lastSource/localSource here because we didn't actually download the source.
+        // This ensures future rows that need trimming will still trigger a download.
       } else {
-        console.log(`Source already downloaded in sources dir: ${localSource}`);
+        // keep original downloaded source files separate from trimmed output videos
+        localSource = path.join(LOCAL_SOURCE_DIR, path.basename(source));
+        if (!fs.existsSync(localSource)) {
+          console.log(`SCP ${source} to ${localSource}`);
+          await ssh.getFile(localSource, source);
+        } else {
+          console.log(
+            `Source already downloaded in sources dir: ${localSource}`
+          );
+        }
+        lastSource = source;
       }
-      lastSource = source;
     }
-    const trimmedVideo = path.join(LOCAL_VIDEO_DIR, `${cleanName}.mp4`);
-    const thumbnail = path.join(LOCAL_THUMB_DIR, `${cleanName}.jpg`);
 
     // 2. ffmpeg trim
-    if (!fs.existsSync(trimmedVideo)) {
-      console.log(`Trimming video: ${localSource} -> ${trimmedVideo}`);
+    if (!fs.existsSync(trimmedVideoPath)) {
+      console.log(`Trimming video: ${localSource} -> ${trimmedVideoPath}`);
       execSync(
-        `ffmpeg -y -i "${localSource}" -ss ${Start} -to ${End} -c:v libx264 -profile:v high -pix_fmt yuv420p -c:a copy -b:a 128k -movflags +faststart "${trimmedVideo}"`
+        `ffmpeg -y -i "${localSource}" -ss ${Start} -to ${End} -c:v libx264 -profile:v high -pix_fmt yuv420p -c:a copy -b:a 128k -movflags +faststart "${trimmedVideoPath}"`
       );
     }
 
     // 3. ffmpeg thumbnail
-    if (!fs.existsSync(thumbnail)) {
-      console.log(`Extracting thumbnail: ${trimmedVideo} -> ${thumbnail}`);
+    if (!fs.existsSync(thumbnailPath)) {
+      console.log(`Extracting thumbnail: ${trimmedVideoPath} -> ${thumbnailPath}`);
       execSync(
-        `ffmpeg -y -i "${trimmedVideo}" -frames:v 1 -q:v 2 "${thumbnail}"`
+        `ffmpeg -y -i "${trimmedVideoPath}" -frames:v 1 -q:v 2 "${thumbnailPath}"`
       );
     }
 
     // 4. Compute blurhash
-    const image = await sharp(thumbnail)
+    const image = await sharp(thumbnailPath)
       .raw()
       .ensureAlpha()
       .resize(32, 32)
@@ -279,7 +304,7 @@ async function processCSV(passphrase: string, rowArg?: string) {
     );
 
     // 5.2 Upload video to S3
-    const videoData = fs.readFileSync(trimmedVideo);
+    const videoData = fs.readFileSync(trimmedVideoPath);
     await axios.put(generateUploadUrl.uploadUrl, videoData, {
       headers: {
         'Content-Type': contentType,
@@ -293,8 +318,8 @@ async function processCSV(passphrase: string, rowArg?: string) {
 
     // 5.3 Upload thumbnail to S3
     let thumbnailUrl = undefined;
-    if (generateUploadUrl.thumbnailUploadUrl && fs.existsSync(thumbnail)) {
-      const thumbnailData = fs.readFileSync(thumbnail);
+    if (generateUploadUrl.thumbnailUploadUrl && fs.existsSync(thumbnailPath)) {
+      const thumbnailData = fs.readFileSync(thumbnailPath);
       await axios.put(generateUploadUrl.thumbnailUploadUrl, thumbnailData, {
         headers: {
           'Content-Type': thumbnailContentType,
@@ -351,8 +376,8 @@ async function processCSV(passphrase: string, rowArg?: string) {
       name,
       description: description || script,
       script,
-      characters,
-      tags,
+      characters: splitCsvArray(characters),
+      tags: splitCsvArray(tags),
       blurhash,
       s3Key,
       videoUrl,
