@@ -92,6 +92,9 @@ async function processCSV(passphrase: string, rowArg?: string) {
     }
   `;
 
+  let skipped = 0;
+  let processed = 0;
+  let alreadyPresent = 0;
   for (const row of selectedRows) {
     const currentIndex = rows.indexOf(row) + 1;
     console.log(`Processing ${currentIndex} of ${rows.length}`);
@@ -109,6 +112,17 @@ async function processCSV(passphrase: string, rowArg?: string) {
       source,
     } = row;
 
+    if (!source || !name || !Start || !End) {
+      skipped += 1;
+      continue;
+    }
+
+    // Clean the name for file usage
+    const cleanName = name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '');
+
     // Query backend to check if video already exists by name and ensure names match
     try {
       const result = await client.request(getVideoClipByNameQuery, {
@@ -121,6 +135,7 @@ async function processCSV(passphrase: string, rowArg?: string) {
         result.videoClips.some((clip: any) => clip.name === name)
       ) {
         console.log(`Clip already exists on backend, skipping: ${name}`);
+        alreadyPresent += 1;
         continue;
       }
     } catch (err) {
@@ -139,8 +154,8 @@ async function processCSV(passphrase: string, rowArg?: string) {
       }
       lastSource = source;
     }
-    const trimmedVideo = path.join(LOCAL_VIDEO_DIR, `${name}.mp4`);
-    const thumbnail = path.join(LOCAL_THUMB_DIR, `${name}.jpg`);
+    const trimmedVideo = path.join(LOCAL_VIDEO_DIR, `${cleanName}.mp4`);
+    const thumbnail = path.join(LOCAL_THUMB_DIR, `${cleanName}.jpg`);
 
     // 2. ffmpeg trim
     console.log(`Trimming video: ${localSource} -> ${trimmedVideo}`);
@@ -193,11 +208,11 @@ async function processCSV(passphrase: string, rowArg?: string) {
         }
       }
     `;
-    const fileName = `${name}.mp4`;
+    const fileName = `${cleanName}.mp4`;
     const contentType = 'video/mp4';
-    const thumbnailFileName = `${name}.jpg`;
+    const thumbnailFileName = `${cleanName}.jpg`;
     const thumbnailContentType = 'image/jpeg';
-    
+
     const { generateUploadUrl } = await client.request(
       generateUploadUrlMutation,
       {
@@ -207,7 +222,6 @@ async function processCSV(passphrase: string, rowArg?: string) {
         thumbnailContentType,
       }
     );
-    console.log('Generated upload URLs:', generateUploadUrl);
 
     // 5.2 Upload video to S3
     const videoData = fs.readFileSync(trimmedVideo);
@@ -259,9 +273,12 @@ async function processCSV(passphrase: string, rowArg?: string) {
     };
     await client.request(createVideoClipMutation, { input });
     console.log(`Uploaded and saved clip: ${name}`);
+    processed += 1;
   }
 
-  console.log('All done!');
+  console.log(
+    `All done! Processed: ${processed}, Skipped (missing data): ${skipped}, Already Present: ${alreadyPresent}`
+  );
   ssh.dispose();
 }
 
@@ -301,7 +318,6 @@ function askPassphrase(): Promise<string> {
     });
   });
 }
-
 
 // Parse named argument --row-range=<value>
 let rowArg: string | undefined = undefined;
