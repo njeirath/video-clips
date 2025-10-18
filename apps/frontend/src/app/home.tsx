@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import Box from '@mui/material/Box';
@@ -15,6 +15,10 @@ import InputAdornment from '@mui/material/InputAdornment';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
 import Snackbar from '@mui/material/Snackbar';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
 import { useQuery } from '@apollo/client/react';
 import { graphql } from '../gql/gql';
 import { useNavigate } from 'react-router-dom';
@@ -186,6 +190,16 @@ const GET_VIDEO_CLIPS = graphql(`
       shareUrl
       thumbnailUrl
       createdAt
+      source {
+        ... on ShowSource {
+          title
+          season
+          episode
+        }
+        ... on MovieSource {
+          title
+        }
+      }
     }
   }
 `);
@@ -193,12 +207,16 @@ const GET_VIDEO_CLIPS = graphql(`
 const ITEMS_PER_PAGE = 12;
 const DEBOUNCE_DELAY = 500; // 500ms debounce
 
+type SortOption = 'createdAt' | 'name';
+
 export default function Home() {
   const [searchInput, setSearchInput] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [offset, setOffset] = useState(0);
   const [allClips, setAllClips] = useState<any[]>([]);
   const [hasMore, setHasMore] = useState(true);
+  const [sortBy, setSortBy] = useState<SortOption>('createdAt');
+  const [filterShow, setFilterShow] = useState<string>('all');
   const observerTarget = useRef<HTMLDivElement>(null);
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
 
@@ -290,6 +308,41 @@ export default function Home() {
     };
   }, [handleObserver]);
 
+  // Extract unique show titles from all clips
+  const availableShows = useMemo(() => {
+    const showSet = new Set<string>();
+    allClips.forEach((clip) => {
+      if (clip.source && clip.source.__typename === 'ShowSource') {
+        showSet.add(clip.source.title);
+      }
+    });
+    return Array.from(showSet).sort();
+  }, [allClips]);
+
+  // Apply filtering and sorting
+  const displayedClips = useMemo(() => {
+    let filtered = [...allClips];
+
+    // Filter by show
+    if (filterShow !== 'all') {
+      filtered = filtered.filter((clip) => {
+        return clip.source && 
+               clip.source.__typename === 'ShowSource' && 
+               clip.source.title === filterShow;
+      });
+    }
+
+    // Sort clips
+    if (sortBy === 'name') {
+      filtered.sort((a, b) => a.name.localeCompare(b.name));
+    } else {
+      // Default: sort by createdAt descending (newest first)
+      filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    }
+
+    return filtered;
+  }, [allClips, filterShow, sortBy]);
+
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
       {/* Sticky search bar */}
@@ -323,8 +376,51 @@ export default function Home() {
               maxWidth: 600,
               mx: 'auto',
               display: 'block',
+              mb: 2,
             }}
           />
+          
+          {/* Sorting and Filtering Controls */}
+          <Box
+            sx={{
+              display: 'flex',
+              gap: 2,
+              justifyContent: 'center',
+              flexWrap: 'wrap',
+            }}
+          >
+            <FormControl sx={{ minWidth: 200 }} size="small">
+              <InputLabel id="sort-label">Sort By</InputLabel>
+              <Select
+                labelId="sort-label"
+                id="sort-select"
+                value={sortBy}
+                label="Sort By"
+                onChange={(e) => setSortBy(e.target.value as SortOption)}
+              >
+                <MenuItem value="createdAt">Date Added (Newest First)</MenuItem>
+                <MenuItem value="name">Name (A-Z)</MenuItem>
+              </Select>
+            </FormControl>
+
+            <FormControl sx={{ minWidth: 200 }} size="small">
+              <InputLabel id="filter-label">Filter by Show</InputLabel>
+              <Select
+                labelId="filter-label"
+                id="filter-select"
+                value={filterShow}
+                label="Filter by Show"
+                onChange={(e) => setFilterShow(e.target.value)}
+              >
+                <MenuItem value="all">All Shows</MenuItem>
+                {availableShows.map((show) => (
+                  <MenuItem key={show} value={show}>
+                    {show}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
         </Container>
       </Box>
 
@@ -342,7 +438,7 @@ export default function Home() {
           </Alert>
         )}
 
-        {!loading && allClips.length === 0 && (
+        {!loading && displayedClips.length === 0 && allClips.length === 0 && (
           <Box sx={{ textAlign: 'center', py: 8 }}>
             <Typography variant="h6" color="text.secondary">
               {searchInput
@@ -352,9 +448,17 @@ export default function Home() {
           </Box>
         )}
 
-        {allClips.length > 0 && (
+        {!loading && displayedClips.length === 0 && allClips.length > 0 && (
+          <Box sx={{ textAlign: 'center', py: 8 }}>
+            <Typography variant="h6" color="text.secondary">
+              No video clips match the selected filters
+            </Typography>
+          </Box>
+        )}
+
+        {displayedClips.length > 0 && (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24 }}>
-            {allClips.map((clip) => (
+            {displayedClips.map((clip) => (
               <VideoClipPlayer key={clip.id} clip={clip} />
             ))}
           </div>
