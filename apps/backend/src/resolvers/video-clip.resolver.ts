@@ -27,12 +27,16 @@ export class VideoClipResolver {
     @Arg('offset', () => Int, { nullable: true, defaultValue: 0 })
     offset?: number,
     @Arg('limit', () => Int, { nullable: true, defaultValue: 12 })
-    limit?: number
+    limit?: number,
+    @Arg('sortBy', () => String, { nullable: true }) sortBy?: string,
+    @Arg('filterShow', () => String, { nullable: true }) filterShow?: string
   ): Promise<VideoClip[]> {
     const result = await openSearchService.searchVideoClips(
       searchQuery,
       offset,
-      limit
+      limit,
+      sortBy,
+      filterShow
     );
     return result.clips;
   }

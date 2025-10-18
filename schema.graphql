@@ -1,6 +1,6 @@
 type Query {
   hello: String!
-  videoClips(limit: Int = 12, offset: Int = 0, searchQuery: String): [VideoClip!]!
+  videoClips(limit: Int = 12, offset: Int = 0, searchQuery: String, sortBy: String, filterShow: String): [VideoClip!]!
   videoClip(id: String!): VideoClip
   myVideoClips: [VideoClip!]!
 }

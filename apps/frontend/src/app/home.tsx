@@ -179,8 +179,8 @@ function VideoClipPlayer({ clip }: VideoClipPlayerProps) {
 }
 
 const GET_VIDEO_CLIPS = graphql(`
-  query GetVideoClips($searchQuery: String, $offset: Int, $limit: Int) {
-    videoClips(searchQuery: $searchQuery, offset: $offset, limit: $limit) {
+  query GetVideoClips($searchQuery: String, $offset: Int, $limit: Int, $sortBy: String, $filterShow: String) {
+    videoClips(searchQuery: $searchQuery, offset: $offset, limit: $limit, sortBy: $sortBy, filterShow: $filterShow) {
       id
       name
       description
@@ -225,6 +225,8 @@ export default function Home() {
       searchQuery: debouncedSearch || undefined,
       offset: 0,
       limit: ITEMS_PER_PAGE,
+      sortBy: sortBy,
+      filterShow: filterShow !== 'all' ? filterShow : undefined,
     },
     fetchPolicy: 'cache-and-network',
   });
@@ -237,6 +239,12 @@ export default function Home() {
       setHasMore(data.videoClips.length >= ITEMS_PER_PAGE);
     }
   }, [data]);
+
+  // Reset when sort or filter changes
+  useEffect(() => {
+    setOffset(0);
+    setAllClips([]);
+  }, [sortBy, filterShow]);
 
   // Debounce search input
   useEffect(() => {
@@ -266,6 +274,8 @@ export default function Home() {
           searchQuery: debouncedSearch || undefined,
           offset: offset,
           limit: ITEMS_PER_PAGE,
+          sortBy: sortBy,
+          filterShow: filterShow !== 'all' ? filterShow : undefined,
         },
       });
 
@@ -278,7 +288,7 @@ export default function Home() {
     } catch (err) {
       console.error('Error loading more clips:', err);
     }
-  }, [hasMore, loading, fetchMore, debouncedSearch, offset]);
+  }, [hasMore, loading, fetchMore, debouncedSearch, offset, sortBy, filterShow]);
 
   // Infinite scroll implementation
   const handleObserver = useCallback(
@@ -318,30 +328,6 @@ export default function Home() {
     });
     return Array.from(showSet).sort();
   }, [allClips]);
-
-  // Apply filtering and sorting
-  const displayedClips = useMemo(() => {
-    let filtered = [...allClips];
-
-    // Filter by show
-    if (filterShow !== 'all') {
-      filtered = filtered.filter((clip) => {
-        return clip.source && 
-               clip.source.__typename === 'ShowSource' && 
-               clip.source.title === filterShow;
-      });
-    }
-
-    // Sort clips
-    if (sortBy === 'name') {
-      filtered.sort((a, b) => a.name.localeCompare(b.name));
-    } else {
-      // Default: sort by createdAt descending (newest first)
-      filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-    }
-
-    return filtered;
-  }, [allClips, filterShow, sortBy]);
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
@@ -438,27 +424,19 @@ export default function Home() {
           </Alert>
         )}
 
-        {!loading && displayedClips.length === 0 && allClips.length === 0 && (
+        {!loading && allClips.length === 0 && (
           <Box sx={{ textAlign: 'center', py: 8 }}>
             <Typography variant="h6" color="text.secondary">
-              {searchInput
-                ? `No video clips found matching "${searchInput}"`
+              {searchInput || filterShow !== 'all'
+                ? 'No video clips match the selected filters'
                 : 'No video clips available yet'}
             </Typography>
           </Box>
         )}
 
-        {!loading && displayedClips.length === 0 && allClips.length > 0 && (
-          <Box sx={{ textAlign: 'center', py: 8 }}>
-            <Typography variant="h6" color="text.secondary">
-              No video clips match the selected filters
-            </Typography>
-          </Box>
-        )}
-
-        {displayedClips.length > 0 && (
+        {allClips.length > 0 && (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24 }}>
-            {displayedClips.map((clip) => (
+            {allClips.map((clip) => (
               <VideoClipPlayer key={clip.id} clip={clip} />
             ))}
           </div>
