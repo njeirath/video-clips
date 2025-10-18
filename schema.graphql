@@ -1,6 +1,7 @@
 type Query {
   hello: String!
   videoClips(limit: Int = 12, offset: Int = 0, searchQuery: String): [VideoClip!]!
+  videoClip(id: String!): VideoClip
   myVideoClips: [VideoClip!]!
 }
 
@@ -21,6 +22,8 @@ type VideoClip {
   blurhash: String
   source: VideoClipSource
   createdAt: String!
+  updatedAt: String
+  updatedBy: String
 }
 
 union VideoClipSource = ShowSource | MovieSource
@@ -43,6 +46,7 @@ type MovieSource {
 
 type Mutation {
   createVideoClip(input: CreateVideoClipInput!): VideoClip!
+  updateVideoClip(input: UpdateVideoClipInput!): VideoClip!
   generateUploadUrl(contentType: String!, fileName: String!, thumbnailContentType: String, thumbnailFileName: String): PresignedUrlResponse!
 }
 
@@ -57,6 +61,17 @@ input CreateVideoClipInput {
   tags: [String!]
   thumbnailUrl: String
   blurhash: String
+  source: VideoClipSourceInput
+}
+
+input UpdateVideoClipInput {
+  id: ID!
+  description: String
+  shareUrl: String
+  script: String
+  duration: Float
+  characters: [String!]
+  tags: [String!]
   source: VideoClipSourceInput
 }
 
