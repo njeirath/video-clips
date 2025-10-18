@@ -59,8 +59,8 @@ export class VideoClip {
   @Field(() => String)
   name: string;
 
-  @Field(() => String)
-  description: string;
+  @Field(() => String, { nullable: true })
+  description?: string;
 
   @Field(() => String)
   userId: string;
@@ -159,8 +159,8 @@ export class CreateVideoClipInput {
   @Field(() => String)
   name: string;
 
-  @Field(() => String)
-  description: string;
+  @Field(() => String, { nullable: true })
+  description?: string;
 
   @Field(() => String, { nullable: true })
   s3Key?: string;

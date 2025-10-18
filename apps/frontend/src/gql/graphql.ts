@@ -19,7 +19,7 @@ export type Scalars = {
 export type CreateVideoClipInput = {
   blurhash?: InputMaybe<Scalars['String']['input']>;
   characters?: InputMaybe<Array<Scalars['String']['input']>>;
-  description: Scalars['String']['input'];
+  description?: InputMaybe<Scalars['String']['input']>;
   duration?: InputMaybe<Scalars['Float']['input']>;
   name: Scalars['String']['input'];
   s3Key?: InputMaybe<Scalars['String']['input']>;
@@ -135,7 +135,7 @@ export type VideoClip = {
   blurhash?: Maybe<Scalars['String']['output']>;
   characters?: Maybe<Array<Scalars['String']['output']>>;
   createdAt: Scalars['String']['output'];
-  description: Scalars['String']['output'];
+  description?: Maybe<Scalars['String']['output']>;
   duration?: Maybe<Scalars['Float']['output']>;
   id: Scalars['ID']['output'];
   name: Scalars['String']['output'];
@@ -164,7 +164,7 @@ export type CreateVideoClipMutationVariables = Exact<{
 }>;
 
 
-export type CreateVideoClipMutation = { __typename?: 'Mutation', createVideoClip: { __typename?: 'VideoClip', id: string, name: string, description: string, userId: string, createdAt: string } };
+export type CreateVideoClipMutation = { __typename?: 'Mutation', createVideoClip: { __typename?: 'VideoClip', id: string, name: string, description?: string | null, userId: string, createdAt: string } };
 
 export type GenerateUploadUrlMutationVariables = Exact<{
   fileName: Scalars['String']['input'];
@@ -179,7 +179,7 @@ export type GetVideoClipQueryVariables = Exact<{
 }>;
 
 
-export type GetVideoClipQuery = { __typename?: 'Query', videoClip?: { __typename?: 'VideoClip', id: string, name: string, description: string, userId: string, userEmail: string, videoUrl?: string | null, thumbnailUrl?: string | null, script?: string | null, duration?: number | null, characters?: Array<string> | null, tags?: Array<string> | null, createdAt: string, updatedAt?: string | null, updatedBy?: string | null, source?:
+export type GetVideoClipQuery = { __typename?: 'Query', videoClip?: { __typename?: 'VideoClip', id: string, name: string, description?: string | null, userId: string, userEmail: string, videoUrl?: string | null, thumbnailUrl?: string | null, script?: string | null, duration?: number | null, characters?: Array<string> | null, tags?: Array<string> | null, createdAt: string, updatedAt?: string | null, updatedBy?: string | null, source?:
       | { __typename?: 'MovieSource', title: string, releaseDate?: string | null, start?: number | null, end?: number | null }
       | { __typename?: 'ShowSource', title: string, airDate?: string | null, season?: number | null, episode?: number | null, start?: number | null, end?: number | null }
      | null } | null };
@@ -189,7 +189,7 @@ export type UpdateVideoClipMutationVariables = Exact<{
 }>;
 
 
-export type UpdateVideoClipMutation = { __typename?: 'Mutation', updateVideoClip: { __typename?: 'VideoClip', id: string, name: string, description: string, script?: string | null, duration?: number | null, characters?: Array<string> | null, tags?: Array<string> | null, updatedAt?: string | null, updatedBy?: string | null, source?:
+export type UpdateVideoClipMutation = { __typename?: 'Mutation', updateVideoClip: { __typename?: 'VideoClip', id: string, name: string, description?: string | null, script?: string | null, duration?: number | null, characters?: Array<string> | null, tags?: Array<string> | null, updatedAt?: string | null, updatedBy?: string | null, source?:
       | { __typename?: 'MovieSource', title: string, releaseDate?: string | null, start?: number | null, end?: number | null }
       | { __typename?: 'ShowSource', title: string, airDate?: string | null, season?: number | null, episode?: number | null, start?: number | null, end?: number | null }
      | null } };
@@ -201,14 +201,14 @@ export type GetVideoClipsQueryVariables = Exact<{
 }>;
 
 
-export type GetVideoClipsQuery = { __typename?: 'Query', videoClips: Array<{ __typename?: 'VideoClip', id: string, name: string, description: string, userId: string, userEmail: string, videoUrl?: string | null, shareUrl?: string | null, thumbnailUrl?: string | null, createdAt: string }> };
+export type GetVideoClipsQuery = { __typename?: 'Query', videoClips: Array<{ __typename?: 'VideoClip', id: string, name: string, description?: string | null, userId: string, userEmail: string, videoUrl?: string | null, shareUrl?: string | null, thumbnailUrl?: string | null, createdAt: string }> };
 
 export type GetVideoClipDetailQueryVariables = Exact<{
   id: Scalars['String']['input'];
 }>;
 
 
-export type GetVideoClipDetailQuery = { __typename?: 'Query', videoClip?: { __typename?: 'VideoClip', id: string, name: string, description: string, userId: string, userEmail: string, videoUrl?: string | null, thumbnailUrl?: string | null, script?: string | null, duration?: number | null, characters?: Array<string> | null, tags?: Array<string> | null, createdAt: string, updatedAt?: string | null, updatedBy?: string | null, source?:
+export type GetVideoClipDetailQuery = { __typename?: 'Query', videoClip?: { __typename?: 'VideoClip', id: string, name: string, description?: string | null, userId: string, userEmail: string, videoUrl?: string | null, thumbnailUrl?: string | null, script?: string | null, duration?: number | null, characters?: Array<string> | null, tags?: Array<string> | null, createdAt: string, updatedAt?: string | null, updatedBy?: string | null, source?:
       | { __typename?: 'MovieSource', title: string, releaseDate?: string | null, start?: number | null, end?: number | null }
       | { __typename?: 'ShowSource', title: string, airDate?: string | null, season?: number | null, episode?: number | null, start?: number | null, end?: number | null }
      | null } | null };

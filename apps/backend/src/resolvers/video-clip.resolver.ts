@@ -76,10 +76,6 @@ export class VideoClipResolver {
       throw new Error('Name is required');
     }
 
-    if (!input.description || !input.description.trim()) {
-      throw new Error('Description is required');
-    }
-
     // Convert source input to source object for storage
     let source: any = undefined;
     if (input.source) {
@@ -102,7 +98,7 @@ export class VideoClipResolver {
     const shareUrl = await s3Service.generateSharePage({
       id: clipId,
       name: input.name.trim(),
-      description: input.description.trim(),
+      description: input.description?.trim() || '',
       videoUrl: input.videoUrl,
       thumbnailUrl: input.thumbnailUrl,
       source,
@@ -111,7 +107,7 @@ export class VideoClipResolver {
     const videoClip = {
       id: clipId,
       name: input.name.trim(),
-      description: input.description.trim(),
+      description: input.description?.trim() || '',
       userId: ctx.userId,
       userEmail: ctx.userEmail,
       s3Key: input.s3Key,
@@ -159,9 +155,6 @@ export class VideoClipResolver {
     };
 
     if (input.description !== undefined) {
-      if (!input.description.trim()) {
-        throw new Error('Description cannot be empty');
-      }
       updates.description = input.description.trim();
     }
 

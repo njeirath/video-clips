@@ -40,12 +40,13 @@ vi.mock('@apollo/client/react', () => ({
 }));
 
 describe('EditVideoClip validation', () => {
-  it('should validate that description cannot be empty', () => {
-    // Test that the form validates description as required
+  it('should allow empty description', () => {
+    // Test that the form allows description to be optional
     const emptyDescription = '';
     const validDescription = 'Test description';
 
-    expect(emptyDescription.trim().length > 0).toBe(false);
+    // Both empty and filled descriptions should be allowed
+    expect(emptyDescription.length === 0).toBe(true);
     expect(validDescription.trim().length > 0).toBe(true);
   });
 

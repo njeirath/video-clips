@@ -222,7 +222,7 @@ export default function AddVideoClip() {
         variables: {
           input: {
             name: data.name.trim(),
-            description: data.description.trim(),
+            description: data.description?.trim() || undefined,
             s3Key,
             videoUrl,
             script: data.script?.trim() || undefined,
@@ -309,23 +309,17 @@ export default function AddVideoClip() {
           <Controller
             name="description"
             control={control}
-            rules={{
-              required: 'Description is required',
-              validate: (value) => value.trim().length > 0 || 'Description cannot be empty',
-            }}
             render={({ field }) => (
               <TextField
                 {...field}
                 margin="normal"
-                required
                 fullWidth
                 id="description"
-                label="Description"
+                label="Description (Optional)"
                 multiline
                 rows={4}
                 disabled={loading || isSubmitting || uploading}
-                error={!!errors.description}
-                helperText={errors.description?.message}
+                helperText="Provide a brief description of the video clip"
               />
             )}
           />
