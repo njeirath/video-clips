@@ -249,7 +249,7 @@ export default function EditVideoClip() {
         variables: {
           input: {
             id,
-            description: formData.description.trim(),
+            description: formData.description?.trim() || undefined,
             script: formData.script?.trim() || undefined,
             duration: formData.duration || undefined,
             characters,
@@ -337,23 +337,17 @@ export default function EditVideoClip() {
           <Controller
             name="description"
             control={control}
-            rules={{
-              required: 'Description is required',
-              validate: (value) => value.trim().length > 0 || 'Description cannot be empty',
-            }}
             render={({ field }) => (
               <TextField
                 {...field}
                 margin="normal"
-                required
                 fullWidth
                 id="description"
-                label="Description"
+                label="Description (Optional)"
                 multiline
                 rows={4}
                 disabled={updating || isSubmitting}
-                error={!!errors.description}
-                helperText={errors.description?.message}
+                helperText="Provide a brief description of the video clip"
               />
             )}
           />

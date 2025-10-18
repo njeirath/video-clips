@@ -154,7 +154,7 @@ export class S3Service {
   async generateSharePage(clipData: {
     id: string;
     name: string;
-    description: string;
+    description?: string;
     videoUrl?: string;
     thumbnailUrl?: string;
     source?: any;
@@ -182,7 +182,7 @@ export class S3Service {
     }
 
     // Build the description
-    const metaDescription = clipData.description || 'Video clip';
+    const metaDescription = clipData.description || clipData.name;
 
     // Get the share URL
     const shareUrl = this.cloudFrontDomain

@@ -168,12 +168,14 @@ export default function VideoClipDetail() {
             </Typography>
           </Divider>
 
-          <Box sx={{ mb: 2 }}>
-            <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-              Description
-            </Typography>
-            <Typography variant="body1">{clip.description}</Typography>
-          </Box>
+          {clip.description && (
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                Description
+              </Typography>
+              <Typography variant="body1">{clip.description}</Typography>
+            </Box>
+          )}
 
           {clip.script && (
             <Box sx={{ mb: 2 }}>

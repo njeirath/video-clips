@@ -108,7 +108,6 @@ describe("VideoClipResolver", () => {
     it("should throw error when name is only whitespace", async () => {
       const input: CreateVideoClipInput = {
         name: "   ",
-        description: "Test Description",
       };
       const context: Context = {
         userId: "test-user-123",
@@ -120,7 +119,27 @@ describe("VideoClipResolver", () => {
       );
     });
 
-    it("should throw error when description is empty", async () => {
+    it("should create video clip without description", async () => {
+      const input: CreateVideoClipInput = {
+        name: "Test Video",
+      };
+      const context: Context = {
+        userId: "test-user-123",
+        userEmail: "test@example.com",
+      };
+
+      const result = await resolver.createVideoClip(input, context);
+
+      expect(result).toBeDefined();
+      expect(result.name).toBe("Test Video");
+      expect(result.description).toBe("");
+      expect(result.userId).toBe("test-user-123");
+      expect(result.userEmail).toBe("test@example.com");
+      expect(result.id).toBeDefined();
+      expect(result.createdAt).toBeDefined();
+    });
+
+    it("should create video clip with empty description", async () => {
       const input: CreateVideoClipInput = {
         name: "Test Video",
         description: "",
@@ -130,9 +149,11 @@ describe("VideoClipResolver", () => {
         userEmail: "test@example.com",
       };
 
-      await expect(resolver.createVideoClip(input, context)).rejects.toThrow(
-        "Description is required"
-      );
+      const result = await resolver.createVideoClip(input, context);
+
+      expect(result).toBeDefined();
+      expect(result.name).toBe("Test Video");
+      expect(result.description).toBe("");
     });
 
     it("should create video clip with valid input", async () => {
@@ -406,7 +427,7 @@ describe("VideoClipResolver", () => {
       );
     });
 
-    it("should throw error when description is empty", async () => {
+    it("should update video clip with empty description", async () => {
       const input: UpdateVideoClipInput = {
         id: "test-id",
         description: "",
@@ -416,16 +437,30 @@ describe("VideoClipResolver", () => {
         userEmail: "test@example.com",
       };
 
-      const { openSearchService } = require("../services/opensearch.service");
-      openSearchService.getVideoClip.mockResolvedValueOnce({
+      const existingClip = {
         id: "test-id",
         name: "Test Video",
         description: "Original Description",
-      });
+        userId: "test-user-123",
+        userEmail: "test@example.com",
+        createdAt: "2024-01-01T00:00:00.000Z",
+      };
 
-      await expect(resolver.updateVideoClip(input, context)).rejects.toThrow(
-        "Description cannot be empty"
-      );
+      const updatedClip = {
+        ...existingClip,
+        description: "",
+        updatedAt: "2024-01-02T00:00:00.000Z",
+        updatedBy: "test@example.com",
+      };
+
+      const { openSearchService } = require("../services/opensearch.service");
+      openSearchService.getVideoClip
+        .mockResolvedValueOnce(existingClip)
+        .mockResolvedValueOnce(updatedClip);
+
+      const result = await resolver.updateVideoClip(input, context);
+
+      expect(result.description).toBe("");
     });
 
     it("should update video clip with valid input", async () => {
