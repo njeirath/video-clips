@@ -9,6 +9,8 @@ import SignIn from './app/auth/signin';
 import ConfirmSignUp from './app/auth/confirm';
 import Home from './app/home';
 import AddVideoClip from './app/add-video-clip';
+import VideoClipDetail from './app/video-clip-detail';
+import EditVideoClip from './app/edit-video-clip';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import theme from './theme';
@@ -38,6 +40,14 @@ const router = createBrowserRouter([
       {
         path: 'add-clip',
         element: <AddVideoClip />,
+      },
+      {
+        path: 'clip/:id',
+        element: <VideoClipDetail />,
+      },
+      {
+        path: 'clip/:id/edit',
+        element: <EditVideoClip />,
       },
     ],
   },

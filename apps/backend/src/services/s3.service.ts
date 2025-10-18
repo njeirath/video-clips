@@ -218,7 +218,7 @@ export class S3Service {
       fallbackImage,
     });
 
-    // Upload the HTML file to S3
+    // Upload the HTML file to S3 
     const command = new PutObjectCommand({
       Bucket: this.bucketName,
       Key: s3Key,

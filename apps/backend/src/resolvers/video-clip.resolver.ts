@@ -7,7 +7,7 @@ import {
   Authorized,
   Int,
 } from 'type-graphql';
-import { VideoClip, CreateVideoClipInput, PresignedUrlResponse } from '../types/video-clip';
+import { VideoClip, CreateVideoClipInput, UpdateVideoClipInput, PresignedUrlResponse } from '../types/video-clip';
 import { openSearchService } from '../services/opensearch.service';
 import { s3Service } from '../services/s3.service';
 import { v4 as uuidv4 } from 'uuid';
@@ -35,6 +35,18 @@ export class VideoClipResolver {
       limit
     );
     return result.clips;
+  }
+
+  @Query(() => VideoClip, { nullable: true })
+  async videoClip(
+    @Arg('id', () => String) id: string
+  ): Promise<VideoClip | null> {
+    try {
+      return await openSearchService.getVideoClip(id);
+    } catch (error) {
+      console.error('Error fetching video clip:', error);
+      return null;
+    }
   }
 
   @Query(() => [VideoClip])
@@ -118,6 +130,85 @@ export class VideoClipResolver {
     await openSearchService.createVideoClip(videoClip);
 
     return videoClip;
+  }
+
+  @Mutation(() => VideoClip)
+  async updateVideoClip(
+    @Arg('input', () => UpdateVideoClipInput) input: UpdateVideoClipInput,
+    @Ctx() ctx: Context
+  ): Promise<VideoClip> {
+    // Require authentication
+    if (!ctx.userId) {
+      throw new Error('Not authenticated. Please sign in to edit video clips.');
+    }
+
+    if (!ctx.userEmail) {
+      throw new Error('User email not found in authentication token.');
+    }
+
+    // Get the existing clip to verify it exists
+    const existingClip = await openSearchService.getVideoClip(input.id);
+    if (!existingClip) {
+      throw new Error('Video clip not found');
+    }
+
+    // Build updates object with only provided fields
+    const updates: any = {
+      updatedAt: new Date().toISOString(),
+      updatedBy: ctx.userEmail,
+    };
+
+    if (input.description !== undefined) {
+      if (!input.description.trim()) {
+        throw new Error('Description cannot be empty');
+      }
+      updates.description = input.description.trim();
+    }
+
+    if (input.shareUrl !== undefined) {
+      updates.shareUrl = input.shareUrl;
+    }
+
+    if (input.script !== undefined) {
+      updates.script = input.script;
+    }
+
+    if (input.duration !== undefined) {
+      updates.duration = input.duration;
+    }
+
+    if (input.characters !== undefined) {
+      updates.characters = input.characters;
+    }
+
+    if (input.tags !== undefined) {
+      updates.tags = input.tags;
+    }
+
+    // Convert source input to source object for storage
+    if (input.source !== undefined) {
+      let source: any = undefined;
+      if (input.source) {
+        if (input.source.show) {
+          source = {
+            type: 'show',
+            ...input.source.show,
+          };
+        } else if (input.source.movie) {
+          source = {
+            type: 'movie',
+            ...input.source.movie,
+          };
+        }
+      }
+      updates.source = source;
+    }
+
+    await openSearchService.updateVideoClip(input.id, updates);
+
+    // Get updated clip and return it
+    const updatedClip = await openSearchService.getVideoClip(input.id);
+    return updatedClip;
   }
 
   @Mutation(() => PresignedUrlResponse)

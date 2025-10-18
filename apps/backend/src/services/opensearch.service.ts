@@ -77,6 +77,8 @@ export class OpenSearchService {
                   },
                 },
                 createdAt: { type: "date" },
+                updatedAt: { type: "date" },
+                updatedBy: { type: "keyword" },
               },
             },
           },
@@ -120,7 +122,7 @@ export class OpenSearchService {
     }
   }
 
-  async getVideoClip(id: string) {
+  async getVideoClip(id: string): Promise<any> {
     try {
       const response = await this.client.get({
         index: this.indexName,
@@ -130,6 +132,33 @@ export class OpenSearchService {
     } catch (error) {
       console.error("Error fetching video clip from OpenSearch:", error);
       throw new Error("Failed to fetch video clip");
+    }
+  }
+
+  async updateVideoClip(id: string, updates: {
+    description?: string;
+    shareUrl?: string;
+    script?: string;
+    duration?: number;
+    characters?: string[];
+    tags?: string[];
+    source?: any;
+    updatedAt?: string;
+    updatedBy?: string;
+  }): Promise<any> {
+    try {
+      const response = await this.client.update({
+        index: this.indexName,
+        id,
+        body: {
+          doc: updates,
+        },
+        refresh: "true",
+      });
+      return response.body;
+    } catch (error) {
+      console.error("Error updating video clip in OpenSearch:", error);
+      throw new Error("Failed to update video clip");
     }
   }
 

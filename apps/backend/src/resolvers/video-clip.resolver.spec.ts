@@ -1,6 +1,6 @@
 import "reflect-metadata";
 import { VideoClipResolver, Context } from "./video-clip.resolver";
-import { CreateVideoClipInput } from "../types/video-clip";
+import { CreateVideoClipInput, UpdateVideoClipInput } from "../types/video-clip";
 
 // Mock the OpenSearch service
 jest.mock("../services/opensearch.service", () => ({
@@ -9,6 +9,8 @@ jest.mock("../services/opensearch.service", () => ({
     getAllVideoClips: jest.fn().mockResolvedValue([]),
     getVideoClipsByUser: jest.fn().mockResolvedValue([]),
     searchVideoClips: jest.fn().mockResolvedValue({ clips: [], total: 0 }),
+    getVideoClip: jest.fn().mockResolvedValue(null),
+    updateVideoClip: jest.fn().mockResolvedValue({}),
   },
 }));
 
@@ -332,6 +334,195 @@ describe("VideoClipResolver", () => {
       expect(result.thumbnailUploadUrl).toBeDefined();
       expect(result.thumbnailS3Key).toBeDefined();
       expect(result.thumbnailUrl).toBeDefined();
+    });
+  });
+
+  describe("videoClip query", () => {
+    it("should return null if video clip not found", async () => {
+      const result = await resolver.videoClip("non-existent-id");
+      expect(result).toBeNull();
+    });
+
+    it("should return video clip if found", async () => {
+      const mockClip = {
+        id: "test-id",
+        name: "Test Video",
+        description: "Test Description",
+        userId: "test-user-123",
+        userEmail: "test@example.com",
+        createdAt: "2024-01-01T00:00:00.000Z",
+      };
+
+      const { openSearchService } = require("../services/opensearch.service");
+      openSearchService.getVideoClip.mockResolvedValueOnce(mockClip);
+
+      const result = await resolver.videoClip("test-id");
+      expect(result).toEqual(mockClip);
+    });
+  });
+
+  describe("updateVideoClip mutation", () => {
+    it("should throw error when not authenticated", async () => {
+      const input: UpdateVideoClipInput = {
+        id: "test-id",
+        description: "Updated Description",
+      };
+      const context: Context = {};
+
+      await expect(resolver.updateVideoClip(input, context)).rejects.toThrow(
+        "Not authenticated"
+      );
+    });
+
+    it("should throw error when email is missing", async () => {
+      const input: UpdateVideoClipInput = {
+        id: "test-id",
+        description: "Updated Description",
+      };
+      const context: Context = {
+        userId: "test-user-123",
+      };
+
+      await expect(resolver.updateVideoClip(input, context)).rejects.toThrow(
+        "email not found"
+      );
+    });
+
+    it("should throw error when video clip not found", async () => {
+      const input: UpdateVideoClipInput = {
+        id: "non-existent-id",
+        description: "Updated Description",
+      };
+      const context: Context = {
+        userId: "test-user-123",
+        userEmail: "test@example.com",
+      };
+
+      const { openSearchService } = require("../services/opensearch.service");
+      openSearchService.getVideoClip.mockResolvedValueOnce(null);
+
+      await expect(resolver.updateVideoClip(input, context)).rejects.toThrow(
+        "Video clip not found"
+      );
+    });
+
+    it("should throw error when description is empty", async () => {
+      const input: UpdateVideoClipInput = {
+        id: "test-id",
+        description: "",
+      };
+      const context: Context = {
+        userId: "test-user-123",
+        userEmail: "test@example.com",
+      };
+
+      const { openSearchService } = require("../services/opensearch.service");
+      openSearchService.getVideoClip.mockResolvedValueOnce({
+        id: "test-id",
+        name: "Test Video",
+        description: "Original Description",
+      });
+
+      await expect(resolver.updateVideoClip(input, context)).rejects.toThrow(
+        "Description cannot be empty"
+      );
+    });
+
+    it("should update video clip with valid input", async () => {
+      const input: UpdateVideoClipInput = {
+        id: "test-id",
+        description: "Updated Description",
+        script: "Updated Script",
+        tags: ["tag1", "tag2"],
+      };
+      const context: Context = {
+        userId: "test-user-123",
+        userEmail: "test@example.com",
+      };
+
+      const existingClip = {
+        id: "test-id",
+        name: "Test Video",
+        description: "Original Description",
+        userId: "test-user-123",
+        userEmail: "test@example.com",
+        createdAt: "2024-01-01T00:00:00.000Z",
+      };
+
+      const updatedClip = {
+        ...existingClip,
+        description: "Updated Description",
+        script: "Updated Script",
+        tags: ["tag1", "tag2"],
+        updatedAt: expect.any(String),
+        updatedBy: "test@example.com",
+      };
+
+      const { openSearchService } = require("../services/opensearch.service");
+      openSearchService.getVideoClip
+        .mockResolvedValueOnce(existingClip)
+        .mockResolvedValueOnce(updatedClip);
+
+      const result = await resolver.updateVideoClip(input, context);
+
+      expect(result.description).toBe("Updated Description");
+      expect(result.script).toBe("Updated Script");
+      expect(result.tags).toEqual(["tag1", "tag2"]);
+      expect(result.updatedBy).toBe("test@example.com");
+      expect(result.updatedAt).toBeDefined();
+    });
+
+    it("should update video clip with source", async () => {
+      const input: UpdateVideoClipInput = {
+        id: "test-id",
+        source: {
+          show: {
+            title: "Updated Show",
+            season: 2,
+            episode: 3,
+          },
+        },
+      };
+      const context: Context = {
+        userId: "test-user-123",
+        userEmail: "test@example.com",
+      };
+
+      const existingClip = {
+        id: "test-id",
+        name: "Test Video",
+        description: "Test Description",
+        userId: "test-user-123",
+        userEmail: "test@example.com",
+        createdAt: "2024-01-01T00:00:00.000Z",
+      };
+
+      const updatedClip = {
+        ...existingClip,
+        source: {
+          type: "show",
+          title: "Updated Show",
+          season: 2,
+          episode: 3,
+        },
+        updatedAt: "2024-01-02T00:00:00.000Z",
+        updatedBy: "test@example.com",
+      };
+
+      const { openSearchService } = require("../services/opensearch.service");
+      openSearchService.getVideoClip
+        .mockResolvedValueOnce(existingClip)
+        .mockResolvedValueOnce(updatedClip);
+
+      const result = await resolver.updateVideoClip(input, context);
+
+      expect(result.source).toBeDefined();
+      expect(result.source).toMatchObject({
+        type: "show",
+        title: "Updated Show",
+        season: 2,
+        episode: 3,
+      });
     });
   });
 });
