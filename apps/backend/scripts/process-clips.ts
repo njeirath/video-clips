@@ -345,6 +345,8 @@ async function processCSV(passphrase: string, rowArg?: string) {
       };
     }
 
+    const duration = parsedEnd - parsedStart;
+
     const input = {
       name,
       description: description || script,
@@ -355,6 +357,7 @@ async function processCSV(passphrase: string, rowArg?: string) {
       s3Key,
       videoUrl,
       thumbnailUrl,
+      duration,
       source: sourceInput,
     };
     await client.request(createVideoClipMutation, { input });
