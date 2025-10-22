@@ -9,6 +9,9 @@ import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import IconButton from '@mui/material/IconButton';
 import AccountCircle from '@mui/icons-material/AccountCircle';
+import SearchIcon from '@mui/icons-material/Search';
+import TextField from '@mui/material/TextField';
+import InputAdornment from '@mui/material/InputAdornment';
 import { useLocation } from 'react-router-dom';
 import { getCurrentUser, signOut } from 'aws-amplify/auth';
 
@@ -74,39 +77,109 @@ export function App() {
       <AppBar
         position="static"
         color="transparent"
-        sx={{ backgroundColor: '#000 !important', boxShadow: 'none' }}
+        sx={{ 
+          backgroundColor: '#1a2332 !important', 
+          boxShadow: 'none',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+        }}
       >
-        <Toolbar>
-          <Box sx={{ flexGrow: 1 }}>
-            <Button
-              color="inherit"
-              component={Link}
-              to="/"
-              sx={{ p: 0, minWidth: 0 }}
+        <Toolbar sx={{ py: 1 }}>
+          {/* VideoClips Logo/Brand */}
+          <Box 
+            component={Link}
+            to="/"
+            sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              textDecoration: 'none',
+              mr: 4 
+            }}
+          >
+            <Box
+              sx={{
+                width: 32,
+                height: 32,
+                mr: 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
             >
-              <img
-                src="/logo-64.png"
-                alt="Home"
-                width={40}
-                height={40}
-                style={{ display: 'block' }}
-              />
-            </Button>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <path d="M4 4L20 12L4 20V4Z" fill="#3b9dd6" />
+              </svg>
+            </Box>
+            <Typography 
+              variant="h6" 
+              sx={{ 
+                color: '#fff',
+                fontWeight: 600,
+                fontSize: '1.25rem'
+              }}
+            >
+              VideoClips
+            </Typography>
           </Box>
+
+          {/* Search Bar */}
+          <Box sx={{ flexGrow: 1, maxWidth: 600, mx: 2 }}>
+            <TextField
+              fullWidth
+              size="small"
+              placeholder="Search for video clips..."
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon sx={{ color: '#9ca3af' }} />
+                  </InputAdornment>
+                ),
+                sx: {
+                  bgcolor: '#2a3544',
+                  '& fieldset': { border: 'none' },
+                  '&:hover': {
+                    bgcolor: '#323f50',
+                  },
+                }
+              }}
+            />
+          </Box>
+
+          {/* Auth Buttons */}
           {!checking && !signedIn && (
-            <Button
-              color="inherit"
-              component={Link}
-              to="/signup"
-              sx={{ mr: 1 }}
-            >
-              Sign Up
-            </Button>
-          )}
-          {!checking && !signedIn && (
-            <Button color="inherit" component={Link} to="/signin">
-              Sign In
-            </Button>
+            <>
+              <Button
+                component={Link}
+                to="/signin"
+                variant="contained"
+                sx={{ 
+                  mr: 2,
+                  bgcolor: '#3b9dd6',
+                  color: '#fff',
+                  px: 3,
+                  '&:hover': {
+                    bgcolor: '#2d8ac4',
+                  }
+                }}
+              >
+                Login
+              </Button>
+              <Button
+                component={Link}
+                to="/signup"
+                variant="outlined"
+                sx={{ 
+                  borderColor: '#374151',
+                  color: '#fff',
+                  px: 3,
+                  '&:hover': {
+                    borderColor: '#4b5563',
+                    bgcolor: 'rgba(255, 255, 255, 0.05)',
+                  }
+                }}
+              >
+                SignUp
+              </Button>
+            </>
           )}
           {!checking && signedIn && (
             <Button

@@ -21,7 +21,7 @@ import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import { useQuery } from '@apollo/client/react';
 import { graphql } from '../gql/gql';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { BlurhashImage } from './components/BlurhashImage';
 
 
@@ -79,114 +79,154 @@ function VideoClipPlayer({ clip }: VideoClipPlayerProps) {
   const poster = clip.thumbnailUrl || undefined;
   const hasVideo = !!clip.videoUrl;
   return (
-    <div style={{ flex: '1 0 30%', minWidth: 300, maxWidth: 400 }}>
-      <Card
-        onClick={handleCardClick}
-        sx={{
-          height: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-          transition: 'transform 0.2s, box-shadow 0.2s',
-          minHeight: 200,
-          cursor: 'pointer',
-          '&:hover': {
-            transform: 'translateY(-4px)',
-            boxShadow: 4,
-          },
-        }}
-      >
-        <CardContent sx={{ flexGrow: 1 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <Typography variant="h6" component="h2" gutterBottom sx={{ flex: 1 }}>
-              {clip.name}
-            </Typography>
-            {clip.shareUrl && (
-              <Tooltip title="Copy share link">
-                <IconButton onClick={handleShare} size="small" color="primary">
-                  <ShareIcon />
-                </IconButton>
-              </Tooltip>
-            )}
+    <Card
+      onClick={handleCardClick}
+      sx={{
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        transition: 'transform 0.2s, box-shadow 0.2s',
+        cursor: 'pointer',
+        bgcolor: '#2a3544',
+        borderRadius: '12px',
+        overflow: 'hidden',
+        '&:hover': {
+          transform: 'translateY(-4px)',
+          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.3)',
+        },
+      }}
+    >
+      {/* Video/Thumbnail Area */}
+      {hasVideo ? (
+        isPlaying ? (
+          <Box>
+            <video
+              ref={videoRef}
+              controls
+              style={{ width: '100%', height: 200, objectFit: 'cover' }}
+              src={clip.videoUrl}
+              poster={poster}
+              autoPlay
+              onClick={(e) => e.stopPropagation()}
+            >
+              Your browser does not support the video tag.
+            </video>
           </Box>
-          <Typography variant="body2" color="text.secondary">
-            {clip.description}
-          </Typography>
-          {hasVideo ? (
-            isPlaying ? (
-              <Box sx={{ mt: 2 }}>
-                <video
-                  ref={videoRef}
-                  controls
-                  style={{ width: '100%', maxHeight: 200, borderRadius: 4 }}
-                  src={clip.videoUrl}
-                  poster={poster}
-                  autoPlay
-                  // stop clicks on the actual video from triggering the Card click
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  Your browser does not support the video tag.
-                </video>
-              </Box>
-            ) : (
-              // clicking the poster area should start playback but not navigate
-              <Box
-                sx={{ mt: 2, position: 'relative', width: '100%', maxHeight: 200, background: '#000', borderRadius: 4, overflow: 'hidden' }}
-                onClick={(e) => handlePlay(e)}
-              >
-                {poster ? (
-                  <BlurhashImage
-                    src={poster}
-                    blurhash={clip.blurhash}
-                    alt={clip.name}
-                    height={200}
-                    style={{ borderRadius: 4 }}
-                  />
-                ) : (
-                  <div style={{ width: '100%', height: 200, background: '#222' }} />
-                )}
-                <button
-                  onClick={(e) => handlePlay(e)}
-                  style={{
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    fontSize: 32,
-                    background: 'rgba(0,0,0,0.5)',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: '50%',
-                    width: 64,
-                    height: 64,
-                    cursor: 'pointer',
-                  }}
-                  aria-label={`Play ${clip.name}`}
-                >
-                  ▶
-                </button>
-              </Box>
-            )
-          ) : (
-            <Box sx={{ mt: 2, width: '100%', height: 200, background: '#eee', borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Typography color="text.secondary">No video available</Typography>
-            </Box>
-          )}
-          <Typography
-            variant="caption"
-            color="text.secondary"
-            sx={{ display: 'block', mt: 2 }}
+        ) : (
+          <Box
+            sx={{ 
+              position: 'relative', 
+              width: '100%', 
+              height: 200, 
+              background: '#1a2332',
+              overflow: 'hidden' 
+            }}
+            onClick={(e) => handlePlay(e)}
           >
-            Added: {new Date(clip.createdAt).toLocaleDateString()}
-          </Typography>
-        </CardContent>
-      </Card>
+            {poster ? (
+              <BlurhashImage
+                src={poster}
+                blurhash={clip.blurhash}
+                alt={clip.name}
+                height={200}
+                style={{ objectFit: 'cover', width: '100%' }}
+              />
+            ) : (
+              <div style={{ width: '100%', height: 200, background: '#1a2332' }} />
+            )}
+            <button
+              onClick={(e) => handlePlay(e)}
+              style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                fontSize: 32,
+                background: 'rgba(0,0,0,0.6)',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '50%',
+                width: 64,
+                height: 64,
+                cursor: 'pointer',
+              }}
+              aria-label={`Play ${clip.name}`}
+            >
+              ▶
+            </button>
+          </Box>
+        )
+      ) : (
+        <Box sx={{ width: '100%', height: 200, background: '#1a2332', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Typography color="text.secondary">No video available</Typography>
+        </Box>
+      )}
+
+      {/* Card Content */}
+      <CardContent sx={{ flexGrow: 1, p: 2 }}>
+        <Typography 
+          variant="h6" 
+          component="h2" 
+          sx={{ 
+            fontSize: '1rem',
+            fontWeight: 600,
+            mb: 1,
+            color: '#fff',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
+          }}
+        >
+          {clip.name}
+        </Typography>
+        <Typography 
+          variant="body2" 
+          sx={{ 
+            color: '#9ca3af',
+            fontSize: '0.875rem',
+            mb: 2,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
+          }}
+        >
+          {clip.description}
+        </Typography>
+        
+        {/* Share Button */}
+        {clip.shareUrl && (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <IconButton 
+              onClick={handleShare} 
+              size="small" 
+              sx={{ 
+                color: '#9ca3af',
+                '&:hover': { 
+                  color: '#3b9dd6',
+                  bgcolor: 'rgba(59, 157, 214, 0.1)' 
+                } 
+              }}
+            >
+              <ShareIcon fontSize="small" />
+            </IconButton>
+            <Typography variant="caption" sx={{ color: '#9ca3af' }}>
+              Share
+            </Typography>
+          </Box>
+        )}
+      </CardContent>
+      
       <Snackbar
         open={copySuccess}
         autoHideDuration={3000}
         onClose={handleCloseSnackbar}
         message="Share link copied to clipboard!"
       />
-    </div>
+    </Card>
   );
 }
 
@@ -372,132 +412,207 @@ export default function Home() {
   }, [handleObserver]);
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
-      {/* Sticky search bar */}
+    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
+      {/* Left Sidebar */}
       <Box
         sx={{
+          width: 250,
+          bgcolor: '#1a2332',
+          borderRight: '1px solid rgba(255, 255, 255, 0.1)',
+          py: 3,
+          px: 2,
           position: 'sticky',
           top: 0,
-          zIndex: 1100,
-          bgcolor: 'background.paper',
-          borderBottom: 1,
-          borderColor: 'divider',
-          py: 3,
-          boxShadow: 1,
+          height: '100vh',
+          overflowY: 'auto',
         }}
       >
-        <Container maxWidth="lg">
-          <TextField
-            fullWidth
-            variant="outlined"
-            placeholder="Search video clips by name or keywords..."
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon />
-                </InputAdornment>
-              ),
-            }}
-            sx={{
-              maxWidth: 600,
-              mx: 'auto',
-              display: 'block',
-              mb: 2,
-            }}
-          />
-          
-          {/* Sorting and Filtering Controls */}
-          <Box
-            sx={{
-              display: 'flex',
-              gap: 2,
-              justifyContent: 'center',
-              flexWrap: 'wrap',
-            }}
-          >
-            <FormControl sx={{ minWidth: 200 }} size="small">
-              <InputLabel id="sort-label">Sort By</InputLabel>
-              <Select
-                labelId="sort-label"
-                id="sort-select"
-                value={sortBy}
-                label="Sort By"
-                onChange={(e) => setSortBy(e.target.value as SortOption)}
+        <Typography variant="h6" sx={{ color: '#fff', mb: 2, px: 1 }}>
+          Shows
+        </Typography>
+        
+        {availableShows.length > 0 ? (
+          <Box>
+            <Box
+              onClick={() => setFilterShow('all')}
+              sx={{
+                px: 2,
+                py: 1.5,
+                mb: 0.5,
+                borderRadius: '8px',
+                cursor: 'pointer',
+                bgcolor: filterShow === 'all' ? 'rgba(59, 157, 214, 0.15)' : 'transparent',
+                color: filterShow === 'all' ? '#3b9dd6' : '#fff',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                '&:hover': {
+                  bgcolor: filterShow === 'all' ? 'rgba(59, 157, 214, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+                },
+              }}
+            >
+              <Typography variant="body2" sx={{ fontWeight: filterShow === 'all' ? 600 : 400 }}>
+                All Shows
+              </Typography>
+              <Typography variant="body2" sx={{ color: '#9ca3af' }}>
+                {availableShows.reduce((sum, show) => sum + show.count, 0)}
+              </Typography>
+            </Box>
+            {availableShows.map((show) => (
+              <Box
+                key={show.name}
+                onClick={() => setFilterShow(show.name)}
+                sx={{
+                  px: 2,
+                  py: 1.5,
+                  mb: 0.5,
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  bgcolor: filterShow === show.name ? 'rgba(59, 157, 214, 0.15)' : 'transparent',
+                  color: filterShow === show.name ? '#3b9dd6' : '#fff',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  '&:hover': {
+                    bgcolor: filterShow === show.name ? 'rgba(59, 157, 214, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+                  },
+                }}
               >
-                <MenuItem value="createdAt">Date Added (Newest First)</MenuItem>
-                <MenuItem value="name">Name (A-Z)</MenuItem>
-              </Select>
-            </FormControl>
-
-            <FormControl sx={{ minWidth: 200 }} size="small">
-              <InputLabel id="filter-label">Filter by Show</InputLabel>
-              <Select
-                labelId="filter-label"
-                id="filter-select"
-                value={filterShow}
-                label="Filter by Show"
-                onChange={(e) => setFilterShow(e.target.value)}
-              >
-                <MenuItem value="all">All Shows</MenuItem>
-                {availableShows.map((show) => (
-                  <MenuItem key={show.name} value={show.name}>
-                    {show.name} ({show.count})
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+                <Typography variant="body2" sx={{ fontWeight: filterShow === show.name ? 600 : 400 }}>
+                  {show.name}
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#9ca3af' }}>
+                  {show.count}
+                </Typography>
+              </Box>
+            ))}
           </Box>
-        </Container>
+        ) : (
+          <Typography variant="body2" sx={{ color: '#9ca3af', px: 1 }}>
+            No shows available
+          </Typography>
+        )}
       </Box>
 
-      {/* Video clips list */}
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-        {loading && allClips.length === 0 && (
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-            <CircularProgress />
+      {/* Main Content Area */}
+      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        {/* Header with Title and Sort */}
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            px: 4,
+            py: 3,
+          }}
+        >
+          <Typography variant="h4" sx={{ color: '#fff', fontWeight: 600 }}>
+            Explore Clips
+          </Typography>
+          
+          <FormControl sx={{ minWidth: 200 }} size="small">
+            <InputLabel id="sort-label">Sort by</InputLabel>
+            <Select
+              labelId="sort-label"
+              id="sort-select"
+              value={sortBy}
+              label="Sort by"
+              onChange={(e) => setSortBy(e.target.value as SortOption)}
+              sx={{
+                bgcolor: '#2a3544',
+                '& .MuiOutlinedInput-notchedOutline': {
+                  border: 'none',
+                },
+              }}
+            >
+              <MenuItem value="createdAt">Most Recent</MenuItem>
+              <MenuItem value="name">Name (A-Z)</MenuItem>
+            </Select>
+          </FormControl>
+        </Box>
+
+        {/* Video clips grid */}
+        <Box sx={{ flex: 1, px: 4, pb: 4 }}>
+          {loading && allClips.length === 0 && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+              <CircularProgress />
+            </Box>
+          )}
+
+          {error && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              Failed to load video clips. Please try again later.
+            </Alert>
+          )}
+
+          {!loading && allClips.length === 0 && (
+            <Box sx={{ textAlign: 'center', py: 8 }}>
+              <Typography variant="h6" color="text.secondary">
+                {searchInput || filterShow !== 'all'
+                  ? 'No video clips match the selected filters'
+                  : 'No video clips available yet'}
+              </Typography>
+            </Box>
+          )}
+
+          {allClips.length > 0 && (
+            <Grid container spacing={3}>
+              {allClips.map((clip) => (
+                <Grid item xs={12} sm={6} md={4} lg={3} key={clip.id}>
+                  <VideoClipPlayer clip={clip} />
+                </Grid>
+              ))}
+            </Grid>
+          )}
+
+          {/* Infinite scroll trigger */}
+          {hasMore && allClips.length > 0 && (
+            <Box
+              ref={observerTarget}
+              sx={{
+                display: 'flex',
+                justifyContent: 'center',
+                py: 4,
+              }}
+            >
+              <CircularProgress size={32} />
+            </Box>
+          )}
+        </Box>
+
+        {/* Footer */}
+        <Box
+          sx={{
+            borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+            py: 3,
+            px: 4,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
+          <Typography variant="body2" sx={{ color: '#9ca3af' }}>
+            © 2024 VideoClips. All rights reserved.
+          </Typography>
+          <Box sx={{ display: 'flex', gap: 3 }}>
+            <Link to="/about" style={{ textDecoration: 'none' }}>
+              <Typography variant="body2" sx={{ color: '#9ca3af', '&:hover': { color: '#fff' } }}>
+                About Us
+              </Typography>
+            </Link>
+            <Link to="/contact" style={{ textDecoration: 'none' }}>
+              <Typography variant="body2" sx={{ color: '#9ca3af', '&:hover': { color: '#fff' } }}>
+                Contact
+              </Typography>
+            </Link>
+            <Link to="/terms" style={{ textDecoration: 'none' }}>
+              <Typography variant="body2" sx={{ color: '#9ca3af', '&:hover': { color: '#fff' } }}>
+                Terms of Service
+              </Typography>
+            </Link>
           </Box>
-        )}
-
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            Failed to load video clips. Please try again later.
-          </Alert>
-        )}
-
-        {!loading && allClips.length === 0 && (
-          <Box sx={{ textAlign: 'center', py: 8 }}>
-            <Typography variant="h6" color="text.secondary">
-              {searchInput || filterShow !== 'all'
-                ? 'No video clips match the selected filters'
-                : 'No video clips available yet'}
-            </Typography>
-          </Box>
-        )}
-
-        {allClips.length > 0 && (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24 }}>
-            {allClips.map((clip) => (
-              <VideoClipPlayer key={clip.id} clip={clip} />
-            ))}
-          </div>
-        )}
-
-        {/* Infinite scroll trigger */}
-        {hasMore && allClips.length > 0 && (
-          <Box
-            ref={observerTarget}
-            sx={{
-              display: 'flex',
-              justifyContent: 'center',
-              py: 4,
-            }}
-          >
-            <CircularProgress size={32} />
-          </Box>
-        )}
-      </Container>
+        </Box>
+      </Box>
     </Box>
   );
 }
