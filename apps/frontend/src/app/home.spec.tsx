@@ -26,6 +26,7 @@ const mockVideoClipsByDate = [
     videoUrl: 'https://example.com/video2.mp4',
     shareUrl: 'https://example.com/share2',
     thumbnailUrl: 'https://example.com/thumb2.jpg',
+    blurhash: 'LEHV6nWB2yk8pyo0adR*.7kCMdnj',
     createdAt: '2024-01-20T10:00:00Z',
     source: {
       __typename: 'ShowSource' as const,
@@ -43,6 +44,7 @@ const mockVideoClipsByDate = [
     videoUrl: 'https://example.com/video1.mp4',
     shareUrl: 'https://example.com/share1',
     thumbnailUrl: 'https://example.com/thumb1.jpg',
+    blurhash: 'L6PZfSi_.AyE_3t7t7R**0o#DgR4',
     createdAt: '2024-01-15T10:00:00Z',
     source: {
       __typename: 'ShowSource' as const,
@@ -60,6 +62,7 @@ const mockVideoClipsByDate = [
     videoUrl: 'https://example.com/video3.mp4',
     shareUrl: 'https://example.com/share3',
     thumbnailUrl: 'https://example.com/thumb3.jpg',
+    blurhash: 'LGF5]+Yk^6#M@-5c,1J5@[or[Q6.',
     createdAt: '2024-01-10T10:00:00Z',
     source: {
       __typename: 'ShowSource' as const,
@@ -81,6 +84,7 @@ const mockVideoClipsByName = [
     videoUrl: 'https://example.com/video2.mp4',
     shareUrl: 'https://example.com/share2',
     thumbnailUrl: 'https://example.com/thumb2.jpg',
+    blurhash: 'LEHV6nWB2yk8pyo0adR*.7kCMdnj',
     createdAt: '2024-01-20T10:00:00Z',
     source: {
       __typename: 'ShowSource' as const,
@@ -98,6 +102,7 @@ const mockVideoClipsByName = [
     videoUrl: 'https://example.com/video3.mp4',
     shareUrl: 'https://example.com/share3',
     thumbnailUrl: 'https://example.com/thumb3.jpg',
+    blurhash: 'LGF5]+Yk^6#M@-5c,1J5@[or[Q6.',
     createdAt: '2024-01-10T10:00:00Z',
     source: {
       __typename: 'ShowSource' as const,
@@ -115,6 +120,7 @@ const mockVideoClipsByName = [
     videoUrl: 'https://example.com/video1.mp4',
     shareUrl: 'https://example.com/share1',
     thumbnailUrl: 'https://example.com/thumb1.jpg',
+    blurhash: 'L6PZfSi_.AyE_3t7t7R**0o#DgR4',
     createdAt: '2024-01-15T10:00:00Z',
     source: {
       __typename: 'ShowSource' as const,
@@ -136,6 +142,7 @@ const mockVideoClipsShowA = [
     videoUrl: 'https://example.com/video1.mp4',
     shareUrl: 'https://example.com/share1',
     thumbnailUrl: 'https://example.com/thumb1.jpg',
+    blurhash: 'L6PZfSi_.AyE_3t7t7R**0o#DgR4',
     createdAt: '2024-01-15T10:00:00Z',
     source: {
       __typename: 'ShowSource' as const,
@@ -153,6 +160,7 @@ const mockVideoClipsShowA = [
     videoUrl: 'https://example.com/video3.mp4',
     shareUrl: 'https://example.com/share3',
     thumbnailUrl: 'https://example.com/thumb3.jpg',
+    blurhash: 'LGF5]+Yk^6#M@-5c,1J5@[or[Q6.',
     createdAt: '2024-01-10T10:00:00Z',
     source: {
       __typename: 'ShowSource' as const,
