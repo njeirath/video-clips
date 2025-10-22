@@ -82,6 +82,7 @@ export type PresignedUrlResponse = {
 
 export type Query = {
   __typename?: 'Query';
+  availableShows: Array<Scalars['String']['output']>;
   hello: Scalars['String']['output'];
   myVideoClips: Array<VideoClip>;
   videoClip?: Maybe<VideoClip>;
@@ -125,7 +126,7 @@ export type UpdateVideoClipInput = {
   characters?: InputMaybe<Array<Scalars['String']['input']>>;
   description?: InputMaybe<Scalars['String']['input']>;
   duration?: InputMaybe<Scalars['Float']['input']>;
-  id: Scalars['ID']['input'];
+  id: Scalars['String']['input'];
   script?: InputMaybe<Scalars['String']['input']>;
   shareUrl?: InputMaybe<Scalars['String']['input']>;
   source?: InputMaybe<VideoClipSourceInput>;

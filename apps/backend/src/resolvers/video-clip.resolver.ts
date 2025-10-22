@@ -61,6 +61,11 @@ export class VideoClipResolver {
     return await openSearchService.getVideoClipsByUser(ctx.userId);
   }
 
+  @Query(() => [String])
+  async availableShows(): Promise<string[]> {
+    return await openSearchService.getAvailableShows();
+  }
+
   @Mutation(() => VideoClip)
   async createVideoClip(
     @Arg('input', () => CreateVideoClipInput) input: CreateVideoClipInput,

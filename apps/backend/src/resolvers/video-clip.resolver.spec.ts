@@ -11,6 +11,7 @@ jest.mock("../services/opensearch.service", () => ({
     searchVideoClips: jest.fn().mockResolvedValue({ clips: [], total: 0 }),
     getVideoClip: jest.fn().mockResolvedValue(null),
     updateVideoClip: jest.fn().mockResolvedValue({}),
+    getAvailableShows: jest.fn().mockResolvedValue([]),
   },
 }));
 
@@ -379,6 +380,23 @@ describe("VideoClipResolver", () => {
 
       const result = await resolver.videoClip("test-id");
       expect(result).toEqual(mockClip);
+    });
+  });
+
+  describe("availableShows query", () => {
+    it("should return an empty array when no shows are available", async () => {
+      const result = await resolver.availableShows();
+      expect(Array.isArray(result)).toBe(true);
+      expect(result).toEqual([]);
+    });
+
+    it("should return sorted list of available shows", async () => {
+      const mockShows = ["Show A", "Show B", "Show C"];
+      const { openSearchService } = require("../services/opensearch.service");
+      openSearchService.getAvailableShows.mockResolvedValueOnce(mockShows);
+
+      const result = await resolver.availableShows();
+      expect(result).toEqual(mockShows);
     });
   });
 
