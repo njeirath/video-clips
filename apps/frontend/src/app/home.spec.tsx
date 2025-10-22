@@ -176,7 +176,12 @@ let mockUseQuery = vi.fn((query: any, options: any) => {
   // Check if this is the availableShows query (we can identify by the query name or variables)
   if (query && query.definitions && query.definitions[0]?.name?.value === 'GetAvailableShows') {
     return {
-      data: { availableShows: ['Show A', 'Show B'] },
+      data: { 
+        availableShows: [
+          { name: 'Show A', count: 2 },
+          { name: 'Show B', count: 1 }
+        ] 
+      },
       loading: false,
       error: null,
     };
@@ -203,7 +208,12 @@ describe('Home - Sorting and Filtering', () => {
       // Return different mock data based on the query
       if (query && query.definitions && query.definitions[0]?.name?.value === 'GetAvailableShows') {
         return {
-          data: { availableShows: ['Show A', 'Show B'] },
+          data: { 
+            availableShows: [
+              { name: 'Show A', count: 2 },
+              { name: 'Show B', count: 1 }
+            ] 
+          },
           loading: false,
           error: null,
         };
@@ -288,6 +298,30 @@ describe('Home - Sorting and Filtering', () => {
       const lastCall = calls[calls.length - 1];
       // When "All Shows" is selected, filterShow should be undefined
       expect(lastCall[1].variables.filterShow).toBeUndefined();
+    });
+  });
+
+  it('displays video clip counts next to show names in the dropdown', async () => {
+    const user = userEvent.setup();
+    
+    render(
+      <BrowserRouter>
+        <Home />
+      </BrowserRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Filter by Show')).toBeInTheDocument();
+    });
+
+    // Click on the filter dropdown
+    const filterSelect = screen.getByLabelText('Filter by Show');
+    await user.click(filterSelect);
+
+    // Verify that the counts are displayed next to show names
+    await waitFor(() => {
+      expect(screen.getByRole('option', { name: /Show A \(2\)/i })).toBeInTheDocument();
+      expect(screen.getByRole('option', { name: /Show B \(1\)/i })).toBeInTheDocument();
     });
   });
 

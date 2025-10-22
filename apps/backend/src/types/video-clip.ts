@@ -218,6 +218,15 @@ export class UpdateVideoClipInput {
 }
 
 @ObjectType()
+export class ShowWithCount {
+  @Field(() => String)
+  name: string;
+
+  @Field(() => Int)
+  count: number;
+}
+
+@ObjectType()
 export class PresignedUrlResponse {
   @Field(() => String)
   uploadUrl: string;

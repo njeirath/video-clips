@@ -219,7 +219,10 @@ const GET_VIDEO_CLIPS = graphql(`
 
 const GET_AVAILABLE_SHOWS = graphql(`
   query GetAvailableShows {
-    availableShows
+    availableShows {
+      name
+      count
+    }
   }
 `);
 
@@ -439,8 +442,8 @@ export default function Home() {
               >
                 <MenuItem value="all">All Shows</MenuItem>
                 {availableShows.map((show) => (
-                  <MenuItem key={show} value={show}>
-                    {show}
+                  <MenuItem key={show.name} value={show.name}>
+                    {show.name} ({show.count})
                   </MenuItem>
                 ))}
               </Select>
