@@ -8,7 +8,6 @@ import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
-import Grid from '@mui/material/Grid';
 import SearchIcon from '@mui/icons-material/Search';
 import ShareIcon from '@mui/icons-material/Share';
 import InputAdornment from '@mui/material/InputAdornment';
@@ -82,6 +81,7 @@ function VideoClipPlayer({ clip }: VideoClipPlayerProps) {
     <Card
       onClick={handleCardClick}
       sx={{
+        width: 280,
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
@@ -177,6 +177,8 @@ function VideoClipPlayer({ clip }: VideoClipPlayerProps) {
             display: '-webkit-box',
             WebkitLineClamp: 2,
             WebkitBoxOrient: 'vertical',
+            wordWrap: 'break-word',
+            lineHeight: 1.4,
           }}
         >
           {clip.name}
@@ -313,9 +315,11 @@ export default function Home() {
 
   // Reset when sort or filter changes
   useEffect(() => {
-    // don't clear the list immediately — refetch and replace when results arrive to avoid showing
-    // the empty-state while the network request is in-flight
+    // Clear the list and reset offset
+    setAllClips([]);
     setOffset(0);
+    setHasMore(true);
+    
     // trigger a refetch to get the newly-sorted/filtered data and update the list when it returns
     refetch({
       searchQuery: debouncedSearch || undefined,
@@ -337,7 +341,7 @@ export default function Home() {
       console.error('Refetch error after sort/filter change:', err);
       // keep existing list in case of error
     });
-  }, [sortBy, filterShow]);
+  }, [sortBy, filterShow, refetch, debouncedSearch]);
 
   // Debounce search input
   useEffect(() => {
@@ -556,13 +560,18 @@ export default function Home() {
           )}
 
           {allClips.length > 0 && (
-            <Grid container spacing={3}>
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 280px))',
+                gap: 3,
+                justifyContent: 'start',
+              }}
+            >
               {allClips.map((clip) => (
-                <Grid item xs={12} sm={6} md={4} lg={3} key={clip.id}>
-                  <VideoClipPlayer clip={clip} />
-                </Grid>
+                <VideoClipPlayer key={clip.id} clip={clip} />
               ))}
-            </Grid>
+            </Box>
           )}
 
           {/* Infinite scroll trigger */}
@@ -578,39 +587,6 @@ export default function Home() {
               <CircularProgress size={32} />
             </Box>
           )}
-        </Box>
-
-        {/* Footer */}
-        <Box
-          sx={{
-            borderTop: '1px solid rgba(255, 255, 255, 0.1)',
-            py: 3,
-            px: 4,
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}
-        >
-          <Typography variant="body2" sx={{ color: '#9ca3af' }}>
-            © 2024 VideoClips. All rights reserved.
-          </Typography>
-          <Box sx={{ display: 'flex', gap: 3 }}>
-            <Link to="/about" style={{ textDecoration: 'none' }}>
-              <Typography variant="body2" sx={{ color: '#9ca3af', '&:hover': { color: '#fff' } }}>
-                About Us
-              </Typography>
-            </Link>
-            <Link to="/contact" style={{ textDecoration: 'none' }}>
-              <Typography variant="body2" sx={{ color: '#9ca3af', '&:hover': { color: '#fff' } }}>
-                Contact
-              </Typography>
-            </Link>
-            <Link to="/terms" style={{ textDecoration: 'none' }}>
-              <Typography variant="body2" sx={{ color: '#9ca3af', '&:hover': { color: '#fff' } }}>
-                Terms of Service
-              </Typography>
-            </Link>
-          </Box>
         </Box>
       </Box>
     </Box>
