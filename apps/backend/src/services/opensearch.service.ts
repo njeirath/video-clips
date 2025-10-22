@@ -309,7 +309,7 @@ export class OpenSearchService {
     }
   }
 
-  async getAvailableShows(): Promise<string[]> {
+  async getAvailableShows(): Promise<Array<{ name: string; count: number }>> {
     try {
       const response = await this.client.search({
         index: this.indexName,
@@ -330,10 +330,13 @@ export class OpenSearchService {
         },
       });
 
-      // Extract unique show titles from aggregation results
+      // Extract unique show titles and counts from aggregation results
       const aggregations = response.body.aggregations as any;
       const buckets = aggregations?.unique_shows?.buckets || [];
-      return buckets.map((bucket: any) => bucket.key);
+      return buckets.map((bucket: any) => ({
+        name: bucket.key,
+        count: bucket.doc_count,
+      }));
     } catch (error) {
       console.error('Error fetching available shows from OpenSearch:', error);
       // Return empty array if OpenSearch is not available

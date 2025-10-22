@@ -3,7 +3,7 @@ type Query {
   videoClips(filterShow: String, sortBy: String, limit: Int = 12, offset: Int = 0, searchQuery: String): [VideoClip!]!
   videoClip(id: String!): VideoClip
   myVideoClips: [VideoClip!]!
-  availableShows: [String!]!
+  availableShows: [ShowWithCount!]!
 }
 
 type VideoClip {
@@ -43,6 +43,11 @@ type MovieSource {
   releaseDate: String
   start: Float
   end: Float
+}
+
+type ShowWithCount {
+  name: String!
+  count: Int!
 }
 
 type Mutation {

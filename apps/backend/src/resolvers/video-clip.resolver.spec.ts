@@ -390,8 +390,12 @@ describe("VideoClipResolver", () => {
       expect(result).toEqual([]);
     });
 
-    it("should return sorted list of available shows", async () => {
-      const mockShows = ["Show A", "Show B", "Show C"];
+    it("should return sorted list of available shows with counts", async () => {
+      const mockShows = [
+        { name: "Show A", count: 5 },
+        { name: "Show B", count: 3 },
+        { name: "Show C", count: 1 },
+      ];
       const { openSearchService } = require("../services/opensearch.service");
       openSearchService.getAvailableShows.mockResolvedValueOnce(mockShows);
 
