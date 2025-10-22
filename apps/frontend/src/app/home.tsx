@@ -46,7 +46,9 @@ function VideoClipPlayer({ clip }: VideoClipPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const navigate = useNavigate();
 
-  const handlePlay = () => {
+  const handlePlay = (e?: React.MouseEvent) => {
+    // prevent the click from bubbling up to the Card which would navigate
+    e?.stopPropagation();
     setIsPlaying(true);
     setTimeout(() => {
       videoRef.current?.play();
@@ -119,12 +121,18 @@ function VideoClipPlayer({ clip }: VideoClipPlayerProps) {
                   src={clip.videoUrl}
                   poster={poster}
                   autoPlay
+                  // stop clicks on the actual video from triggering the Card click
+                  onClick={(e) => e.stopPropagation()}
                 >
                   Your browser does not support the video tag.
                 </video>
               </Box>
             ) : (
-              <Box sx={{ mt: 2, position: 'relative', width: '100%', maxHeight: 200, background: '#000', borderRadius: 4, overflow: 'hidden' }}>
+              // clicking the poster area should start playback but not navigate
+              <Box
+                sx={{ mt: 2, position: 'relative', width: '100%', maxHeight: 200, background: '#000', borderRadius: 4, overflow: 'hidden' }}
+                onClick={(e) => handlePlay(e)}
+              >
                 {poster ? (
                   <BlurhashImage
                     src={poster}
@@ -137,7 +145,7 @@ function VideoClipPlayer({ clip }: VideoClipPlayerProps) {
                   <div style={{ width: '100%', height: 200, background: '#222' }} />
                 )}
                 <button
-                  onClick={handlePlay}
+                  onClick={(e) => handlePlay(e)}
                   style={{
                     position: 'absolute',
                     top: '50%',
