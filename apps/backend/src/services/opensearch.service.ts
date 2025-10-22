@@ -74,7 +74,14 @@ export class OpenSearchService {
                   type: "object",
                   properties: {
                     type: { type: "keyword" },
-                    title: { type: "text" },
+                    title: { 
+                      type: "text",
+                      fields: {
+                        keyword: {
+                          type: "keyword"
+                        }
+                      }
+                    },
                     airDate: { type: "date" },
                     season: { type: "integer" },
                     episode: { type: "integer" },
@@ -289,6 +296,38 @@ export class OpenSearchService {
       console.error("Error searching video clips from OpenSearch:", error);
       // Return empty result if OpenSearch is not available
       return { clips: [], total: 0 };
+    }
+  }
+
+  async getAvailableShows(): Promise<string[]> {
+    try {
+      const response = await this.client.search({
+        index: this.indexName,
+        body: {
+          size: 0, // We don't need the actual documents
+          query: {
+            term: { 'source.type': 'show' }
+          },
+          aggs: {
+            unique_shows: {
+              terms: {
+                field: 'source.title.keyword',
+                size: 1000, // Max number of unique shows to retrieve
+                order: { _key: 'asc' } // Sort alphabetically
+              }
+            }
+          }
+        }
+      });
+
+      // Extract unique show titles from aggregation results
+      const aggregations = response.body.aggregations as any;
+      const buckets = aggregations?.unique_shows?.buckets || [];
+      return buckets.map((bucket: any) => bucket.key);
+    } catch (error) {
+      console.error("Error fetching available shows from OpenSearch:", error);
+      // Return empty array if OpenSearch is not available
+      return [];
     }
   }
 }
