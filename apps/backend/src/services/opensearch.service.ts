@@ -1,19 +1,19 @@
-import { Client } from "@opensearch-project/opensearch";
+import { Client } from '@opensearch-project/opensearch';
 
 export class OpenSearchService {
   private client: Client;
-  private readonly indexName = "video-clips";
+  private readonly indexName = 'video-clips';
 
   constructor() {
     // OpenSearch client configuration
     // For development, using localhost. In production, use environment variables.
-    const host = process.env.OPENSEARCH_HOST || "localhost";
-    const port = process.env.OPENSEARCH_PORT || "9200";
-    const protocol = process.env.OPENSEARCH_PROTOCOL || "http";
+    const host = process.env.OPENSEARCH_HOST || 'localhost';
+    const port = process.env.OPENSEARCH_PORT || '9200';
+    const protocol = process.env.OPENSEARCH_PROTOCOL || 'http';
     const username = process.env.OPENSEARCH_USERNAME;
     const password = process.env.OPENSEARCH_PASSWORD;
-    const isProduction = process.env.NODE_ENV === "production";
-    
+    const isProduction = process.env.NODE_ENV === 'production';
+
     const clientConfig: any = {
       node: `${protocol}://${host}:${port}`,
     };
@@ -27,7 +27,7 @@ export class OpenSearchService {
     }
 
     // In non-production environments, ignore certificate errors
-    if (!isProduction && protocol === "https") {
+    if (!isProduction && protocol === 'https') {
       clientConfig.ssl = {
         rejectUnauthorized: false,
       };
@@ -50,49 +50,49 @@ export class OpenSearchService {
           body: {
             mappings: {
               properties: {
-                id: { type: "keyword" },
-                name: { 
-                  type: "text",
+                id: { type: 'keyword' },
+                name: {
+                  type: 'text',
                   fields: {
                     keyword: {
-                      type: "keyword"
-                    }
-                  }
-                },
-                description: { type: "text" },
-                userId: { type: "keyword" },
-                userEmail: { type: "keyword" },
-                s3Key: { type: "keyword" },
-                videoUrl: { type: "keyword" },
-                script: { type: "text" },
-                duration: { type: "float" },
-                characters: { type: "keyword" },
-                tags: { type: "keyword" },
-                thumbnailUrl: { type: "keyword" },
-                blurhash: { type: "keyword" },
-                source: {
-                  type: "object",
-                  properties: {
-                    type: { type: "keyword" },
-                    title: { 
-                      type: "text",
-                      fields: {
-                        keyword: {
-                          type: "keyword"
-                        }
-                      }
+                      type: 'keyword',
                     },
-                    airDate: { type: "date" },
-                    season: { type: "integer" },
-                    episode: { type: "integer" },
-                    releaseDate: { type: "date" },
-                    start: { type: "float" },
-                    end: { type: "float" },
                   },
                 },
-                createdAt: { type: "date" },
-                updatedAt: { type: "date" },
-                updatedBy: { type: "keyword" },
+                description: { type: 'text' },
+                userId: { type: 'keyword' },
+                userEmail: { type: 'keyword' },
+                s3Key: { type: 'keyword' },
+                videoUrl: { type: 'keyword' },
+                script: { type: 'text' },
+                duration: { type: 'float' },
+                characters: { type: 'keyword' },
+                tags: { type: 'keyword' },
+                thumbnailUrl: { type: 'keyword' },
+                blurhash: { type: 'keyword' },
+                source: {
+                  type: 'object',
+                  properties: {
+                    type: { type: 'keyword' },
+                    title: {
+                      type: 'text',
+                      fields: {
+                        keyword: {
+                          type: 'keyword',
+                        },
+                      },
+                    },
+                    airDate: { type: 'date' },
+                    season: { type: 'integer' },
+                    episode: { type: 'integer' },
+                    releaseDate: { type: 'date' },
+                    start: { type: 'float' },
+                    end: { type: 'float' },
+                  },
+                },
+                createdAt: { type: 'date' },
+                updatedAt: { type: 'date' },
+                updatedBy: { type: 'keyword' },
               },
             },
           },
@@ -100,7 +100,7 @@ export class OpenSearchService {
         console.log(`Created index: ${this.indexName}`);
       }
     } catch (error) {
-      console.error("Error initializing OpenSearch index:", error);
+      console.error('Error initializing OpenSearch index:', error);
       // Don't throw - allow app to start even if OpenSearch is not available
     }
   }
@@ -127,12 +127,12 @@ export class OpenSearchService {
         index: this.indexName,
         id: data.id,
         body: data,
-        refresh: "true",
+        refresh: 'true',
       });
       return response.body;
     } catch (error) {
-      console.error("Error creating video clip in OpenSearch:", error);
-      throw new Error("Failed to create video clip");
+      console.error('Error creating video clip in OpenSearch:', error);
+      throw new Error('Failed to create video clip');
     }
   }
 
@@ -144,22 +144,25 @@ export class OpenSearchService {
       });
       return response.body._source;
     } catch (error) {
-      console.error("Error fetching video clip from OpenSearch:", error);
-      throw new Error("Failed to fetch video clip");
+      console.error('Error fetching video clip from OpenSearch:', error);
+      throw new Error('Failed to fetch video clip');
     }
   }
 
-  async updateVideoClip(id: string, updates: {
-    description?: string;
-    shareUrl?: string;
-    script?: string;
-    duration?: number;
-    characters?: string[];
-    tags?: string[];
-    source?: any;
-    updatedAt?: string;
-    updatedBy?: string;
-  }): Promise<any> {
+  async updateVideoClip(
+    id: string,
+    updates: {
+      description?: string;
+      shareUrl?: string;
+      script?: string;
+      duration?: number;
+      characters?: string[];
+      tags?: string[];
+      source?: any;
+      updatedAt?: string;
+      updatedBy?: string;
+    }
+  ): Promise<any> {
     try {
       const response = await this.client.update({
         index: this.indexName,
@@ -167,12 +170,12 @@ export class OpenSearchService {
         body: {
           doc: updates,
         },
-        refresh: "true",
+        refresh: 'true',
       });
       return response.body;
     } catch (error) {
-      console.error("Error updating video clip in OpenSearch:", error);
-      throw new Error("Failed to update video clip");
+      console.error('Error updating video clip in OpenSearch:', error);
+      throw new Error('Failed to update video clip');
     }
   }
 
@@ -184,13 +187,13 @@ export class OpenSearchService {
           query: {
             match: { userId },
           },
-          sort: [{ createdAt: { order: "desc" } }],
+          sort: [{ createdAt: { order: 'desc' } }],
         },
       });
       return response.body.hits.hits.map((hit: any) => hit._source);
     } catch (error) {
-      console.error("Error fetching user video clips from OpenSearch:", error);
-      throw new Error("Failed to fetch video clips");
+      console.error('Error fetching user video clips from OpenSearch:', error);
+      throw new Error('Failed to fetch video clips');
     }
   }
 
@@ -200,12 +203,12 @@ export class OpenSearchService {
         index: this.indexName,
         body: {
           query: { match_all: {} },
-          sort: [{ createdAt: { order: "desc" } }],
+          sort: [{ createdAt: { order: 'desc' } }],
         },
       });
       return response.body.hits.hits.map((hit: any) => hit._source);
     } catch (error) {
-      console.error("Error fetching all video clips from OpenSearch:", error);
+      console.error('Error fetching all video clips from OpenSearch:', error);
       // Return empty array if OpenSearch is not available
       return [];
     }
@@ -220,7 +223,7 @@ export class OpenSearchService {
   ): Promise<{ clips: any[]; total: number }> {
     try {
       let query: any;
-      
+
       // Build the query with optional show filter
       if (filterShow && filterShow.trim()) {
         // Filter by show title
@@ -228,9 +231,9 @@ export class OpenSearchService {
           bool: {
             must: [
               { term: { 'source.type': 'show' } },
-              { match: { 'source.title': filterShow.trim() } }
-            ]
-          }
+              { match: { 'source.title': filterShow.trim() } },
+            ],
+          },
         };
 
         // If there's also a search query, combine them
@@ -241,14 +244,20 @@ export class OpenSearchService {
                 {
                   multi_match: {
                     query: searchQuery.trim(),
-                    fields: ["name^2", "description", "script", "characters", "tags"],
-                    type: "best_fields",
-                    fuzziness: "AUTO",
+                    fields: [
+                      'name^2',
+                      'description',
+                      'script',
+                      'characters',
+                      'tags',
+                    ],
+                    type: 'best_fields',
+                    fuzziness: 'AUTO',
                   },
                 },
-                showFilter
-              ]
-            }
+                showFilter,
+              ],
+            },
           };
         } else {
           query = showFilter;
@@ -258,9 +267,9 @@ export class OpenSearchService {
         query = {
           multi_match: {
             query: searchQuery.trim(),
-            fields: ["name^2", "description", "script", "characters", "tags"], // Boost name matches
-            type: "best_fields",
-            fuzziness: "AUTO",
+            fields: ['name^2', 'description', 'script', 'characters', 'tags'], // Boost name matches
+            type: 'best_fields',
+            fuzziness: 'AUTO',
           },
         };
       } else {
@@ -287,13 +296,14 @@ export class OpenSearchService {
       });
 
       const clips = response.body.hits.hits.map((hit: any) => hit._source);
-      const total = typeof response.body.hits.total === 'number' 
-        ? response.body.hits.total 
-        : response.body.hits.total.value;
+      const total =
+        typeof response.body.hits.total === 'number'
+          ? response.body.hits.total
+          : response.body.hits.total.value;
 
       return { clips, total };
     } catch (error) {
-      console.error("Error searching video clips from OpenSearch:", error);
+      console.error('Error searching video clips from OpenSearch:', error);
       // Return empty result if OpenSearch is not available
       return { clips: [], total: 0 };
     }
@@ -306,18 +316,18 @@ export class OpenSearchService {
         body: {
           size: 0, // We don't need the actual documents
           query: {
-            term: { 'source.type': 'show' }
+            term: { 'source.type': 'show' },
           },
           aggs: {
             unique_shows: {
               terms: {
                 field: 'source.title.keyword',
                 size: 1000, // Max number of unique shows to retrieve
-                order: { _key: 'asc' } // Sort alphabetically
-              }
-            }
-          }
-        }
+                order: { _key: 'asc' }, // Sort alphabetically
+              },
+            },
+          },
+        },
       });
 
       // Extract unique show titles from aggregation results
@@ -325,7 +335,7 @@ export class OpenSearchService {
       const buckets = aggregations?.unique_shows?.buckets || [];
       return buckets.map((bucket: any) => bucket.key);
     } catch (error) {
-      console.error("Error fetching available shows from OpenSearch:", error);
+      console.error('Error fetching available shows from OpenSearch:', error);
       // Return empty array if OpenSearch is not available
       return [];
     }
