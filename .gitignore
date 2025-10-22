@@ -46,3 +46,4 @@ vite.config.*.timestamp*
 vitest.config.*.timestamp*
 /.envrc
 /.nx/workspace-data
+/apps/backend/Video Clips - Sheet1.csv
