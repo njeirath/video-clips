@@ -254,11 +254,11 @@ describe('Home - Sorting and Filtering', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByLabelText('Sort By')).toBeInTheDocument();
+      expect(screen.getByLabelText('Sort by')).toBeInTheDocument();
     });
 
     // Click on the sort dropdown and select "Name (A-Z)"
-    const sortSelect = screen.getByLabelText('Sort By');
+    const sortSelect = screen.getByLabelText('Sort by');
     await user.click(sortSelect);
 
     const nameOption = await screen.findByRole('option', { name: /Name \(A-Z\)/i });
@@ -280,9 +280,10 @@ describe('Home - Sorting and Filtering', () => {
       </BrowserRouter>
     );
 
-    // Just verify the controls exist
+    // Verify shows appear in sidebar
     await waitFor(() => {
-      expect(screen.getByLabelText('Filter by Show')).toBeInTheDocument();
+      expect(screen.getByText('Show A')).toBeInTheDocument();
+      expect(screen.getByText('Show B')).toBeInTheDocument();
     });
   });
 
@@ -301,27 +302,17 @@ describe('Home - Sorting and Filtering', () => {
     });
   });
 
-  it('displays video clip counts next to show names in the dropdown', async () => {
-    const user = userEvent.setup();
-    
+  it('displays video clip counts next to show names in the sidebar', async () => {
     render(
       <BrowserRouter>
         <Home />
       </BrowserRouter>
     );
 
+    // Verify that the counts are displayed next to show names in sidebar
     await waitFor(() => {
-      expect(screen.getByLabelText('Filter by Show')).toBeInTheDocument();
-    });
-
-    // Click on the filter dropdown
-    const filterSelect = screen.getByLabelText('Filter by Show');
-    await user.click(filterSelect);
-
-    // Verify that the counts are displayed next to show names
-    await waitFor(() => {
-      expect(screen.getByRole('option', { name: /Show A \(2\)/i })).toBeInTheDocument();
-      expect(screen.getByRole('option', { name: /Show B \(1\)/i })).toBeInTheDocument();
+      expect(screen.getByText('2')).toBeInTheDocument(); // Show A count
+      expect(screen.getByText('1')).toBeInTheDocument(); // Show B count
     });
   });
 
