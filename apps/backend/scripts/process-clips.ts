@@ -212,7 +212,7 @@ async function processCSV(passphrase: string, rowArg?: string) {
 
     if (source !== lastSource) {
       // If both trimmed video and thumbnail already exist, skip fetching the source
-      if (fs.existsSync(trimmedVideoPath) && fs.existsSync(thumbnailPath)) {
+      if (fs.existsSync(trimmedVideoPath)) {
         console.log(
           `Trimmed video and thumbnail already present for '${cleanName}', skipping source download`
         );
@@ -243,10 +243,44 @@ async function processCSV(passphrase: string, rowArg?: string) {
 
     // 3. ffmpeg thumbnail
     if (!fs.existsSync(thumbnailPath)) {
-      console.log(`Extracting thumbnail: ${trimmedVideoPath} -> ${thumbnailPath}`);
-      execSync(
-        `ffmpeg -y -i "${trimmedVideoPath}" -frames:v 1 -q:v 2 "${thumbnailPath}"`
+      console.log(
+        `Extracting thumbnail: ${trimmedVideoPath} -> ${thumbnailPath}`
       );
+      // Extract a single frame using ffmpeg to a temporary file first.
+      // Ensure the temp file has a standard image extension so ffmpeg can
+      // choose the proper muxer/format automatically (avoid "Unable to choose an output format").
+      const tmpThumb = thumbnailPath + '.tmp.jpg';
+      execSync(
+        `ffmpeg -y -i "${trimmedVideoPath}" -frames:v 1 -q:v 2 "${tmpThumb}"`
+      );
+
+      // Resize the extracted thumbnail to a max width of 480px while preserving aspect ratio
+      // and avoid upscaling smaller images.
+      try {
+        const img = sharp(tmpThumb);
+        const metadata = await img.metadata();
+        if (metadata.width && metadata.width > 480) {
+          await img
+            .resize({ width: 480 })
+            .jpeg({ quality: 85 })
+            .toFile(thumbnailPath);
+        } else {
+          // If width is already <= 480, simply convert to JPEG (if necessary) and move
+          await img.jpeg({ quality: 85 }).toFile(thumbnailPath);
+        }
+      } catch (err) {
+        // If sharp fails for any reason, fall back to the original tmp file
+        console.error(`Failed to resize thumbnail for ${cleanName}:`, err);
+        // tmpThumb already has a .jpg extension so we can safely rename it
+        fs.renameSync(tmpThumb, thumbnailPath);
+      } finally {
+        // Clean up tmp file if it still exists
+        try {
+          if (fs.existsSync(tmpThumb)) fs.unlinkSync(tmpThumb);
+        } catch (e) {
+          // ignore cleanup errors
+        }
+      }
     }
 
     // 4. Compute blurhash
