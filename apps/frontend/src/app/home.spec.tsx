@@ -171,12 +171,26 @@ const mockVideoClipsShowA = [
   },
 ];
 
-let mockUseQuery = vi.fn(() => ({
-  data: { videoClips: mockVideoClipsByDate },
-  loading: false,
-  error: null,
-  fetchMore: vi.fn(),
-}));
+let mockUseQuery = vi.fn((query: any, options: any) => {
+  // Return different mock data based on the query
+  // Check if this is the availableShows query (we can identify by the query name or variables)
+  if (query && query.definitions && query.definitions[0]?.name?.value === 'GetAvailableShows') {
+    return {
+      data: { availableShows: ['Show A', 'Show B'] },
+      loading: false,
+      error: null,
+    };
+  }
+  
+  // Default to video clips query
+  return {
+    data: { videoClips: mockVideoClipsByDate },
+    loading: false,
+    error: null,
+    fetchMore: vi.fn(),
+    refetch: vi.fn().mockResolvedValue({ data: { videoClips: mockVideoClipsByDate } }),
+  };
+});
 
 vi.mock('@apollo/client/react', () => ({
   useQuery: (query: any, options: any) => mockUseQuery(query, options),
@@ -185,11 +199,24 @@ vi.mock('@apollo/client/react', () => ({
 describe('Home - Sorting and Filtering', () => {
   beforeEach(() => {
     mockUseQuery.mockClear();
-    mockUseQuery.mockReturnValue({
-      data: { videoClips: mockVideoClipsByDate },
-      loading: false,
-      error: null,
-      fetchMore: vi.fn(),
+    mockUseQuery.mockImplementation((query: any, options: any) => {
+      // Return different mock data based on the query
+      if (query && query.definitions && query.definitions[0]?.name?.value === 'GetAvailableShows') {
+        return {
+          data: { availableShows: ['Show A', 'Show B'] },
+          loading: false,
+          error: null,
+        };
+      }
+      
+      // Default to video clips query
+      return {
+        data: { videoClips: mockVideoClipsByDate },
+        loading: false,
+        error: null,
+        fetchMore: vi.fn(),
+        refetch: vi.fn().mockResolvedValue({ data: { videoClips: mockVideoClipsByDate } }),
+      };
     });
   });
 

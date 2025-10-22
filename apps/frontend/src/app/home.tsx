@@ -217,6 +217,12 @@ const GET_VIDEO_CLIPS = graphql(`
   }
 `);
 
+const GET_AVAILABLE_SHOWS = graphql(`
+  query GetAvailableShows {
+    availableShows
+  }
+`);
+
 const ITEMS_PER_PAGE = 12;
 const DEBOUNCE_DELAY = 500; // 500ms debounce
 
@@ -243,6 +249,15 @@ export default function Home() {
     },
     fetchPolicy: 'cache-and-network',
   });
+
+  // Fetch available shows from backend
+  const { data: showsData } = useQuery(GET_AVAILABLE_SHOWS, {
+    fetchPolicy: 'cache-first',
+  });
+
+  const availableShows = useMemo(() => {
+    return showsData?.availableShows || [];
+  }, [showsData]);
 
   // Ensure allClips is updated if data.videoClips changes (e.g., after cache update)
   useEffect(() => {
@@ -352,17 +367,6 @@ export default function Home() {
       }
     };
   }, [handleObserver]);
-
-  // Extract unique show titles from all clips
-  const availableShows = useMemo(() => {
-    const showSet = new Set<string>();
-    allClips.forEach((clip) => {
-      if (clip.source && clip.source.__typename === 'ShowSource') {
-        showSet.add(clip.source.title);
-      }
-    });
-    return Array.from(showSet).sort();
-  }, [allClips]);
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
