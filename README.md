@@ -193,6 +193,7 @@ npx nx build backend
 ```
 
 **Run the process-clips script:**
+From the root of the repository:
 ```bash
 node dist/backend/apps/backend/scripts/process-clips.js
 ```
