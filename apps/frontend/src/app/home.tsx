@@ -22,6 +22,7 @@ import MenuItem from '@mui/material/MenuItem';
 import { useQuery } from '@apollo/client/react';
 import { graphql } from '../gql/gql';
 import { useNavigate } from 'react-router-dom';
+import { BlurhashImage } from './components/BlurhashImage';
 
 
 // VideoClipPlayer component: only loads video when play is clicked
@@ -35,6 +36,7 @@ type VideoClipPlayerProps = {
     createdAt: string;
     // Optionally add thumbnailUrl if available in your backend
     thumbnailUrl?: string;
+    blurhash?: string;
   };
 };
 
@@ -124,10 +126,12 @@ function VideoClipPlayer({ clip }: VideoClipPlayerProps) {
             ) : (
               <Box sx={{ mt: 2, position: 'relative', width: '100%', maxHeight: 200, background: '#000', borderRadius: 4, overflow: 'hidden' }}>
                 {poster ? (
-                  <img
+                  <BlurhashImage
                     src={poster}
+                    blurhash={clip.blurhash}
                     alt={clip.name}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    height={200}
+                    style={{ borderRadius: 4 }}
                   />
                 ) : (
                   <div style={{ width: '100%', height: 200, background: '#222' }} />
@@ -189,6 +193,7 @@ const GET_VIDEO_CLIPS = graphql(`
       videoUrl
       shareUrl
       thumbnailUrl
+      blurhash
       createdAt
       source {
         ... on ShowSource {
