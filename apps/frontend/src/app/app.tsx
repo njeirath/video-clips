@@ -14,6 +14,7 @@ import TextField from '@mui/material/TextField';
 import InputAdornment from '@mui/material/InputAdornment';
 import { useLocation } from 'react-router-dom';
 import { getCurrentUser, signOut } from 'aws-amplify/auth';
+import { SearchProvider, useSearch } from './SearchContext';
 
 export function App() {
   const [signedIn, setSignedIn] = useState(false);
@@ -73,6 +74,7 @@ export function App() {
   };
 
   return (
+    <SearchProvider>
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
       <AppBar
         position="static"
@@ -83,7 +85,7 @@ export function App() {
           borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
         }}
       >
-        <Toolbar sx={{ py: 1 }}>
+  <Toolbar sx={{ py: 1, position: 'relative' }}>
           {/* VideoClips Logo/Brand */}
           <Box 
             component={Link}
@@ -121,107 +123,128 @@ export function App() {
             </Typography>
           </Box>
 
-          {/* Search Bar */}
-          <Box sx={{ flexGrow: 1, maxWidth: 600, mx: 2 }}>
-            <TextField
-              fullWidth
-              size="small"
-              placeholder="Search for video clips..."
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon sx={{ color: '#9ca3af' }} />
-                  </InputAdornment>
-                ),
-                sx: {
-                  bgcolor: '#2a3544',
-                  '& fieldset': { border: 'none' },
-                  '&:hover': {
-                    bgcolor: '#323f50',
-                  },
-                }
-              }}
-            />
+          {/* Centered Search Bar */}
+          <Box
+            sx={{
+              position: 'absolute',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: 'min(760px, 60%)',
+            }}
+          >
+            <HeaderSearch />
           </Box>
 
-          {/* Auth Buttons */}
-          {!checking && !signedIn && (
-            <>
+          {/* Right aligned action buttons */}
+          <Box sx={{ marginLeft: 'auto', display: 'flex', alignItems: 'center' }}>
+            {!checking && !signedIn && (
+              <>
+                <Button
+                  component={Link}
+                  to="/signin"
+                  variant="contained"
+                  sx={{ 
+                    mr: 2,
+                    bgcolor: '#3b9dd6',
+                    color: '#fff',
+                    px: 3,
+                    '&:hover': {
+                      bgcolor: '#2d8ac4',
+                    }
+                  }}
+                >
+                  Login
+                </Button>
+                <Button
+                  component={Link}
+                  to="/signup"
+                  variant="outlined"
+                  sx={{ 
+                    borderColor: '#374151',
+                    color: '#fff',
+                    px: 3,
+                    '&:hover': {
+                      borderColor: '#4b5563',
+                      bgcolor: 'rgba(255, 255, 255, 0.05)',
+                    }
+                  }}
+                >
+                  SignUp
+                </Button>
+              </>
+            )}
+
+            {!checking && signedIn && (
               <Button
-                component={Link}
-                to="/signin"
-                variant="contained"
-                sx={{ 
-                  mr: 2,
-                  bgcolor: '#3b9dd6',
-                  color: '#fff',
-                  px: 3,
-                  '&:hover': {
-                    bgcolor: '#2d8ac4',
-                  }
-                }}
-              >
-                Login
-              </Button>
-              <Button
-                component={Link}
-                to="/signup"
-                variant="outlined"
-                sx={{ 
-                  borderColor: '#374151',
-                  color: '#fff',
-                  px: 3,
-                  '&:hover': {
-                    borderColor: '#4b5563',
-                    bgcolor: 'rgba(255, 255, 255, 0.05)',
-                  }
-                }}
-              >
-                SignUp
-              </Button>
-            </>
-          )}
-          {!checking && signedIn && (
-            <Button
-              color="inherit"
-              component={Link}
-              to="/add-clip"
-              sx={{ mr: 1 }}
-            >
-              Add Clip
-            </Button>
-          )}
-          {!checking && signedIn && (
-            <>
-              <IconButton
-                size="large"
-                edge="end"
                 color="inherit"
-                onClick={handleMenu}
-                sx={{ ml: 1 }}
+                component={Link}
+                to="/add-clip"
+                sx={{ mr: 1 }}
               >
-                <AccountCircle />
-              </IconButton>
-              <Menu
-                anchorEl={anchorEl}
-                open={menuOpen}
-                onClose={handleClose}
-                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-                transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-              >
-                <MenuItem disabled>
-                  {user ? `Signed in as ${user}` : 'Signed in'}
-                </MenuItem>
-                <MenuItem onClick={handleSignOut}>Sign Out</MenuItem>
-              </Menu>
-            </>
-          )}
+                Add Clip
+              </Button>
+            )}
+            {!checking && signedIn && (
+              <>
+                <IconButton
+                  size="large"
+                  edge="end"
+                  color="inherit"
+                  onClick={handleMenu}
+                  sx={{ ml: 1 }}
+                >
+                  <AccountCircle />
+                </IconButton>
+                <Menu
+                  anchorEl={anchorEl}
+                  open={menuOpen}
+                  onClose={handleClose}
+                  anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                  transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+                >
+                  <MenuItem disabled>
+                    {user ? `Signed in as ${user}` : 'Signed in'}
+                  </MenuItem>
+                  <MenuItem onClick={handleSignOut}>Sign Out</MenuItem>
+                </Menu>
+              </>
+            )}
+          </Box>
         </Toolbar>
       </AppBar>
       {/* Main app content goes here. Routing is handled in main.tsx. */}
       <Outlet />
     </Box>
+    </SearchProvider>
   );
 }
 
 export default App;
+
+function HeaderSearch() {
+  const { searchInput, setSearchInput } = useSearch();
+
+  return (
+    <TextField
+      value={searchInput}
+      onChange={(e) => setSearchInput(e.target.value)}
+      fullWidth
+      size="small"
+      placeholder="Search for video clips..."
+      InputProps={{
+        startAdornment: (
+          <InputAdornment position="start">
+            <SearchIcon sx={{ color: '#9ca3af' }} />
+          </InputAdornment>
+        ),
+        sx: {
+          bgcolor: '#2a3544',
+          '& fieldset': { border: 'none' },
+          '&:hover': {
+            bgcolor: '#323f50',
+          },
+        }
+      }}
+    />
+  );
+}

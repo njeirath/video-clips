@@ -1,5 +1,6 @@
 
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import { useSearch } from './SearchContext';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import Box from '@mui/material/Box';
@@ -274,7 +275,7 @@ const DEBOUNCE_DELAY = 500; // 500ms debounce
 type SortOption = 'createdAt' | 'name';
 
 export default function Home() {
-  const [searchInput, setSearchInput] = useState('');
+  const { searchInput, setSearchInput } = useSearch();
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [offset, setOffset] = useState(0);
   const offsetRef = useRef(offset);
@@ -350,7 +351,7 @@ export default function Home() {
     });
   }, [sortBy, filterShow, refetch, debouncedSearch]);
 
-  // Debounce search input
+  // Debounce search input (shared from header)
   useEffect(() => {
     if (debounceTimer.current) {
       clearTimeout(debounceTimer.current);
