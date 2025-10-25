@@ -199,14 +199,46 @@ export class OpenSearchService {
 
   async getAllVideoClips() {
     try {
-      const response = await this.client.search({
+      // Use the scroll API to fetch all documents instead of relying on the default size (10)
+      const allClips: any[] = [];
+      const pageSize = 1000; // reasonable batch size
+
+      let response = await this.client.search({
         index: this.indexName,
+        scroll: '1m',
+        size: pageSize,
         body: {
           query: { match_all: {} },
           sort: [{ createdAt: { order: 'desc' } }],
         },
       });
-      return response.body.hits.hits.map((hit: any) => hit._source);
+
+      let hits = response.body.hits.hits || [];
+      allClips.push(...hits.map((hit: any) => hit._source));
+
+      // Continue scrolling while we get full pages
+  let scrollId = response.body._scroll_id;
+      while (hits.length === pageSize) {
+        const next = await this.client.scroll({
+          scroll_id: scrollId,
+          scroll: '1m',
+        });
+        hits = next.body.hits.hits || [];
+        if (hits.length === 0) break;
+        allClips.push(...hits.map((hit: any) => hit._source));
+  scrollId = next.body._scroll_id || scrollId;
+      }
+
+      // Clear the scroll context to free resources
+      try {
+        if (scrollId) {
+          await this.client.clearScroll({ scroll_id: scrollId });
+        }
+      } catch (e) {
+        // Non-fatal if clearScroll fails
+      }
+
+      return allClips;
     } catch (error) {
       console.error('Error fetching all video clips from OpenSearch:', error);
       // Return empty array if OpenSearch is not available

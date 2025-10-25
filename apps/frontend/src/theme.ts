@@ -6,31 +6,41 @@ const theme = createTheme({
   palette: {
     mode: 'dark',
     background: {
-      default: '#181a1b', // dark gray for main background
-      paper: '#23272a',   // slightly lighter for surfaces
+      default: '#1a2332', // dark blue background matching design
+      paper: '#2a3544',   // slightly lighter for cards/surfaces
     },
     primary: {
-      main: '#22d2fe', // Logo blue
-      contrastText: '#000',
+      main: '#3b9dd6', // bright blue for Login button and accents
+      contrastText: '#fff',
     },
     secondary: {
-      main: '#fc923d', // Logo orange
+      main: '#fc923d', // Logo orange (kept for potential use)
       contrastText: '#000',
     },
     success: {
-      main: '#a3ee6b', // Logo green
+      main: '#a3ee6b', // Logo green (kept for potential use)
       contrastText: '#000',
     },
     text: {
       primary: '#ffffff',
-      secondary: '#b3b3b3',
+      secondary: '#9ca3af', // light gray for secondary text
+    },
+    divider: '#374151', // subtle divider color
+  },
+  typography: {
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+    h5: {
+      fontWeight: 600,
+    },
+    h6: {
+      fontWeight: 600,
     },
   },
   components: {
     MuiAppBar: {
       styleOverrides: {
         colorPrimary: {
-          backgroundColor: '#000000', // pure black header
+          backgroundColor: '#1a2332', // match main background
         },
       },
     },
@@ -44,7 +54,33 @@ const theme = createTheme({
     MuiButton: {
       styleOverrides: {
         root: {
-          color: '#ffffff',
+          textTransform: 'none',
+          borderRadius: '8px',
+          fontWeight: 500,
+        },
+        contained: {
+          boxShadow: 'none',
+          '&:hover': {
+            boxShadow: 'none',
+          },
+        },
+      },
+    },
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          borderRadius: '12px',
+          backgroundColor: '#2a3544',
+        },
+      },
+    },
+    MuiTextField: {
+      styleOverrides: {
+        root: {
+          '& .MuiOutlinedInput-root': {
+            borderRadius: '8px',
+            backgroundColor: '#2a3544',
+          },
         },
       },
     },
