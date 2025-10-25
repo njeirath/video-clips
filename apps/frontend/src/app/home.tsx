@@ -277,11 +277,16 @@ export default function Home() {
   const [searchInput, setSearchInput] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [offset, setOffset] = useState(0);
+  const offsetRef = useRef(offset);
   const [allClips, setAllClips] = useState<any[]>([]);
   const [hasMore, setHasMore] = useState(true);
   const [sortBy, setSortBy] = useState<SortOption>('createdAt');
   const [filterShow, setFilterShow] = useState<string>('all');
   const observerTarget = useRef<HTMLDivElement>(null);
+  // guard to prevent concurrent fetchMore calls which were causing duplicate API requests
+  const isFetchingMoreRef = useRef(false);
+  // dedupe requests by offset to avoid making duplicate fetches for the same page
+  const lastRequestedOffsetRef = useRef<number | null>(null);
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
 
   const { data, loading, error, fetchMore, refetch } = useQuery(GET_VIDEO_CLIPS, {
@@ -309,6 +314,7 @@ export default function Home() {
     if (data && Array.isArray(data.videoClips)) {
       setAllClips(data.videoClips);
       setOffset(data.videoClips.length);
+      offsetRef.current = data.videoClips.length;
       setHasMore(data.videoClips.length >= ITEMS_PER_PAGE);
     }
   }, [data]);
@@ -331,6 +337,7 @@ export default function Home() {
       if (result?.data?.videoClips) {
         setAllClips(result.data.videoClips);
         setOffset(result.data.videoClips.length);
+        offsetRef.current = result.data.videoClips.length;
         setHasMore(result.data.videoClips.length >= ITEMS_PER_PAGE);
       } else {
         // no data — clear the list
@@ -352,6 +359,7 @@ export default function Home() {
     debounceTimer.current = setTimeout(() => {
       setDebouncedSearch(searchInput);
       setOffset(0);
+      offsetRef.current = 0;
     }, DEBOUNCE_DELAY);
 
     return () => {
@@ -364,12 +372,23 @@ export default function Home() {
   // Load more clips when scrolling
   const loadMore = useCallback(async () => {
     if (!hasMore || loading) return;
+    // Prevent concurrent loadMore execution
+    if (isFetchingMoreRef.current) return;
+
+    // compute the offset to request from the ref to avoid races
+    const requestOffset = offsetRef.current;
+
+    // If we've already requested this offset, skip to avoid duplicate API calls
+    if (lastRequestedOffsetRef.current === requestOffset) return;
+
+    isFetchingMoreRef.current = true;
+    lastRequestedOffsetRef.current = requestOffset;
 
     try {
       const result = await fetchMore({
         variables: {
           searchQuery: debouncedSearch || undefined,
-          offset: offset,
+          offset: requestOffset,
           limit: ITEMS_PER_PAGE,
           sortBy: sortBy,
           filterShow: filterShow !== 'all' ? filterShow : undefined,
@@ -379,41 +398,101 @@ export default function Home() {
       if (result.data?.videoClips) {
         const newClips = result.data.videoClips;
         setAllClips((prev) => [...prev, ...newClips]);
-        setOffset((prev) => prev + newClips.length);
+        setOffset((prev) => {
+          const next = prev + newClips.length;
+          offsetRef.current = next;
+          return next;
+        });
         setHasMore(newClips.length >= ITEMS_PER_PAGE);
       }
     } catch (err) {
       console.error('Error loading more clips:', err);
     }
+    finally {
+      isFetchingMoreRef.current = false;
+      // clear the last requested offset so subsequent scrolls can request it again if needed
+      lastRequestedOffsetRef.current = null;
+    }
   }, [hasMore, loading, fetchMore, debouncedSearch, offset, sortBy, filterShow]);
 
-  // Infinite scroll implementation
-  const handleObserver = useCallback(
-    (entries: IntersectionObserverEntry[]) => {
-      const [entry] = entries;
-      if (entry.isIntersecting && hasMore && !loading) {
-        loadMore();
-      }
-    },
-    [hasMore, loading, loadMore]
-  );
+  // refs to avoid stale closures in the observer callback
+  const loadMoreRef = useRef(loadMore);
+  const hasMoreRef = useRef(hasMore);
+  const loadingRef = useRef(loading);
 
+  // keep refs in sync with latest values so the observer can use them without recreating
+  useEffect(() => {
+    loadMoreRef.current = loadMore;
+  }, [loadMore]);
+
+  useEffect(() => {
+    hasMoreRef.current = hasMore;
+  }, [hasMore]);
+
+  useEffect(() => {
+    loadingRef.current = loading;
+  }, [loading]);
+
+  // Create an observer that calls the latest loadMore via refs. This effect runs when
+  // the target element mounts/unmounts (observerTarget.current changes).
   useEffect(() => {
     const element = observerTarget.current;
     if (!element) return;
 
-    const observer = new IntersectionObserver(handleObserver, {
-      threshold: 0.1,
-    });
+    const observerRefInternal = { current: null as IntersectionObserver | null };
 
+    const observer = new IntersectionObserver((entries) => {
+      const [entry] = entries;
+      if (!entry.isIntersecting) return;
+      if (!hasMoreRef.current) return;
+      if (loadingRef.current) return;
+
+      // Unobserve immediately so we don't get another intersection while fetching
+      try {
+        observer.unobserve(element);
+      } catch (e) {
+        // ignore
+      }
+
+      // Call loadMore and when finished, re-observe if there is still more to load
+      (async () => {
+        try {
+          await loadMoreRef.current();
+        } catch (e) {
+          // swallow: loadMore logs errors
+        }
+
+        if (hasMoreRef.current) {
+          try {
+            observer.observe(element);
+          } catch (e) {
+            // ignore
+          }
+        }
+      })();
+    }, { threshold: 0.1 });
+
+    observerRefInternal.current = observer;
     observer.observe(element);
 
     return () => {
-      if (element) {
+      try {
         observer.unobserve(element);
+      } catch (e) {
+        // ignore
       }
+      try {
+        observer.disconnect();
+      } catch (e) {
+        // ignore
+      }
+      observerRefInternal.current = null;
     };
-  }, [handleObserver]);
+    // Intentionally depend on the element ref value so we re-run when the target mounts
+  }, [observerTarget.current]);
+
+  // Infinite scroll implementation
+  // Infinite scroll implementation will create an observer later that uses stable refs
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
