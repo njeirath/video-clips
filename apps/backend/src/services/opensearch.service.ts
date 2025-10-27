@@ -217,7 +217,7 @@ export class OpenSearchService {
       allClips.push(...hits.map((hit: any) => hit._source));
 
       // Continue scrolling while we get full pages
-  let scrollId = response.body._scroll_id;
+      let scrollId = response.body._scroll_id;
       while (hits.length === pageSize) {
         const next = await this.client.scroll({
           scroll_id: scrollId,
@@ -226,7 +226,7 @@ export class OpenSearchService {
         hits = next.body.hits.hits || [];
         if (hits.length === 0) break;
         allClips.push(...hits.map((hit: any) => hit._source));
-  scrollId = next.body._scroll_id || scrollId;
+        scrollId = next.body._scroll_id || scrollId;
       }
 
       // Clear the scroll context to free resources
