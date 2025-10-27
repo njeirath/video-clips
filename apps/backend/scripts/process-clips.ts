@@ -123,15 +123,38 @@ async function processCSV(passphrase: string, rowArg?: string) {
       .filter((p) => p.length > 0);
     return parts.length > 0 ? parts : undefined;
   }
-  // GraphQL query to check if a video clip with the given name exists
-  const getVideoClipByNameQuery = gql`
-    query GetVideoClipByName($searchQuery: String!) {
-      videoClips(searchQuery: $searchQuery) {
+  // GraphQL query to fetch clips with pagination (offset/limit). We'll page
+  // through results until we receive a page smaller than the requested limit.
+  const getVideoClipsQuery = gql`
+    query GetVideoClips( $offset: Int, $limit: Int) {
+      videoClips(offset: $offset, limit: $limit) {
         id
         name
       }
     }
   `;
+  // Fetch existing clips once so we don't query the backend on every row.
+  // Assumption: the `videoClips(searchQuery: String!)` query accepts an empty
+  // string and returns all clips. If the server requires a different approach
+  // we'll need to adjust this to a proper "list all" query.
+  let existingClips: any[] = [];
+  try {
+    const pageSize = 500; // reasonable batch size for paging
+    let offset = 0;
+    while (true) {
+      const pageResult = await client.request(getVideoClipsQuery, {
+        offset,
+        limit: pageSize,
+      });
+      const pageClips = (pageResult && pageResult.videoClips) || [];
+      existingClips.push(...pageClips);
+      if (pageClips.length < pageSize) break;
+      offset += pageSize;
+    }
+  } catch (err) {
+    console.error('Error fetching existing video clips from backend:', err);
+    // Continue with an empty list; duplicates may be created in this run.
+  }
 
   let skipped = 0;
   let processed = 0;
@@ -185,24 +208,10 @@ async function processCSV(passphrase: string, rowArg?: string) {
       .replace(/[^a-z0-9]+/g, '_')
       .replace(/^_+|_+$/g, '');
 
-    // Query backend to check if video already exists by name and ensure names match
-    try {
-      const result = await client.request(getVideoClipByNameQuery, {
-        searchQuery: name,
-      });
-      if (
-        result &&
-        result.videoClips &&
-        result.videoClips.length > 0 &&
-        result.videoClips.some((clip: any) => clip.name === name)
-      ) {
-        console.log(`Clip already exists on backend, skipping: ${name}`);
-        alreadyPresent += 1;
-        continue;
-      }
-    } catch (err) {
-      console.error(`Error querying backend for clip '${name}':`, err);
-      // Optionally continue or throw, here we continue
+    // Check cached list of existing clips (fetched once before the loop)
+    if (existingClips.some((clip: any) => clip.name === name)) {
+      console.log(`Clip already exists on backend, skipping: ${name}`);
+      alreadyPresent += 1;
       continue;
     }
 
@@ -419,7 +428,12 @@ async function processCSV(passphrase: string, rowArg?: string) {
       duration,
       source: sourceInput,
     };
-    await client.request(createVideoClipMutation, { input });
+    const createResult = await client.request(createVideoClipMutation, { input });
+    // If creation succeeded, push to cached list so subsequent rows in this
+    // run won't try to re-upload the same clip.
+    if (createResult && createResult.createVideoClip && createResult.createVideoClip.id) {
+      existingClips.push({ id: createResult.createVideoClip.id, name });
+    }
     console.log(`Uploaded and saved clip: ${name}`);
     processed += 1;
   }
