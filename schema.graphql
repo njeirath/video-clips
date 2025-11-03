@@ -1,9 +1,9 @@
 type Query {
   hello: String!
-  videoClips(filterShow: String, sortBy: String, limit: Int = 12, offset: Int = 0, searchQuery: String): [VideoClip!]!
+  videoClips(sortBy: String, limit: Int = 12, offset: Int = 0, filter: VideoClipFilter): [VideoClip!]!
   videoClip(id: String!): VideoClip
   myVideoClips: [VideoClip!]!
-  availableShows: [ShowWithCount!]!
+  availableFilters(filter: VideoClipFilter): AvailableFilters!
 }
 
 type VideoClip {
@@ -45,7 +45,23 @@ type MovieSource {
   end: Float
 }
 
+input VideoClipFilter {
+  searchQuery: String
+  filterShow: String
+  filterCharacter: String
+}
+
+type AvailableFilters {
+  shows: [ShowWithCount!]!
+  characters: [CharacterWithCount!]!
+}
+
 type ShowWithCount {
+  name: String!
+  count: Int!
+}
+
+type CharacterWithCount {
   name: String!
   count: Int!
 }

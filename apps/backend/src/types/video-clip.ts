@@ -217,6 +217,18 @@ export class UpdateVideoClipInput {
   source?: VideoClipSourceInput;
 }
 
+@InputType()
+export class VideoClipFilter {
+  @Field(() => String, { nullable: true })
+  searchQuery?: string;
+
+  @Field(() => String, { nullable: true })
+  filterShow?: string;
+
+  @Field(() => String, { nullable: true })
+  filterCharacter?: string;
+}
+
 @ObjectType()
 export class ShowWithCount {
   @Field(() => String)
@@ -224,6 +236,24 @@ export class ShowWithCount {
 
   @Field(() => Int)
   count: number;
+}
+
+@ObjectType()
+export class CharacterWithCount {
+  @Field(() => String)
+  name: string;
+
+  @Field(() => Int)
+  count: number;
+}
+
+@ObjectType()
+export class AvailableFilters {
+  @Field(() => [ShowWithCount])
+  shows: ShowWithCount[];
+
+  @Field(() => [CharacterWithCount])
+  characters: CharacterWithCount[];
 }
 
 @ObjectType()

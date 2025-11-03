@@ -12,6 +12,7 @@ jest.mock("../services/opensearch.service", () => ({
     getVideoClip: jest.fn().mockResolvedValue(null),
     updateVideoClip: jest.fn().mockResolvedValue({}),
     getAvailableShows: jest.fn().mockResolvedValue([]),
+    getAvailableCharacters: jest.fn().mockResolvedValue([]),
   },
 }));
 
@@ -383,24 +384,30 @@ describe("VideoClipResolver", () => {
     });
   });
 
-  describe("availableShows query", () => {
-    it("should return an empty array when no shows are available", async () => {
-      const result = await resolver.availableShows();
-      expect(Array.isArray(result)).toBe(true);
-      expect(result).toEqual([]);
+  describe("availableFilters query", () => {
+    it("should return empty arrays when no filters are available", async () => {
+      const result = await resolver.availableFilters();
+      expect(result.shows).toEqual([]);
+      expect(result.characters).toEqual([]);
     });
 
-    it("should return sorted list of available shows with counts", async () => {
+    it("should return sorted list of available shows and characters with counts", async () => {
       const mockShows = [
         { name: "Show A", count: 5 },
         { name: "Show B", count: 3 },
         { name: "Show C", count: 1 },
       ];
+      const mockCharacters = [
+        { name: "Character A", count: 10 },
+        { name: "Character B", count: 7 },
+      ];
       const { openSearchService } = require("../services/opensearch.service");
       openSearchService.getAvailableShows.mockResolvedValueOnce(mockShows);
+      openSearchService.getAvailableCharacters.mockResolvedValueOnce(mockCharacters);
 
-      const result = await resolver.availableShows();
-      expect(result).toEqual(mockShows);
+      const result = await resolver.availableFilters();
+      expect(result.shows).toEqual(mockShows);
+      expect(result.characters).toEqual(mockCharacters);
     });
   });
 

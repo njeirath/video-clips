@@ -251,59 +251,68 @@ export class OpenSearchService {
     offset: number = 0,
     limit: number = 12,
     sortBy?: string,
-    filterShow?: string
+    filterShow?: string,
+    filterCharacter?: string
   ): Promise<{ clips: any[]; total: number }> {
     try {
       let query: any;
 
-      // Build the query with optional show filter
+      // Build the query with optional show and character filters
+      const filters: any[] = [];
+      
       if (filterShow && filterShow.trim()) {
-        // Filter by show title
-        const showFilter = {
+        filters.push({
           bool: {
             must: [
               { term: { 'source.type': 'show' } },
               { match: { 'source.title': filterShow.trim() } },
             ],
           },
-        };
+        });
+      }
 
-        // If there's also a search query, combine them
-        if (searchQuery && searchQuery.trim()) {
-          query = {
-            bool: {
-              must: [
-                {
-                  multi_match: {
-                    query: searchQuery.trim(),
-                    fields: [
-                      'name^2',
-                      'description',
-                      'script',
-                      'characters',
-                      'tags',
-                    ],
-                    type: 'best_fields',
-                    fuzziness: 'AUTO',
-                  },
-                },
-                showFilter,
-              ],
-            },
-          };
-        } else {
-          query = showFilter;
-        }
-      } else if (searchQuery && searchQuery.trim()) {
-        // Use multi_match to search across name, description, script, characters, and tags fields
-        query = {
+      if (filterCharacter && filterCharacter.trim()) {
+        filters.push({
+          term: { 'characters': filterCharacter.trim() },
+        });
+      }
+
+      // Build query combining search and filters
+      if (searchQuery && searchQuery.trim()) {
+        const searchPart = {
           multi_match: {
             query: searchQuery.trim(),
-            fields: ['name^2', 'description', 'script', 'characters', 'tags'], // Boost name matches
+            fields: [
+              'name^2',
+              'description',
+              'script',
+              'characters',
+              'tags',
+            ],
             type: 'best_fields',
             fuzziness: 'AUTO',
           },
         };
+
+        if (filters.length > 0) {
+          query = {
+            bool: {
+              must: [searchPart, ...filters],
+            },
+          };
+        } else {
+          query = searchPart;
+        }
+      } else if (filters.length > 0) {
+        if (filters.length === 1) {
+          query = filters[0];
+        } else {
+          query = {
+            bool: {
+              must: filters,
+            },
+          };
+        }
       } else {
         query = { match_all: {} };
       }
@@ -341,14 +350,23 @@ export class OpenSearchService {
     }
   }
 
-  async getAvailableShows(): Promise<Array<{ name: string; count: number }>> {
+  async getAvailableShows(filterCharacter?: string): Promise<Array<{ name: string; count: number }>> {
     try {
+      // Build query with optional character filter
+      const must: any[] = [{ term: { 'source.type': 'show' } }];
+      
+      if (filterCharacter && filterCharacter.trim()) {
+        must.push({ term: { 'characters': filterCharacter.trim() } });
+      }
+
       const response = await this.client.search({
         index: this.indexName,
         body: {
           size: 0, // We don't need the actual documents
           query: {
-            term: { 'source.type': 'show' },
+            bool: {
+              must,
+            },
           },
           aggs: {
             unique_shows: {
@@ -371,6 +389,53 @@ export class OpenSearchService {
       }));
     } catch (error) {
       console.error('Error fetching available shows from OpenSearch:', error);
+      // Return empty array if OpenSearch is not available
+      return [];
+    }
+  }
+
+  async getAvailableCharacters(filterShow?: string): Promise<Array<{ name: string; count: number }>> {
+    try {
+      // Build query with optional show filter
+      let query: any = { match_all: {} };
+      
+      if (filterShow && filterShow.trim()) {
+        query = {
+          bool: {
+            must: [
+              { term: { 'source.type': 'show' } },
+              { match: { 'source.title': filterShow.trim() } },
+            ],
+          },
+        };
+      }
+
+      const response = await this.client.search({
+        index: this.indexName,
+        body: {
+          size: 0, // We don't need the actual documents
+          query,
+          aggs: {
+            unique_characters: {
+              terms: {
+                field: 'characters',
+                size: 1000, // Max number of unique characters to retrieve
+                order: { _key: 'asc' }, // Sort alphabetically
+              },
+            },
+          },
+        },
+      });
+
+      // Extract unique characters and counts from aggregation results
+      const aggregations = response.body.aggregations as any;
+      const buckets = aggregations?.unique_characters?.buckets || [];
+      return buckets.map((bucket: any) => ({
+        name: bucket.key,
+        count: bucket.doc_count,
+      }));
+    } catch (error) {
+      console.error('Error fetching available characters from OpenSearch:', error);
       // Return empty array if OpenSearch is not available
       return [];
     }
