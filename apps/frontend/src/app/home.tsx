@@ -234,8 +234,8 @@ function VideoClipPlayer({ clip }: VideoClipPlayerProps) {
 }
 
 const GET_VIDEO_CLIPS = graphql(`
-  query GetVideoClips($searchQuery: String, $offset: Int, $limit: Int, $sortBy: String, $filterShow: String, $filterCharacter: String) {
-    videoClips(searchQuery: $searchQuery, offset: $offset, limit: $limit, sortBy: $sortBy, filterShow: $filterShow, filterCharacter: $filterCharacter) {
+  query GetVideoClips($filter: VideoClipFilter, $offset: Int, $limit: Int, $sortBy: String) {
+    videoClips(filter: $filter, offset: $offset, limit: $limit, sortBy: $sortBy) {
       id
       name
       description
@@ -260,20 +260,17 @@ const GET_VIDEO_CLIPS = graphql(`
   }
 `);
 
-const GET_AVAILABLE_SHOWS = graphql(`
-  query GetAvailableShows($filterCharacter: String) {
-    availableShows(filterCharacter: $filterCharacter) {
-      name
-      count
-    }
-  }
-`);
-
-const GET_AVAILABLE_CHARACTERS = graphql(`
-  query GetAvailableCharacters($filterShow: String) {
-    availableCharacters(filterShow: $filterShow) {
-      name
-      count
+const GET_AVAILABLE_FILTERS = graphql(`
+  query GetAvailableFilters($filter: VideoClipFilter) {
+    availableFilters(filter: $filter) {
+      shows {
+        name
+        count
+      }
+      characters {
+        name
+        count
+      }
     }
   }
 `);
@@ -302,39 +299,36 @@ export default function Home() {
 
   const { data, loading, error, fetchMore, refetch } = useQuery(GET_VIDEO_CLIPS, {
     variables: {
-      searchQuery: debouncedSearch || undefined,
+      filter: {
+        searchQuery: debouncedSearch || undefined,
+        filterShow: filterShow !== 'all' ? filterShow : undefined,
+        filterCharacter: filterCharacter !== 'all' ? filterCharacter : undefined,
+      },
       offset: 0,
       limit: ITEMS_PER_PAGE,
       sortBy: sortBy,
-      filterShow: filterShow !== 'all' ? filterShow : undefined,
-      filterCharacter: filterCharacter !== 'all' ? filterCharacter : undefined,
     },
     fetchPolicy: 'cache-and-network',
   });
 
-  // Fetch available shows from backend
-  const { data: showsData } = useQuery(GET_AVAILABLE_SHOWS, {
+  // Fetch available filters (shows and characters) from backend
+  const { data: filtersData } = useQuery(GET_AVAILABLE_FILTERS, {
     variables: {
-      filterCharacter: filterCharacter !== 'all' ? filterCharacter : undefined,
-    },
-    fetchPolicy: 'cache-and-network',
-  });
-
-  // Fetch available characters from backend
-  const { data: charactersData } = useQuery(GET_AVAILABLE_CHARACTERS, {
-    variables: {
-      filterShow: filterShow !== 'all' ? filterShow : undefined,
+      filter: {
+        filterShow: filterShow !== 'all' ? filterShow : undefined,
+        filterCharacter: filterCharacter !== 'all' ? filterCharacter : undefined,
+      },
     },
     fetchPolicy: 'cache-and-network',
   });
 
   const availableShows = useMemo(() => {
-    return showsData?.availableShows || [];
-  }, [showsData]);
+    return filtersData?.availableFilters?.shows || [];
+  }, [filtersData]);
 
   const availableCharacters = useMemo(() => {
-    return charactersData?.availableCharacters || [];
-  }, [charactersData]);
+    return filtersData?.availableFilters?.characters || [];
+  }, [filtersData]);
 
   // Ensure allClips is updated if data.videoClips changes (e.g., after cache update)
   useEffect(() => {
@@ -355,12 +349,14 @@ export default function Home() {
     
     // trigger a refetch to get the newly-sorted/filtered data and update the list when it returns
     refetch({
-      searchQuery: debouncedSearch || undefined,
+      filter: {
+        searchQuery: debouncedSearch || undefined,
+        filterShow: filterShow !== 'all' ? filterShow : undefined,
+        filterCharacter: filterCharacter !== 'all' ? filterCharacter : undefined,
+      },
       offset: 0,
       limit: ITEMS_PER_PAGE,
       sortBy: sortBy,
-      filterShow: filterShow !== 'all' ? filterShow : undefined,
-      filterCharacter: filterCharacter !== 'all' ? filterCharacter : undefined,
     }).then((result: any) => {
       if (result?.data?.videoClips) {
         setAllClips(result.data.videoClips);
@@ -415,12 +411,14 @@ export default function Home() {
     try {
       const result = await fetchMore({
         variables: {
-          searchQuery: debouncedSearch || undefined,
+          filter: {
+            searchQuery: debouncedSearch || undefined,
+            filterShow: filterShow !== 'all' ? filterShow : undefined,
+            filterCharacter: filterCharacter !== 'all' ? filterCharacter : undefined,
+          },
           offset: requestOffset,
           limit: ITEMS_PER_PAGE,
           sortBy: sortBy,
-          filterShow: filterShow !== 'all' ? filterShow : undefined,
-          filterCharacter: filterCharacter !== 'all' ? filterCharacter : undefined,
         },
       });
 

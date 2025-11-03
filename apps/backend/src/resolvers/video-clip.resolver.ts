@@ -7,7 +7,7 @@ import {
   Authorized,
   Int,
 } from 'type-graphql';
-import { VideoClip, CreateVideoClipInput, UpdateVideoClipInput, PresignedUrlResponse, ShowWithCount, CharacterWithCount } from '../types/video-clip';
+import { VideoClip, CreateVideoClipInput, UpdateVideoClipInput, PresignedUrlResponse, VideoClipFilter, AvailableFilters } from '../types/video-clip';
 import { openSearchService } from '../services/opensearch.service';
 import { s3Service } from '../services/s3.service';
 import { v4 as uuidv4 } from 'uuid';
@@ -23,22 +23,20 @@ export interface Context {
 export class VideoClipResolver {
   @Query(() => [VideoClip])
   async videoClips(
-    @Arg('searchQuery', () => String, { nullable: true }) searchQuery?: string,
+    @Arg('filter', () => VideoClipFilter, { nullable: true }) filter?: VideoClipFilter,
     @Arg('offset', () => Int, { nullable: true, defaultValue: 0 })
     offset?: number,
     @Arg('limit', () => Int, { nullable: true, defaultValue: 12 })
     limit?: number,
-    @Arg('sortBy', () => String, { nullable: true }) sortBy?: string,
-    @Arg('filterShow', () => String, { nullable: true }) filterShow?: string,
-    @Arg('filterCharacter', () => String, { nullable: true }) filterCharacter?: string
+    @Arg('sortBy', () => String, { nullable: true }) sortBy?: string
   ): Promise<VideoClip[]> {
     const result = await openSearchService.searchVideoClips(
-      searchQuery,
+      filter?.searchQuery,
       offset,
       limit,
       sortBy,
-      filterShow,
-      filterCharacter
+      filter?.filterShow,
+      filter?.filterCharacter
     );
     return result.clips;
   }
@@ -63,18 +61,19 @@ export class VideoClipResolver {
     return await openSearchService.getVideoClipsByUser(ctx.userId);
   }
 
-  @Query(() => [ShowWithCount])
-  async availableShows(
-    @Arg('filterCharacter', () => String, { nullable: true }) filterCharacter?: string
-  ): Promise<ShowWithCount[]> {
-    return await openSearchService.getAvailableShows(filterCharacter);
-  }
-
-  @Query(() => [CharacterWithCount])
-  async availableCharacters(
-    @Arg('filterShow', () => String, { nullable: true }) filterShow?: string
-  ): Promise<CharacterWithCount[]> {
-    return await openSearchService.getAvailableCharacters(filterShow);
+  @Query(() => AvailableFilters)
+  async availableFilters(
+    @Arg('filter', () => VideoClipFilter, { nullable: true }) filter?: VideoClipFilter
+  ): Promise<AvailableFilters> {
+    const [shows, characters] = await Promise.all([
+      openSearchService.getAvailableShows(filter?.filterCharacter),
+      openSearchService.getAvailableCharacters(filter?.filterShow),
+    ]);
+    
+    return {
+      shows,
+      characters,
+    };
   }
 
   @Mutation(() => VideoClip)
