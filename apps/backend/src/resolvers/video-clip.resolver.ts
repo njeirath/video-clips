@@ -64,13 +64,17 @@ export class VideoClipResolver {
   }
 
   @Query(() => [ShowWithCount])
-  async availableShows(): Promise<ShowWithCount[]> {
-    return await openSearchService.getAvailableShows();
+  async availableShows(
+    @Arg('filterCharacter', () => String, { nullable: true }) filterCharacter?: string
+  ): Promise<ShowWithCount[]> {
+    return await openSearchService.getAvailableShows(filterCharacter);
   }
 
   @Query(() => [CharacterWithCount])
-  async availableCharacters(): Promise<CharacterWithCount[]> {
-    return await openSearchService.getAvailableCharacters();
+  async availableCharacters(
+    @Arg('filterShow', () => String, { nullable: true }) filterShow?: string
+  ): Promise<CharacterWithCount[]> {
+    return await openSearchService.getAvailableCharacters(filterShow);
   }
 
   @Mutation(() => VideoClip)

@@ -261,8 +261,8 @@ const GET_VIDEO_CLIPS = graphql(`
 `);
 
 const GET_AVAILABLE_SHOWS = graphql(`
-  query GetAvailableShows {
-    availableShows {
+  query GetAvailableShows($filterCharacter: String) {
+    availableShows(filterCharacter: $filterCharacter) {
       name
       count
     }
@@ -270,8 +270,8 @@ const GET_AVAILABLE_SHOWS = graphql(`
 `);
 
 const GET_AVAILABLE_CHARACTERS = graphql(`
-  query GetAvailableCharacters {
-    availableCharacters {
+  query GetAvailableCharacters($filterShow: String) {
+    availableCharacters(filterShow: $filterShow) {
       name
       count
     }
@@ -314,12 +314,18 @@ export default function Home() {
 
   // Fetch available shows from backend
   const { data: showsData } = useQuery(GET_AVAILABLE_SHOWS, {
-    fetchPolicy: 'cache-first',
+    variables: {
+      filterCharacter: filterCharacter !== 'all' ? filterCharacter : undefined,
+    },
+    fetchPolicy: 'cache-and-network',
   });
 
   // Fetch available characters from backend
   const { data: charactersData } = useQuery(GET_AVAILABLE_CHARACTERS, {
-    fetchPolicy: 'cache-first',
+    variables: {
+      filterShow: filterShow !== 'all' ? filterShow : undefined,
+    },
+    fetchPolicy: 'cache-and-network',
   });
 
   const availableShows = useMemo(() => {

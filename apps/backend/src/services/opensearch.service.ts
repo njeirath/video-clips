@@ -350,14 +350,23 @@ export class OpenSearchService {
     }
   }
 
-  async getAvailableShows(): Promise<Array<{ name: string; count: number }>> {
+  async getAvailableShows(filterCharacter?: string): Promise<Array<{ name: string; count: number }>> {
     try {
+      // Build query with optional character filter
+      const must: any[] = [{ term: { 'source.type': 'show' } }];
+      
+      if (filterCharacter && filterCharacter.trim()) {
+        must.push({ term: { 'characters': filterCharacter.trim() } });
+      }
+
       const response = await this.client.search({
         index: this.indexName,
         body: {
           size: 0, // We don't need the actual documents
           query: {
-            term: { 'source.type': 'show' },
+            bool: {
+              must,
+            },
           },
           aggs: {
             unique_shows: {
@@ -385,12 +394,27 @@ export class OpenSearchService {
     }
   }
 
-  async getAvailableCharacters(): Promise<Array<{ name: string; count: number }>> {
+  async getAvailableCharacters(filterShow?: string): Promise<Array<{ name: string; count: number }>> {
     try {
+      // Build query with optional show filter
+      let query: any = { match_all: {} };
+      
+      if (filterShow && filterShow.trim()) {
+        query = {
+          bool: {
+            must: [
+              { term: { 'source.type': 'show' } },
+              { match: { 'source.title': filterShow.trim() } },
+            ],
+          },
+        };
+      }
+
       const response = await this.client.search({
         index: this.indexName,
         body: {
           size: 0, // We don't need the actual documents
+          query,
           aggs: {
             unique_characters: {
               terms: {
