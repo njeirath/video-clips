@@ -4,6 +4,7 @@ import '@testing-library/jest-dom';
 import userEvent from '@testing-library/user-event';
 import { BrowserRouter } from 'react-router-dom';
 import Home from './home';
+import { SearchProvider } from './SearchContext';
 
 // Mock dependencies
 vi.mock('aws-amplify/auth');
@@ -14,6 +15,11 @@ vi.mock('react-router-dom', async () => {
     useNavigate: () => vi.fn(),
   };
 });
+
+// Mock react-blurhash to avoid canvas issues in tests
+vi.mock('react-blurhash', () => ({
+  Blurhash: () => <div data-testid="blurhash-mock">Blurhash</div>,
+}));
 
 // Mock data sorted by creation date (descending - newest first)
 const mockVideoClipsByDate = [
@@ -171,31 +177,38 @@ const mockVideoClipsShowA = [
   },
 ];
 
-let mockUseQuery = vi.fn((query: any, options: any) => {
-  // Return different mock data based on the query
-  // Check if this is the availableShows query (we can identify by the query name or variables)
-  if (query && query.definitions && query.definitions[0]?.name?.value === 'GetAvailableShows') {
+const mockFetchMore = vi.fn();
+const mockRefetch = vi.fn().mockResolvedValue({ data: { videoClips: mockVideoClipsByDate } });
+
+const createMockUseQuery = () => vi.fn((query: any, options: any) => {
+  const queryName = query?.definitions?.[0]?.name?.value;
+  
+  if (queryName === 'GetAvailableFilters') {
     return {
       data: { 
-        availableShows: [
-          { name: 'Show A', count: 2 },
-          { name: 'Show B', count: 1 }
-        ] 
+        availableFilters: {
+          shows: [
+            { name: 'Show A', count: 2 },
+            { name: 'Show B', count: 1 }
+          ],
+          characters: []
+        }
       },
       loading: false,
       error: null,
     };
   }
   
-  // Default to video clips query
   return {
     data: { videoClips: mockVideoClipsByDate },
     loading: false,
     error: null,
-    fetchMore: vi.fn(),
-    refetch: vi.fn().mockResolvedValue({ data: { videoClips: mockVideoClipsByDate } }),
+    fetchMore: mockFetchMore,
+    refetch: mockRefetch,
   };
 });
+
+let mockUseQuery = createMockUseQuery();
 
 vi.mock('@apollo/client/react', () => ({
   useQuery: (query: any, options: any) => mockUseQuery(query, options),
@@ -203,37 +216,16 @@ vi.mock('@apollo/client/react', () => ({
 
 describe('Home - Sorting and Filtering', () => {
   beforeEach(() => {
-    mockUseQuery.mockClear();
-    mockUseQuery.mockImplementation((query: any, options: any) => {
-      // Return different mock data based on the query
-      if (query && query.definitions && query.definitions[0]?.name?.value === 'GetAvailableShows') {
-        return {
-          data: { 
-            availableShows: [
-              { name: 'Show A', count: 2 },
-              { name: 'Show B', count: 1 }
-            ] 
-          },
-          loading: false,
-          error: null,
-        };
-      }
-      
-      // Default to video clips query
-      return {
-        data: { videoClips: mockVideoClipsByDate },
-        loading: false,
-        error: null,
-        fetchMore: vi.fn(),
-        refetch: vi.fn().mockResolvedValue({ data: { videoClips: mockVideoClipsByDate } }),
-      };
-    });
+    vi.clearAllMocks();
+    mockUseQuery = createMockUseQuery();
   });
 
   it('sends sortBy=createdAt to backend by default', async () => {
     render(
       <BrowserRouter>
-        <Home />
+        <SearchProvider>
+          <Home />
+        </SearchProvider>
       </BrowserRouter>
     );
 
@@ -249,7 +241,9 @@ describe('Home - Sorting and Filtering', () => {
     
     render(
       <BrowserRouter>
-        <Home />
+        <SearchProvider>
+          <Home />
+        </SearchProvider>
       </BrowserRouter>
     );
 
@@ -276,7 +270,9 @@ describe('Home - Sorting and Filtering', () => {
     
     render(
       <BrowserRouter>
-        <Home />
+        <SearchProvider>
+          <Home />
+        </SearchProvider>
       </BrowserRouter>
     );
 
@@ -290,7 +286,9 @@ describe('Home - Sorting and Filtering', () => {
   it('does not send filterShow when "All Shows" is selected', async () => {
     render(
       <BrowserRouter>
-        <Home />
+        <SearchProvider>
+          <Home />
+        </SearchProvider>
       </BrowserRouter>
     );
 
@@ -305,7 +303,9 @@ describe('Home - Sorting and Filtering', () => {
   it('displays video clip counts next to show names in the sidebar', async () => {
     render(
       <BrowserRouter>
-        <Home />
+        <SearchProvider>
+          <Home />
+        </SearchProvider>
       </BrowserRouter>
     );
 
@@ -319,7 +319,9 @@ describe('Home - Sorting and Filtering', () => {
   it('displays clips in the order returned by backend', async () => {
     render(
       <BrowserRouter>
-        <Home />
+        <SearchProvider>
+          <Home />
+        </SearchProvider>
       </BrowserRouter>
     );
 
