@@ -16,6 +16,12 @@ export type Scalars = {
   Float: { input: number; output: number; }
 };
 
+export type CharacterWithCount = {
+  __typename?: 'CharacterWithCount';
+  count: Scalars['Int']['output'];
+  name: Scalars['String']['output'];
+};
+
 export type CreateVideoClipInput = {
   blurhash?: InputMaybe<Scalars['String']['input']>;
   characters?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -82,6 +88,7 @@ export type PresignedUrlResponse = {
 
 export type Query = {
   __typename?: 'Query';
+  availableCharacters: Array<CharacterWithCount>;
   availableShows: Array<ShowWithCount>;
   hello: Scalars['String']['output'];
   myVideoClips: Array<VideoClip>;
@@ -96,6 +103,7 @@ export type QueryVideoClipArgs = {
 
 
 export type QueryVideoClipsArgs = {
+  filterCharacter?: InputMaybe<Scalars['String']['input']>;
   filterShow?: InputMaybe<Scalars['String']['input']>;
   limit?: InputMaybe<Scalars['Int']['input']>;
   offset?: InputMaybe<Scalars['Int']['input']>;

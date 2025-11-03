@@ -7,7 +7,7 @@ import {
   Authorized,
   Int,
 } from 'type-graphql';
-import { VideoClip, CreateVideoClipInput, UpdateVideoClipInput, PresignedUrlResponse, ShowWithCount } from '../types/video-clip';
+import { VideoClip, CreateVideoClipInput, UpdateVideoClipInput, PresignedUrlResponse, ShowWithCount, CharacterWithCount } from '../types/video-clip';
 import { openSearchService } from '../services/opensearch.service';
 import { s3Service } from '../services/s3.service';
 import { v4 as uuidv4 } from 'uuid';
@@ -29,14 +29,16 @@ export class VideoClipResolver {
     @Arg('limit', () => Int, { nullable: true, defaultValue: 12 })
     limit?: number,
     @Arg('sortBy', () => String, { nullable: true }) sortBy?: string,
-    @Arg('filterShow', () => String, { nullable: true }) filterShow?: string
+    @Arg('filterShow', () => String, { nullable: true }) filterShow?: string,
+    @Arg('filterCharacter', () => String, { nullable: true }) filterCharacter?: string
   ): Promise<VideoClip[]> {
     const result = await openSearchService.searchVideoClips(
       searchQuery,
       offset,
       limit,
       sortBy,
-      filterShow
+      filterShow,
+      filterCharacter
     );
     return result.clips;
   }
@@ -64,6 +66,11 @@ export class VideoClipResolver {
   @Query(() => [ShowWithCount])
   async availableShows(): Promise<ShowWithCount[]> {
     return await openSearchService.getAvailableShows();
+  }
+
+  @Query(() => [CharacterWithCount])
+  async availableCharacters(): Promise<CharacterWithCount[]> {
+    return await openSearchService.getAvailableCharacters();
   }
 
   @Mutation(() => VideoClip)

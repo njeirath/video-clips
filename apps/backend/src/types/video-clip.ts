@@ -227,6 +227,15 @@ export class ShowWithCount {
 }
 
 @ObjectType()
+export class CharacterWithCount {
+  @Field(() => String)
+  name: string;
+
+  @Field(() => Int)
+  count: number;
+}
+
+@ObjectType()
 export class PresignedUrlResponse {
   @Field(() => String)
   uploadUrl: string;

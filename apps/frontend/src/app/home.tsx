@@ -234,8 +234,8 @@ function VideoClipPlayer({ clip }: VideoClipPlayerProps) {
 }
 
 const GET_VIDEO_CLIPS = graphql(`
-  query GetVideoClips($searchQuery: String, $offset: Int, $limit: Int, $sortBy: String, $filterShow: String) {
-    videoClips(searchQuery: $searchQuery, offset: $offset, limit: $limit, sortBy: $sortBy, filterShow: $filterShow) {
+  query GetVideoClips($searchQuery: String, $offset: Int, $limit: Int, $sortBy: String, $filterShow: String, $filterCharacter: String) {
+    videoClips(searchQuery: $searchQuery, offset: $offset, limit: $limit, sortBy: $sortBy, filterShow: $filterShow, filterCharacter: $filterCharacter) {
       id
       name
       description
@@ -269,6 +269,15 @@ const GET_AVAILABLE_SHOWS = graphql(`
   }
 `);
 
+const GET_AVAILABLE_CHARACTERS = graphql(`
+  query GetAvailableCharacters {
+    availableCharacters {
+      name
+      count
+    }
+  }
+`);
+
 const ITEMS_PER_PAGE = 12;
 const DEBOUNCE_DELAY = 500; // 500ms debounce
 
@@ -283,6 +292,7 @@ export default function Home() {
   const [hasMore, setHasMore] = useState(true);
   const [sortBy, setSortBy] = useState<SortOption>('createdAt');
   const [filterShow, setFilterShow] = useState<string>('all');
+  const [filterCharacter, setFilterCharacter] = useState<string>('all');
   const observerTarget = useRef<HTMLDivElement>(null);
   // guard to prevent concurrent fetchMore calls which were causing duplicate API requests
   const isFetchingMoreRef = useRef(false);
@@ -297,6 +307,7 @@ export default function Home() {
       limit: ITEMS_PER_PAGE,
       sortBy: sortBy,
       filterShow: filterShow !== 'all' ? filterShow : undefined,
+      filterCharacter: filterCharacter !== 'all' ? filterCharacter : undefined,
     },
     fetchPolicy: 'cache-and-network',
   });
@@ -306,9 +317,18 @@ export default function Home() {
     fetchPolicy: 'cache-first',
   });
 
+  // Fetch available characters from backend
+  const { data: charactersData } = useQuery(GET_AVAILABLE_CHARACTERS, {
+    fetchPolicy: 'cache-first',
+  });
+
   const availableShows = useMemo(() => {
     return showsData?.availableShows || [];
   }, [showsData]);
+
+  const availableCharacters = useMemo(() => {
+    return charactersData?.availableCharacters || [];
+  }, [charactersData]);
 
   // Ensure allClips is updated if data.videoClips changes (e.g., after cache update)
   useEffect(() => {
@@ -334,6 +354,7 @@ export default function Home() {
       limit: ITEMS_PER_PAGE,
       sortBy: sortBy,
       filterShow: filterShow !== 'all' ? filterShow : undefined,
+      filterCharacter: filterCharacter !== 'all' ? filterCharacter : undefined,
     }).then((result: any) => {
       if (result?.data?.videoClips) {
         setAllClips(result.data.videoClips);
@@ -349,7 +370,7 @@ export default function Home() {
       console.error('Refetch error after sort/filter change:', err);
       // keep existing list in case of error
     });
-  }, [sortBy, filterShow, refetch, debouncedSearch]);
+  }, [sortBy, filterShow, filterCharacter, refetch, debouncedSearch]);
 
   // Debounce search input (shared from header)
   useEffect(() => {
@@ -393,6 +414,7 @@ export default function Home() {
           limit: ITEMS_PER_PAGE,
           sortBy: sortBy,
           filterShow: filterShow !== 'all' ? filterShow : undefined,
+          filterCharacter: filterCharacter !== 'all' ? filterCharacter : undefined,
         },
       });
 
@@ -414,7 +436,7 @@ export default function Home() {
       // clear the last requested offset so subsequent scrolls can request it again if needed
       lastRequestedOffsetRef.current = null;
     }
-  }, [hasMore, loading, fetchMore, debouncedSearch, offset, sortBy, filterShow]);
+  }, [hasMore, loading, fetchMore, debouncedSearch, offset, sortBy, filterShow, filterCharacter]);
 
   // refs to avoid stale closures in the observer callback
   const loadMoreRef = useRef(loadMore);
@@ -576,6 +598,75 @@ export default function Home() {
             No shows available
           </Typography>
         )}
+
+        {/* Characters Filter Section */}
+        <Box sx={{ mt: 4 }}>
+          <Typography variant="h6" sx={{ color: '#fff', mb: 2, px: 1 }}>
+            Characters
+          </Typography>
+          
+          {availableCharacters.length > 0 ? (
+            <Box>
+              <Box
+                onClick={() => setFilterCharacter('all')}
+                sx={{
+                  px: 2,
+                  py: 1.5,
+                  mb: 0.5,
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  bgcolor: filterCharacter === 'all' ? 'rgba(59, 157, 214, 0.15)' : 'transparent',
+                  color: filterCharacter === 'all' ? '#3b9dd6' : '#fff',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  '&:hover': {
+                    bgcolor: filterCharacter === 'all' ? 'rgba(59, 157, 214, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+                  },
+                }}
+              >
+                <Typography variant="body2" sx={{ fontWeight: filterCharacter === 'all' ? 600 : 400 }}>
+                  All Characters
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#9ca3af' }}>
+                  {availableCharacters.reduce((sum, char) => sum + char.count, 0)}
+                </Typography>
+              </Box>
+              {availableCharacters.map((character) => (
+                <Box
+                  key={character.name}
+                  onClick={() => setFilterCharacter(character.name)}
+                  sx={{
+                    px: 2,
+                    py: 1.5,
+                    mb: 0.5,
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    bgcolor: filterCharacter === character.name ? 'rgba(59, 157, 214, 0.15)' : 'transparent',
+                    color: filterCharacter === character.name ? '#3b9dd6' : '#fff',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    '&:hover': {
+                      bgcolor: filterCharacter === character.name ? 'rgba(59, 157, 214, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+                    },
+                  }}
+                >
+                  <Typography variant="body2" sx={{ fontWeight: filterCharacter === character.name ? 600 : 400 }}>
+                    {character.name}
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: '#9ca3af' }}>
+                    {character.count}
+                  </Typography>
+                </Box>
+              ))}
+            </Box>
+          ) : (
+            <Typography variant="body2" sx={{ color: '#9ca3af', px: 1 }}>
+              No characters available
+            </Typography>
+          )}
+        </Box>
       </Box>
 
       {/* Main Content Area */}
@@ -632,7 +723,7 @@ export default function Home() {
           {!loading && allClips.length === 0 && (
             <Box sx={{ textAlign: 'center', py: 8 }}>
               <Typography variant="h6" color="text.secondary">
-                {searchInput || filterShow !== 'all'
+                {searchInput || filterShow !== 'all' || filterCharacter !== 'all'
                   ? 'No video clips match the selected filters'
                   : 'No video clips available yet'}
               </Typography>
