@@ -1,10 +1,11 @@
 name: CI
 
 on:
-  push:
-    branches: ['**']
   pull_request:
     branches: ['**']
+  push:
+    branches:
+      - main
 
 jobs:
   frontend:
@@ -41,22 +42,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nx-cache-
 
-      - name: Check if commit is part of an open PR
-        id: pr-check
-        run: |
-          if [ "${{ github.event_name }}" = "push" ]; then
-            prs=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" -H "Accept: application/vnd.github.groot-preview+json" "https://api.github.com/repos/${{ github.repository }}/commits/${{ github.sha }}/pulls" | grep -c '"html_url"' || true)
-            echo "prs=$prs" >> $GITHUB_OUTPUT
-          else
-            echo "prs=0" >> $GITHUB_OUTPUT
-          fi
-
       - name: Run frontend tests (nx)
-        if: github.event_name == 'pull_request' || steps.pr-check.outputs.prs == '0'
         run: npx nx test frontend -- --coverage
 
       - name: Upload frontend coverage
-        if: github.event_name == 'pull_request' || steps.pr-check.outputs.prs == '0'
+        if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: coverage-frontend
@@ -96,22 +86,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nx-cache-
 
-      - name: Check if commit is part of an open PR
-        id: pr-check
-        run: |
-          if [ "${{ github.event_name }}" = "push" ]; then
-            prs=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" -H "Accept: application/vnd.github.groot-preview+json" "https://api.github.com/repos/${{ github.repository }}/commits/${{ github.sha }}/pulls" | grep -c '"html_url"' || true)
-            echo "prs=$prs" >> $GITHUB_OUTPUT
-          else
-            echo "prs=0" >> $GITHUB_OUTPUT
-          fi
-
       - name: Run backend tests (nx)
-        if: github.event_name == 'pull_request' || steps.pr-check.outputs.prs == '0'
         run: npx nx test backend -- --coverage
 
       - name: Upload backend coverage
-        if: github.event_name == 'pull_request' || steps.pr-check.outputs.prs == '0'
+        if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: coverage-backend
