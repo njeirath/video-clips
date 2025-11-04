@@ -143,10 +143,22 @@ The repository includes comprehensive E2E tests using Playwright that test criti
 - Combined search and filters
 - Sort functionality
 
-Run E2E tests:
+**Prerequisites for E2E tests:**
+- Docker and Docker Compose (to run OpenSearch with sample data)
+
+**Setup and run E2E tests:**
 ```bash
+# One-time setup: Start OpenSearch and seed sample data
+npm run e2e:setup
+
+# Run E2E tests
 npm run e2e
+
+# Or run in UI mode for debugging
+npm run e2e:ui
 ```
+
+The E2E tests run against the actual GraphQL backend connected to OpenSearch, ensuring complete integration testing with realistic data.
 
 For more details, see [apps/frontend-e2e/README.md](apps/frontend-e2e/README.md).
 

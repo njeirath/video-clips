@@ -103,6 +103,22 @@ jobs:
   e2e:
     name: E2E tests
     runs-on: ubuntu-latest
+    services:
+      opensearch:
+        image: opensearchproject/opensearch:2.11.0
+        env:
+          discovery.type: single-node
+          bootstrap.memory_lock: "true"
+          OPENSEARCH_JAVA_OPTS: "-Xms512m -Xmx512m"
+          DISABLE_INSTALL_DEMO_CONFIG: "true"
+          DISABLE_SECURITY_PLUGIN: "true"
+        options: >-
+          --health-cmd "curl -f http://localhost:9200/_cluster/health || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+        ports:
+          - 9200:9200
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -134,11 +150,56 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nx-cache-
 
+      - name: Wait for OpenSearch to be ready
+        run: |
+          echo "Waiting for OpenSearch..."
+          for i in {1..30}; do
+            if curl -s http://localhost:9200/_cluster/health > /dev/null; then
+              echo "OpenSearch is ready!"
+              break
+            fi
+            echo "Attempt $i/30..."
+            sleep 2
+          done
+
+      - name: Start backend to create OpenSearch index
+        run: |
+          npx nx serve backend &
+          BACKEND_PID=$!
+          echo "Waiting for backend..."
+          for i in {1..30}; do
+            if curl -s http://localhost:3000/graphql > /dev/null; then
+              echo "Backend is ready!"
+              break
+            fi
+            echo "Attempt $i/30..."
+            sleep 2
+          done
+          sleep 3
+          kill $BACKEND_PID || true
+
+      - name: Build backend for seeding
+        run: npx nx build backend
+
+      - name: Seed OpenSearch with test data
+        run: node dist/backend/apps/backend/scripts/seed-opensearch.js
+        env:
+          OPENSEARCH_HOST: localhost
+          OPENSEARCH_PORT: 9200
+
+      - name: Verify seeded data
+        run: |
+          echo "Verifying OpenSearch data..."
+          curl -s http://localhost:9200/video-clips/_count
+
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps chromium
 
       - name: Run E2E tests
         run: npx nx e2e frontend-e2e --project=chromium
+        env:
+          OPENSEARCH_HOST: localhost
+          OPENSEARCH_PORT: 9200
 
       - name: Upload E2E test results
         if: always()

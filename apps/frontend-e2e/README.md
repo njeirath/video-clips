@@ -18,8 +18,55 @@ The E2E test suite validates critical user journeys and functionality:
 - Node.js v20 or higher
 - npm v10 or higher
 - All project dependencies installed (`npm install`)
+- Docker and Docker Compose (for running OpenSearch locally)
 
 **Note**: The E2E tests automatically start both the frontend and backend servers before running tests. You don't need to start them manually.
+
+### OpenSearch Setup (Required for Full E2E Testing)
+
+The E2E tests work best with OpenSearch running and seeded with sample data. This provides realistic test scenarios with actual data.
+
+**Quick Setup:**
+
+```bash
+npm run e2e:setup
+```
+
+This script will:
+1. Start OpenSearch in a Docker container
+2. Start the backend to create the index
+3. Seed OpenSearch with 12 sample video clips
+4. Display verification instructions
+
+**Manual Setup:**
+
+If you prefer to set up OpenSearch manually:
+
+```bash
+# Start OpenSearch
+npm run opensearch:start
+
+# Wait for OpenSearch to be ready (check http://localhost:9200)
+
+# Start backend once to create the index
+npm run start:backend
+# (Wait for it to start, then stop it with Ctrl+C)
+
+# Seed the data
+npm run opensearch:seed
+```
+
+**Verify Data:**
+
+```bash
+# Check if OpenSearch is running
+curl http://localhost:9200/_cluster/health
+
+# Count video clips
+curl http://localhost:9200/video-clips/_count
+```
+
+You should see 12 video clips in the index.
 
 ## Installation
 
@@ -106,6 +153,22 @@ apps/frontend-e2e/
 └── README.md                       # This file
 ```
 
+## Sample Test Data
+
+The seed script (`apps/backend/scripts/seed-opensearch.ts`) populates OpenSearch with 12 sample video clips:
+
+- **Shows**: The Office (6 clips), Parks and Recreation (4 clips), Brooklyn Nine-Nine (2 clips)
+- **Characters**: Michael Scott, Dwight Schrute, Jim Halpert, Pam Beesly, Tom Haverford, Leslie Knope, Ron Swanson, Jake Peralta, Amy Santiago, and more
+- **Tags**: Various tags for testing search functionality
+- **Date Range**: Clips created between 2024-01-15 and 2024-01-26 for sorting tests
+
+This data ensures comprehensive testing of:
+- Show filtering (3 different shows)
+- Character filtering (multiple characters, some appearing in multiple clips)
+- Search functionality (names, descriptions, scripts)
+- Sorting by date and name
+- Combined filters and search
+
 ## Configuration
 
 ### Playwright Configuration
@@ -173,10 +236,19 @@ test.describe('My Feature', () => {
 
 ### Tests failing locally
 
-1. Ensure the frontend dev server is not already running on port 4200
-2. Clear any cached data: `npx nx reset`
-3. Reinstall dependencies: `npm ci`
-4. Install/update Playwright browsers: `npx playwright install`
+1. Ensure OpenSearch is running and seeded with data: `npm run e2e:setup`
+2. Ensure the frontend dev server is not already running on port 4200
+3. Ensure the backend dev server is not already running on port 3000
+4. Clear any cached data: `npx nx reset`
+5. Reinstall dependencies: `npm ci`
+6. Install/update Playwright browsers: `npx playwright install`
+
+### OpenSearch not starting
+
+1. Ensure Docker is running: `docker ps`
+2. Check Docker Compose logs: `docker-compose logs opensearch`
+3. Try restarting: `npm run opensearch:stop && npm run opensearch:start`
+4. If port 9200 is in use, stop other services or modify `docker-compose.yml`
 
 ### Tests timing out
 
