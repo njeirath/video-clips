@@ -7,5 +7,6 @@ export default {
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageDirectory: '../../coverage/backend',
+  coverageReporters: ['lcov', 'text', 'html'],
   transformIgnorePatterns: ['node_modules/(?!(uuid)/)'],
 };

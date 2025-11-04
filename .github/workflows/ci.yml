@@ -1,0 +1,165 @@
+name: CI
+
+permissions:
+  pull-requests: write
+  contents: read
+
+on:
+  pull_request:
+    branches: ['**']
+  push:
+    branches:
+      - main
+
+jobs:
+  frontend:
+    name: Frontend tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            node_modules
+          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Cache Nx build
+        uses: actions/cache@v4
+        with:
+          path: ./.nx/cache
+          key: ${{ runner.os }}-nx-cache-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-nx-cache-
+
+      - name: Run frontend tests (nx)
+        run: npx nx test frontend -- --coverage
+
+      - name: Upload frontend coverage
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-frontend
+          path: coverage/frontend
+
+  backend:
+    name: Backend tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            node_modules
+          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Cache Nx build
+        uses: actions/cache@v4
+        with:
+          path: ./.nx/cache
+          key: ${{ runner.os }}-nx-cache-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-nx-cache-
+
+      - name: Run backend tests (nx)
+        run: npx nx test backend -- --coverage
+
+      - name: Upload backend coverage
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-backend
+          path: coverage/backend
+
+  coverage-report:
+    name: Coverage report and PR comment
+    runs-on: ubuntu-latest
+    needs: [frontend, backend]
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download frontend coverage artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-frontend
+          path: ./coverage/frontend
+
+      - name: Download backend coverage artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-backend
+          path: ./coverage/backend
+
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Add coverage-summary script
+        run: |
+          chmod +x .github/scripts/coverage-summary.js || true
+
+      - name: Compute coverage summary
+        id: coverage
+        run: |
+          node .github/scripts/coverage-summary.js ./coverage/frontend/lcov.info ./coverage/backend/lcov.info > coverage-summary.json
+          # coverage-summary.js may also emit coverage-summary.md; ensure it's present if created
+          if [ -f coverage-summary.md ]; then
+            echo "coverage-summary.md generated"
+          else
+            echo "coverage-summary.md not found"
+          fi
+
+      - name: Upload coverage summary files
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-summary
+          path: |
+            coverage-summary.json
+            coverage-summary.md
+
+      - name: Download coverage summary artifact
+        if: always()
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-summary
+          path: ./coverage-summary
+
+      - name: Post or update PR comment with coverage
+        uses: peter-evans/create-or-update-comment@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body-file: ./coverage-summary/coverage-summary.md
