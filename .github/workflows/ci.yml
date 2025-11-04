@@ -130,25 +130,32 @@ jobs:
         id: coverage
         run: |
           node .github/scripts/coverage-summary.js ./coverage/frontend/lcov.info ./coverage/backend/lcov.info > coverage-summary.json
-          # Use a unique delimiter to avoid conflicts when the content contains 'EOF'
-          DELIM="DELIM_$(date +%s)_$RANDOM"
-          # set JSON output
-          echo "summary<<${DELIM}" >> $GITHUB_OUTPUT
-          cat coverage-summary.json >> $GITHUB_OUTPUT
-          echo "${DELIM}" >> $GITHUB_OUTPUT
-          # set markdown output
+          # coverage-summary.js may also emit coverage-summary.md; ensure it's present if created
           if [ -f coverage-summary.md ]; then
-            echo "markdown<<${DELIM}" >> $GITHUB_OUTPUT
-            cat coverage-summary.md >> $GITHUB_OUTPUT
-            echo "${DELIM}" >> $GITHUB_OUTPUT
+            echo "coverage-summary.md generated"
+          else
+            echo "coverage-summary.md not found"
           fi
+
+      - name: Upload coverage summary files
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-summary
+          path: |
+            coverage-summary.json
+            coverage-summary.md
+
+      - name: Download coverage summary artifact
+        if: always()
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-summary
+          path: ./coverage-summary
 
       - name: Post or update PR comment with coverage
         uses: peter-evans/create-or-update-comment@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           issue-number: ${{ github.event.pull_request.number }}
-          body: |
-            ## Coverage summary
-
-            ${{ steps.coverage.outputs.markdown }}
+          body-file: ./coverage-summary/coverage-summary.md
