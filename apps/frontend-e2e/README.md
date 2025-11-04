@@ -19,6 +19,8 @@ The E2E test suite validates critical user journeys and functionality:
 - npm v10 or higher
 - All project dependencies installed (`npm install`)
 
+**Note**: The E2E tests automatically start both the frontend and backend servers before running tests. You don't need to start them manually.
+
 ## Installation
 
 The E2E testing framework (Playwright) is already configured in this project. If you need to install Playwright browsers:
@@ -111,11 +113,13 @@ apps/frontend-e2e/
 The Playwright configuration is in `playwright.config.ts`. Key settings:
 
 - **Base URL**: `http://localhost:4200` (configurable via `BASE_URL` env var)
-- **Web Server**: Automatically starts the frontend dev server before tests
+- **Web Servers**: Automatically starts both backend (`http://localhost:3000/graphql`) and frontend (`http://localhost:4200`) dev servers before tests
 - **Browsers**: Chromium, Firefox, and WebKit (Safari)
 - **Retries**: Enabled on CI
 - **Trace**: Captured on first retry for debugging
 - **Screenshots**: Taken on failure
+
+The E2E tests run against the actual GraphQL backend, ensuring full integration testing.
 
 ### CI Configuration
 

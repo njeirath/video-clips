@@ -23,13 +23,23 @@ export default defineConfig({
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },
-  /* Run your local dev server before starting the tests */
-  webServer: {
-    command: 'npx nx serve frontend',
-    url: 'http://localhost:4200',
-    reuseExistingServer: !process.env.CI,
-    cwd: workspaceRoot,
-  },
+  /* Run your local dev servers (both frontend and backend) before starting the tests */
+  webServer: [
+    {
+      command: 'npx nx serve backend',
+      url: 'http://localhost:3000/graphql',
+      reuseExistingServer: !process.env.CI,
+      cwd: workspaceRoot,
+      timeout: 120000,
+    },
+    {
+      command: 'npx nx serve frontend',
+      url: 'http://localhost:4200',
+      reuseExistingServer: !process.env.CI,
+      cwd: workspaceRoot,
+      timeout: 120000,
+    },
+  ],
   projects: [
     {
       name: 'chromium',
