@@ -32,11 +32,15 @@ if (args.length === 0) {
 const out = {};
 let totalLF = 0;
 let totalLH = 0;
+const missing = [];
 
 args.forEach(p => {
   const summary = parseLcov(p);
   const project = path.basename(path.dirname(p)) || path.basename(p);
   out[project] = summary;
+  if (!summary) {
+    missing.push({ path: p, project });
+  }
   if (summary) {
     totalLF += summary.LF;
     totalLH += summary.LH;
@@ -60,6 +64,19 @@ Object.keys(out).forEach(k => {
     mdLines.push(`| ${k} | ${v.LF} | ${v.LH} | ${pct}% |`);
   }
 });
+
+if (missing.length > 0) {
+  mdLines.push('');
+  mdLines.push('> ⚠️ Coverage data missing for the following projects:');
+  missing.forEach(m => {
+    mdLines.push('> - **' + m.project + '** - expected LCOV at `' + m.path + '` (file not found)');
+  });
+  mdLines.push('>');
+  mdLines.push('> Hints:');
+  mdLines.push('> - Ensure the test runner is run with coverage enabled (for Nx: `npx nx test <proj> -- --coverage`).');
+  mdLines.push('> - For Vitest, use the `istanbul` provider and include `lcov` in `coverage.reporter`.');
+  mdLines.push('> - For Jest, include `coverageReporters: ["lcov", "text", "html"]` or similar.');
+}
 
 const md = mdLines.join('\n');
 
