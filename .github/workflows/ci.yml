@@ -130,15 +130,17 @@ jobs:
         id: coverage
         run: |
           node .github/scripts/coverage-summary.js ./coverage/frontend/lcov.info ./coverage/backend/lcov.info > coverage-summary.json
+          # Use a unique delimiter to avoid conflicts when the content contains 'EOF'
+          DELIM="DELIM_$(date +%s)_$RANDOM"
           # set JSON output
-          echo "summary<<EOF" >> $GITHUB_OUTPUT
+          echo "summary<<${DELIM}" >> $GITHUB_OUTPUT
           cat coverage-summary.json >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          echo "${DELIM}" >> $GITHUB_OUTPUT
           # set markdown output
           if [ -f coverage-summary.md ]; then
-            echo "markdown<<EOF" >> $GITHUB_OUTPUT
+            echo "markdown<<${DELIM}" >> $GITHUB_OUTPUT
             cat coverage-summary.md >> $GITHUB_OUTPUT
-            echo "EOF" >> $GITHUB_OUTPUT
+            echo "${DELIM}" >> $GITHUB_OUTPUT
           fi
 
       - name: Post or update PR comment with coverage
