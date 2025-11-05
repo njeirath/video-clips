@@ -48,3 +48,4 @@ vitest.config.*.timestamp*
 /.nx/workspace-data
 /apps/backend/Video Clips - Sheet1.csv
 screenshots/
+/apps/frontend-e2e/playwright-report
