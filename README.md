@@ -124,12 +124,43 @@ mutation GenerateUploadUrl($fileName: String!, $contentType: String!) {
 - `npm start` - Serve the default application
 - `npm run build` - Build the default project
 - `npm test` - Run tests
+- `npm run e2e` - Run end-to-end tests
+- `npm run e2e:ui` - Run E2E tests in interactive UI mode
 - `npm run lint` - Lint the code
 
 ### Nx Commands
 
 - `npm run affected` - Run commands only on projects affected by changes
 - `npm run graph` - Show the dependency graph of the workspace
+
+### End-to-End Testing
+
+The repository includes comprehensive E2E tests using Playwright that test critical user journeys:
+
+- Home page video clips display
+- Search functionality with debouncing
+- Filter by shows and characters
+- Combined search and filters
+- Sort functionality
+
+**Prerequisites for E2E tests:**
+- Docker and Docker Compose (to run OpenSearch with sample data)
+
+**Setup and run E2E tests:**
+```bash
+# One-time setup: Start OpenSearch and seed sample data
+npm run e2e:setup
+
+# Run E2E tests
+npm run e2e
+
+# Or run in UI mode for debugging
+npm run e2e:ui
+```
+
+The E2E tests run against the actual GraphQL backend connected to OpenSearch, ensuring complete integration testing with realistic data.
+
+For more details, see [apps/frontend-e2e/README.md](apps/frontend-e2e/README.md).
 
 ### Using Nx Directly
 
