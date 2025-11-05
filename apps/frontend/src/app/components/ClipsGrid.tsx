@@ -4,11 +4,12 @@ import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
 import { VideoClipPlayer } from './VideoClipPlayer';
+import { VideoClip } from './types';
 
 type ClipsGridProps = {
-  clips: any[];
+  clips: VideoClip[];
   loading: boolean;
-  error: any;
+  error: Error | null;
   hasMore: boolean;
   searchInput: string;
   filterShow: string;

@@ -8,18 +8,10 @@ import IconButton from '@mui/material/IconButton';
 import Snackbar from '@mui/material/Snackbar';
 import ShareIcon from '@mui/icons-material/Share';
 import { BlurhashImage } from './BlurhashImage';
+import { VideoClip } from './types';
 
 type VideoClipPlayerProps = {
-  clip: {
-    id: string;
-    name: string;
-    description?: string;
-    videoUrl: string;
-    shareUrl?: string;
-    createdAt: string;
-    thumbnailUrl?: string;
-    blurhash?: string;
-  };
+  clip: VideoClip;
 };
 
 export function VideoClipPlayer({ clip }: VideoClipPlayerProps) {
