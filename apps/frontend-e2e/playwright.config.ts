@@ -28,7 +28,9 @@ export default defineConfig({
     {
       command: 'npx nx serve backend',
       url: 'http://localhost:3000/graphql',
-      reuseExistingServer: !process.env.CI,
+      // In CI we want to reuse an existing server if it's already running (to avoid port conflicts
+      // when the job starts/stops the backend during seeding). Locally we still start a dev server.
+      reuseExistingServer: !!process.env.CI,
       cwd: workspaceRoot,
       timeout: 120000,
     },
