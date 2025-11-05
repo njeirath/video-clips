@@ -162,27 +162,48 @@ jobs:
             sleep 2
           done
 
-      - name: Start backend to create OpenSearch index
+      - name: Build backend for seeding
+        run: npx nx build backend
+
+      - name: Start backend temporarily to create index and seed data
         run: |
-          npx nx serve backend &
+          echo "Starting backend to create OpenSearch index..."
+          npx nx serve backend > /tmp/backend.log 2>&1 &
           BACKEND_PID=$!
-          echo "Waiting for backend..."
+          echo "Backend PID: $BACKEND_PID"
+          
+          echo "Waiting for backend to be ready..."
           for i in {1..30}; do
-            if curl -s http://localhost:3000/graphql > /dev/null; then
+            if curl -s http://localhost:3000/graphql > /dev/null 2>&1; then
               echo "Backend is ready!"
               break
             fi
             echo "Attempt $i/30..."
             sleep 2
           done
-          sleep 3
+          
+          # Give backend a moment to fully initialize the index
+          sleep 5
+          
+          # Seed the data
+          echo "Seeding OpenSearch with test data..."
+          node dist/backend/apps/backend/scripts/seed-opensearch.js
+          
+          # Stop the backend to free the port for Playwright's webServer
+          echo "Stopping backend (PID: $BACKEND_PID)..."
           kill $BACKEND_PID || true
-
-      - name: Build backend for seeding
-        run: npx nx build backend
-
-      - name: Seed OpenSearch with test data
-        run: node dist/backend/apps/backend/scripts/seed-opensearch.js
+          
+          # Wait for the port to be fully released
+          echo "Waiting for port 3000 to be released..."
+          sleep 5
+          for i in {1..10}; do
+            if ! lsof -i:3000 > /dev/null 2>&1; then
+              echo "Port 3000 is now free!"
+              break
+            fi
+            echo "Port still in use, waiting... (attempt $i/10)"
+            sleep 2
+          done
         env:
           OPENSEARCH_HOST: localhost
           OPENSEARCH_PORT: 9200

@@ -60,15 +60,18 @@ test.describe('Home Page - Video Clips Display', () => {
   });
 
   test('should show login buttons when not authenticated', async ({ page }) => {
+    // Wait for auth state to be determined (the app checks auth on mount)
+    await page.waitForLoadState('networkidle');
+    
     // Check for Login or SignUp buttons
     const loginButton = page.getByRole('button', { name: /login/i });
     const signupButton = page.getByRole('button', { name: /signup/i });
     
-    // At least one should be visible (depending on auth state)
-    const hasAuthButtons = await loginButton.isVisible().catch(() => false) || 
-                           await signupButton.isVisible().catch(() => false);
+    // Check visibility of both buttons
+    const loginVisible = await loginButton.isVisible().catch(() => false);
+    const signupVisible = await signupButton.isVisible().catch(() => false);
     
-    // We expect to see auth buttons or user menu (if user somehow got authenticated)
-    expect(hasAuthButtons).toBeTruthy();
+    // At least one auth button should be visible when not authenticated
+    expect(loginVisible || signupVisible).toBeTruthy();
   });
 });
