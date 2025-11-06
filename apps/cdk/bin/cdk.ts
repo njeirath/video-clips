@@ -10,8 +10,10 @@ const env = { account: '910246205140', region: 'us-east-2' };
 
 const app = new cdk.App();
 
-new EcrStack(app, 'UIEcr', { env, repositoryName: 'video-clips-ui' });
-new EcrStack(app, 'APIEcr', { env, repositoryName: 'video-clips-api' });
+new EcrStack(app, 'Ecr', {
+  env,
+  repositoryNames: ['video-clips-api', 'video-clips-ui'],
+});
 
 new SesStack(app, 'Ses', { env });
 const acm = new AcmStack(app, 'Acm', { env: usEast1Env });
