@@ -174,7 +174,7 @@ jobs:
           
           echo "Waiting for backend to be ready..."
           for i in {1..30}; do
-            if curl -s http://localhost:3000/graphql > /dev/null 2>&1; then
+            if curl -s http://localhost:3020/graphql > /dev/null 2>&1; then
               echo "Backend is ready!"
               break
             fi
@@ -194,11 +194,11 @@ jobs:
           kill $BACKEND_PID || true
           
           # Wait for the port to be fully released
-          echo "Waiting for port 3000 to be released..."
+          echo "Waiting for port 3020 to be released..."
           sleep 5
           for i in {1..10}; do
-            if ! lsof -i:3000 > /dev/null 2>&1; then
-              echo "Port 3000 is now free!"
+            if ! lsof -i:3020 > /dev/null 2>&1; then
+              echo "Port 3020 is now free!"
               break
             fi
             echo "Port still in use, waiting... (attempt $i/10)"

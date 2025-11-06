@@ -6,7 +6,7 @@ import { fetchAuthSession } from 'aws-amplify/auth';
 
 // Create HTTP link
 const httpLink = createHttpLink({
-  uri: 'http://localhost:3000/graphql',
+  uri: 'http://localhost:3020/graphql',
 });
 
 // Create auth link to add bearer token to all requests

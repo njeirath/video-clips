@@ -20,7 +20,10 @@ export default defineConfig({
   // outputDir: 'playwright-report',
   reporter: process.env.CI
     ? [['dot'], ['html', { open: 'never', outputFolder: 'playwright-report' }]]
-    : 'list',
+    : [
+        ['list'],
+        ['html', { open: 'on-failure', outputFolder: 'playwright-report' }],
+      ],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     baseURL,
@@ -32,7 +35,7 @@ export default defineConfig({
   webServer: [
     {
       command: 'npx nx serve backend',
-      url: 'http://localhost:3000/graphql',
+      url: 'http://localhost:3020/graphql',
       // In CI we want to reuse an existing server if it's already running (to avoid port conflicts
       // when the job starts/stops the backend during seeding). Locally we still start a dev server.
       reuseExistingServer: !!process.env.CI,

@@ -176,7 +176,7 @@ This data ensures comprehensive testing of:
 The Playwright configuration is in `playwright.config.ts`. Key settings:
 
 - **Base URL**: `http://localhost:4200` (configurable via `BASE_URL` env var)
-- **Web Servers**: Automatically starts both backend (`http://localhost:3000/graphql`) and frontend (`http://localhost:4200`) dev servers before tests
+- **Web Servers**: Automatically starts both backend (`http://localhost:3020/graphql`) and frontend (`http://localhost:4200`) dev servers before tests
 - **Browsers**: Chromium, Firefox, and WebKit (Safari)
 - **Retries**: Enabled on CI
 - **Trace**: Captured on first retry for debugging
@@ -238,7 +238,7 @@ test.describe('My Feature', () => {
 
 1. Ensure OpenSearch is running and seeded with data: `npm run e2e:setup`
 2. Ensure the frontend dev server is not already running on port 4200
-3. Ensure the backend dev server is not already running on port 3000
+3. Ensure the backend dev server is not already running on port 3020
 4. Clear any cached data: `npx nx reset`
 5. Reinstall dependencies: `npm ci`
 6. Install/update Playwright browsers: `npx playwright install`

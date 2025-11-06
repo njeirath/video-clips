@@ -5,7 +5,7 @@ This guide provides steps to manually test the new video clip editing functional
 ## Prerequisites
 
 1. Backend and frontend servers running:
-   - Backend: `npx nx serve backend` (port 3000)
+  - Backend: `npx nx serve backend` (port 3020)
    - Frontend: `npx nx serve frontend` (port 4200)
 2. AWS Cognito configured for authentication
 3. OpenSearch instance running (or mocked)

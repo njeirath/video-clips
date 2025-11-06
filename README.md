@@ -70,7 +70,7 @@ A Node.js application with TypeScript that provides a GraphQL API using Apollo S
 npx nx serve backend
 ```
 
-The GraphQL endpoint will be available at `http://localhost:3000/graphql`.
+The GraphQL endpoint will be available at `http://localhost:3020/graphql`.
 
 **Rich Link Previews:**
 When creating a video clip, the backend automatically generates a static HTML page with Open Graph and Twitter Card meta tags. This page is uploaded to S3 and served via CloudFront, enabling rich previews in messaging apps and social media platforms without requiring JavaScript execution. See [docs/OPEN_GRAPH_META_TAGS.md](docs/OPEN_GRAPH_META_TAGS.md) for details.

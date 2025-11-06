@@ -127,7 +127,7 @@ curl http://localhost:9200/_cluster/health
 
 # 3. Start backend once to create the index
 npm run start:backend
-# Wait for "Server started on http://localhost:3000/graphql"
+# Wait for "Server started on http://localhost:3020/graphql"
 # Then stop with Ctrl+C
 
 # 4. Seed test data

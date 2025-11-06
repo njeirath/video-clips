@@ -32,11 +32,11 @@ In one terminal:
 npx nx serve backend
 ```
 
-The backend will start at `http://localhost:3000/graphql`
+The backend will start at `http://localhost:3020/graphql`
 
 Expected output:
 ```
-Server started on http://localhost:3000/graphql
+Server started on http://localhost:3020/graphql
 Error initializing OpenSearch index: ConnectionError... (if OpenSearch not running - this is OK)
 ```
 
@@ -110,7 +110,7 @@ Using a GraphQL client (Apollo Studio, Insomnia, Postman) or curl:
 
 #### Test Hello Query
 ```bash
-curl -X POST http://localhost:3000/graphql \
+curl -X POST http://localhost:3020/graphql \
   -H "Content-Type: application/json" \
   -d '{"query":"{ hello }"}'
 ```
@@ -122,7 +122,7 @@ Expected response:
 
 #### Test VideoClips Query
 ```bash
-curl -X POST http://localhost:3000/graphql \
+curl -X POST http://localhost:3020/graphql \
   -H "Content-Type: application/json" \
   -d '{"query":"{ videoClips { id name description userId createdAt } }"}'
 ```
@@ -153,7 +153,7 @@ First, get your ID token:
 
 Then test the mutation:
 ```bash
-curl -X POST http://localhost:3000/graphql \
+curl -X POST http://localhost:3020/graphql \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_ID_TOKEN_HERE" \
   -d '{
@@ -185,7 +185,7 @@ Expected response:
 #### Test Create VideoClip Without Authentication
 
 ```bash
-curl -X POST http://localhost:3000/graphql \
+curl -X POST http://localhost:3020/graphql \
   -H "Content-Type: application/json" \
   -d '{
     "query": "mutation CreateVideoClip($input: CreateVideoClipInput!) { createVideoClip(input: $input) { id name description userId createdAt } }",
@@ -214,7 +214,7 @@ Expected response:
 ## Troubleshooting
 
 ### Backend won't start
-- Check if port 3000 is already in use
+- Check if port 3020 is already in use
 - Verify dependencies are installed: `npm install`
 - Check Node.js version: `node --version` (should be v20+)
 

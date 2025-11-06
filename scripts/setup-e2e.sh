@@ -60,7 +60,7 @@ max_attempts=30
 attempt=0
 
 while [ $attempt -lt $max_attempts ]; do
-    if curl -s http://localhost:3000/graphql > /dev/null 2>&1; then
+    if curl -s http://localhost:3020/graphql > /dev/null 2>&1; then
         echo "✅ Backend is ready!"
         break
     fi

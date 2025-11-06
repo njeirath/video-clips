@@ -29,7 +29,7 @@ This repository is an Nx monorepo for video clips applications and infrastructur
 - **Forms**: Use `react-hook-form` library for all form validation in the frontend. This provides better performance and cleaner validation logic.
 - **GraphQL**: Frontend GraphQL codegen in `src/app/gql/` (see `gql.ts`, `graphql.ts`).
 - **Infrastructure**: CDK stacks in `apps/cdk/lib/`. Deploy via CDK CLI or Nx.
-- **Ports**: Frontend runs on 4200, backend (when available) on 3000 (`/graphql`).
+- **Ports**: Frontend runs on 4200, backend (when available) on 3020 (`/graphql`).
 
 ## Nx-Specific Guidance
 

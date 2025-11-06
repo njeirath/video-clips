@@ -45,8 +45,10 @@ async function bootstrap() {
   await server.start();
   server.applyMiddleware({ app });
 
-  app.listen(3000, () => {
-    console.log('Server started on http://localhost:3000/graphql');
+  const PORT = process.env.PORT ? Number(process.env.PORT) : 3020;
+
+  app.listen(PORT, () => {
+    console.log(`Server started on http://localhost:${PORT}/graphql`);
   });
 }
 

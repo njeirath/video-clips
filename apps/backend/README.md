@@ -62,7 +62,7 @@ npm run start:backend
 npx nx serve backend
 ```
 
-The server will start at `http://localhost:3000` with the GraphQL endpoint at `http://localhost:3000/graphql`.
+The server will start at `http://localhost:3020` with the GraphQL endpoint at `http://localhost:3020/graphql`.
 
 ### Build
 
@@ -265,17 +265,17 @@ You can test the GraphQL API using curl:
 
 ```bash
 # Test hello query
-curl -X POST http://localhost:3000/graphql \
+curl -X POST http://localhost:3020/graphql \
   -H "Content-Type: application/json" \
   -d '{"query":"{ hello }"}'
 
 # Test videoClips query
-curl -X POST http://localhost:3000/graphql \
+curl -X POST http://localhost:3020/graphql \
   -H "Content-Type: application/json" \
   -d '{"query":"{ videoClips { id name description } }"}'
 
 # Test createVideoClip mutation (requires authentication token)
-curl -X POST http://localhost:3000/graphql \
+curl -X POST http://localhost:3020/graphql \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_COGNITO_ID_TOKEN" \
   -d '{"query":"mutation CreateVideoClip($input: CreateVideoClipInput!) { createVideoClip(input: $input) { id name description userId createdAt } }", "variables":{"input":{"name":"My Video","description":"A test video"}}}'
