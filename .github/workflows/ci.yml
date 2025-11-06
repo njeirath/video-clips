@@ -106,7 +106,7 @@ jobs:
     # Run steps inside Playwright's official Docker image which includes browsers
     # and the native libraries WebKit needs. This avoids missing-library errors.
     container:
-      image: mcr.microsoft.com/playwright:latest
+      image: mcr.microsoft.com/playwright:v1.56.1-jammy
     services:
       opensearch:
         image: opensearchproject/opensearch:2.11.0
