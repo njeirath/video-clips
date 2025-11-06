@@ -47,9 +47,41 @@ async function bootstrap() {
 
   const PORT = process.env.PORT ? Number(process.env.PORT) : 3020;
 
-  app.listen(PORT, () => {
+  // Start the HTTP server and keep a reference so we can close it on shutdown
+  const httpServer = app.listen(PORT, () => {
     console.log(`Server started on http://localhost:${PORT}/graphql`);
   });
+
+  // Graceful shutdown helper
+  const shutdown = async (signal: string) => {
+    console.log(`Received ${signal}. Shutting down gracefully...`);
+    try {
+      // Stop accepting new requests
+      httpServer.close((err?: Error) => {
+        if (err) {
+          console.error('Error closing HTTP server:', err);
+        } else {
+          console.log('HTTP server closed.');
+        }
+      });
+
+      // Stop Apollo server
+      await server.stop();
+      console.log('Apollo server stopped.');
+
+      // Give some time for close callbacks to run then exit
+      setTimeout(() => {
+        console.log('Shutdown complete. Exiting.');
+        process.exit(0);
+      }, 100);
+    } catch (error) {
+      console.error('Error during shutdown:', error);
+      process.exit(1);
+    }
+  };
+
+  process.on('SIGINT', () => shutdown('SIGINT'));
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
 }
 
 bootstrap();
