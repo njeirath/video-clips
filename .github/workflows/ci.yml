@@ -121,6 +121,14 @@ jobs:
           name: coverage-backend
           path: ./coverage/backend
 
+      - name: "Debug: is CODECOV_TOKEN present?"
+        run: |
+          if [ -n "${{ secrets.CODECOV_TOKEN }}" ]; then
+            echo "CODECOV_TOKEN_PRESENT=true"
+          else
+            echo "CODECOV_TOKEN_PRESENT=false"
+          fi
+
       - name: Upload combined coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
@@ -128,7 +136,7 @@ jobs:
             coverage/frontend/lcov.info
             coverage/backend/lcov.info
           fail_ci_if_error: false
-          # token is optional; repository secret CODECOV_TOKEN will be used if configured
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   e2e:
     name: E2E tests
