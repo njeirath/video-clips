@@ -48,13 +48,12 @@ jobs:
 
       - name: Run frontend tests (nx)
         run: npx nx test frontend -- --coverage
-      - name: Upload coverage to Codecov
+      - name: Upload coverage artifact
         if: success()
-        uses: codecov/codecov-action@v4
+        uses: actions/upload-artifact@v4
         with:
-          files: coverage/frontend/lcov.info
-          fail_ci_if_error: false
-          # token is optional; repository secret CODECOV_TOKEN will be used if configured
+          name: coverage-frontend
+          path: coverage/frontend/lcov.info
 
   backend:
     name: Backend tests
@@ -92,11 +91,42 @@ jobs:
 
       - name: Run backend tests (nx)
         run: npx nx test backend -- --coverage
-      - name: Upload coverage to Codecov
+      - name: Upload coverage artifact
         if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-backend
+          path: coverage/backend/lcov.info
+
+  coverage-upload:
+    name: "Coverage: download & upload to Codecov"
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    needs:
+      - frontend
+      - backend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download frontend coverage artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-frontend
+          path: ./coverage/frontend
+
+      - name: Download backend coverage artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-backend
+          path: ./coverage/backend
+
+      - name: Upload combined coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
-          files: coverage/backend/lcov.info
+          files: |
+            coverage/frontend/lcov.info
+            coverage/backend/lcov.info
           fail_ci_if_error: false
           # token is optional; repository secret CODECOV_TOKEN will be used if configured
 
