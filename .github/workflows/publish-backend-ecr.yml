@@ -1,0 +1,61 @@
+name: Publish backend to ECR
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: Build and publish backend image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Ensure this tag is on main
+        id: verify_branch
+        run: |
+          # Get the commit the tag points to
+          TAG_COMMIT=$(git rev-list -n 1 ${{ github.ref }})
+          # Get main branch tip
+          MAIN_COMMIT=$(git rev-parse origin/main)
+          if [ "$TAG_COMMIT" != "$MAIN_COMMIT" ]; then
+            echo "Tag does not point at main's tip. Exiting."
+            exit 1
+          fi
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: ecr_login
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build and push image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: apps/backend/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: 910246205140.dkr.ecr.us-east-2.amazonaws.com/video-clips-api:${{ github.ref_name }}
+
+      - name: Publish metadata
+        run: |
+          echo "image=910246205140.dkr.ecr.us-east-2.amazonaws.com/video-clips-api:${{ github.ref_name }}" >> $GITHUB_OUTPUT
