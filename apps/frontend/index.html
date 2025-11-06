@@ -11,6 +11,8 @@
   </head>
   <body>
     <div id="root"></div>
+    <!-- Load runtime config first so the app can read runtime overrides without rebuilding -->
+    <script src="/runtime-config.js"></script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
