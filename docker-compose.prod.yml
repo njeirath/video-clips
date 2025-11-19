@@ -1,0 +1,98 @@
+services:
+  opensearch:
+    image: opensearchproject/opensearch:2.11.0
+    container_name: video-clips-opensearch
+    environment:
+      - cluster.name=video-clips-cluster
+      - node.name=video-clips-node
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "OPENSEARCH_JAVA_OPTS=-Xms1g -Xmx1g"
+      - "DISABLE_INSTALL_DEMO_CONFIG=true"
+      - "DISABLE_SECURITY_PLUGIN=true"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    volumes:
+      - opensearch-data:/usr/share/opensearch/data
+    ports:
+      - "9200:9200"
+      - "9600:9600"
+    networks:
+      - video-clips-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: .
+      dockerfile: ./apps/backend/Dockerfile
+    image: video-clips-backend:latest
+    container_name: video-clips-backend
+    environment:
+      - NODE_ENV=production
+      - PORT=3020
+      - OPENSEARCH_HOST=opensearch
+      - OPENSEARCH_PORT=9200
+      # Cognito envs can be overridden in production environment
+      - COGNITO_CLIENT_ID=4lk87f6cg3o2dr9sbsldkv8ntq
+      - S3_VIDEO_BUCKET=dev-assetsbucket5cb76180-vj3xg2shbmn6
+      - CLOUDFRONT_DOMAIN=assets-dev.vidclip.co
+    # Optional: load sensitive runtime variables (AWS credentials, overrides) from a local env file
+    # Copy apps/backend/.env.prod.example -> apps/backend/.env.prod.local and fill values.
+    env_file:
+      - ./apps/backend/.env.prod.local
+    ports:
+      - "3020:3020"
+    networks:
+      - video-clips-network
+    depends_on:
+      opensearch:
+        condition: service_healthy
+    healthcheck:
+      # Use a POST GraphQL hello query to verify the server is actually responding
+      test: ["CMD-SHELL", "curl -sS -X POST -H 'Content-Type: application/json' -d '{\"query\":\"{ hello }\"}' http://localhost:3020/graphql | grep -q 'Hello' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      start_period: 20s
+      retries: 12
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: ./apps/frontend/Dockerfile
+    image: video-clips-frontend:latest
+    container_name: video-clips-frontend
+    environment:
+      # The frontend entrypoint writes /runtime-config.js from GRAPHQL_URI at container start
+      - GRAPHQL_URI=http://192.168.0.56:3020/graphql
+    ports:
+      - "4200:80"
+    networks:
+      - video-clips-network
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  opensearch-data:
+    driver: local
+
+networks:
+  video-clips-network:
+    driver: bridge
+
+# Notes:
+# - This compose file is intended for a simple single-host production deployment for testing.
+# - For production use in real environments prefer running images built by CI, using an external
+#   OpenSearch cluster (managed or hosted), and secrets management (dont store secrets in env vars).

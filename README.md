@@ -238,3 +238,83 @@ node dist/backend/apps/backend/scripts/process-clips.js
 - [Nx Documentation](https://nx.dev)
 - [Nx Tutorial](https://nx.dev/getting-started/intro)
 
+## Docker / Production (compose)
+
+The repository includes a production-oriented Docker Compose file at `docker-compose.prod.yml`. It builds the `backend` and `frontend` images from `apps/backend` and `apps/frontend` respectively, and runs an embedded OpenSearch instance for easy single-host deployments or testing.
+
+Quick notes:
+- The frontend uses an entrypoint script to write `/runtime-config.js` from the `GRAPHQL_URI` environment variable at container start. `docker-compose.prod.yml` sets this to `http://backend:3020/graphql` by default so the SPA points to the backend on the same Docker network.
+- The backend listens on port `3020` and exposes the GraphQL endpoint at `/graphql`.
+- OpenSearch runs on port `9200` and data is persisted to the `opensearch-data` Docker volume.
+
+Validate the compose file:
+```bash
+docker compose -f docker-compose.prod.yml config
+```
+
+Start services (builds frontend/backend images from the `apps/*` folders):
+```bash
+docker compose -f docker-compose.prod.yml up -d --build
+```
+
+View running containers and health status:
+```bash
+docker compose -f docker-compose.prod.yml ps
+```
+
+Tail logs for a specific service:
+```bash
+docker compose -f docker-compose.prod.yml logs -f opensearch
+docker compose -f docker-compose.prod.yml logs -f backend
+docker compose -f docker-compose.prod.yml logs -f frontend
+```
+
+Quick smoke checks:
+- Backend GraphQL: http://localhost:3020/graphql
+- Frontend UI: http://localhost:4200
+- OpenSearch: http://localhost:9200
+
+Production considerations and recommendations:
+
+- For production you should build images in CI and use tagged images (don't build on the host at deploy-time). Replace the `build:` section in compose with `image: your-repo/video-clips-backend:tag` and `image: your-repo/video-clips-frontend:tag`.
+- Use a managed OpenSearch/Elasticsearch service or a dedicated cluster for reliability and scale; running OpenSearch on the same host is useful for demos and testing but not recommended for production-grade deployments.
+- Store secrets (Cognito client IDs, OpenSearch credentials if enabled, S3 keys) in a secrets manager or use Docker secrets; do not commit them into the repo or use plain env vars for long-term production deployments.
+- Consider placing an authenticated reverse proxy (TLS termination) in front of the frontend/backend, or use a cloud load balancer.
+
+If you'd like, I can add a small `docker/` README snippet, a `.env.prod.example` file for commonly needed environment variables, or modify the compose to use prebuilt images from a registry.
+
+### Environment files and credentials
+
+For local testing you can provide AWS credentials and other runtime environment variables via an env file. The repository contains an example at `apps/backend/.env.prod.example`.
+
+1. Copy the example to a local file that is ignored by git:
+
+```bash
+cp apps/backend/.env.prod.example apps/backend/.env.prod.local
+# Edit apps/backend/.env.prod.local and fill in real values (DO NOT commit this file)
+```
+
+2. Tell Docker Compose to load the file when starting the backend service by either:
+
+- Adding an `env_file` entry to `docker-compose.prod.yml` (local only):
+
+```yaml
+services:
+  backend:
+    env_file:
+      - ./apps/backend/.env.prod.local
+```
+
+- Or exporting environment variables in your shell before running compose:
+
+```bash
+export AWS_ACCESS_KEY_ID=...
+export AWS_SECRET_ACCESS_KEY=...
+docker compose -f docker-compose.prod.yml up -d --build
+```
+
+Security notes:
+- Never commit real credentials. The `.gitignore` has been updated to ignore common `.env` patterns and `apps/backend/.env.prod.local`.
+- For production, prefer assigning an IAM role to the host or task (ECS task role, EC2 instance profile, or EKS IRSA) so the app uses temporary credentials provided by the platform.
+
+

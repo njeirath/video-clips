@@ -32,6 +32,10 @@ COPY package-lock.json ./package-lock.json
 
 # Install only production dependencies
 RUN npm ci --omit=dev --silent
+# Install curl so container healthchecks that rely on curl work
+RUN apt-get update \
+	&& apt-get install -y --no-install-recommends curl ca-certificates \
+	&& rm -rf /var/lib/apt/lists/*
 
 ENV NODE_ENV=production
 EXPOSE 3020

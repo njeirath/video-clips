@@ -48,4 +48,9 @@ vitest.config.*.timestamp*
 /.nx/workspace-data
 /apps/backend/Video Clips - Sheet1.csv
 screenshots/
+# local env files
+.env
+*.local
+.env.*.local
+apps/backend/.env.prod.local
 /apps/frontend-e2e/playwright-report
