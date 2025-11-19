@@ -11,6 +11,7 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 interface CdkStackProps extends cdk.StackProps {
   stage: 'dev' | 'prod';
   sesDomain: string;
+  certificateArn: string;
 }
 
 export class CdkStack extends cdk.Stack {
@@ -60,6 +61,10 @@ export class CdkStack extends cdk.Stack {
 
     // CloudFront distribution in front of the S3 bucket
     // ACM certificate for the CloudFront distribution
+    const domainPrefix = isDev ? `assets-${stage}` : '';
+    const domainName = isDev
+      ? `${domainPrefix}.${props.sesDomain}`
+      : `${props.sesDomain}`;
 
     const distribution = new cloudfront.Distribution(
       this,
@@ -70,11 +75,11 @@ export class CdkStack extends cdk.Stack {
           viewerProtocolPolicy:
             cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         },
-        domainNames: [`assets-${stage}.${props.sesDomain}`],
+        domainNames: [domainName],
         certificate: cdk.aws_certificatemanager.Certificate.fromCertificateArn(
           this,
           'cert',
-          'arn:aws:acm:us-east-1:910246205140:certificate/3644ea47-07ad-47f4-95ce-ccce1fe5ad5d'
+          props.certificateArn
         ),
       }
     );
@@ -86,7 +91,7 @@ export class CdkStack extends cdk.Stack {
 
     new route53.ARecord(this, 'AssetsDevAliasRecord', {
       zone: hostedZone,
-      recordName: `assets-${stage}`,
+      recordName: domainPrefix,
       target: route53.RecordTarget.fromAlias(
         new targets.CloudFrontTarget(distribution)
       ),
@@ -94,7 +99,7 @@ export class CdkStack extends cdk.Stack {
 
     new route53.AaaaRecord(this, 'AssetsDevAliasRecordAAAA', {
       zone: hostedZone,
-      recordName: `assets-${stage}`,
+      recordName: domainPrefix,
       target: route53.RecordTarget.fromAlias(
         new targets.CloudFrontTarget(distribution)
       ),

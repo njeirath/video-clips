@@ -22,17 +22,14 @@ new CdkStack(app, 'Dev', {
   env,
   stage: 'dev',
   sesDomain: 'vidclip.co',
-  /* If you don't specify 'env', this stack will be environment-agnostic.
-   * Account/Region-dependent features and context lookups will not work,
-   * but a single synthesized template can be deployed anywhere. */
+  certificateArn:
+    'arn:aws:acm:us-east-1:910246205140:certificate/3644ea47-07ad-47f4-95ce-ccce1fe5ad5d',
+});
 
-  /* Uncomment the next line to specialize this stack for the AWS Account
-   * and Region that are implied by the current CLI configuration. */
-  // env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: process.env.CDK_DEFAULT_REGION },
-
-  /* Uncomment the next line if you know exactly what Account and Region you
-   * want to deploy the stack to. */
-  // env: { account: '123456789012', region: 'us-east-1' },
-
-  /* For more information, see https://docs.aws.amazon.com/cdk/latest/guide/environments.html */
+new CdkStack(app, 'Prod', {
+  env,
+  stage: 'prod',
+  sesDomain: 'vidclip.co',
+  certificateArn:
+    'arn:aws:acm:us-east-1:910246205140:certificate/6eed4165-aef9-4f01-844b-c040d7686334',
 });
