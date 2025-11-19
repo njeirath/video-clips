@@ -6,6 +6,7 @@ import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
 import * as route53 from 'aws-cdk-lib/aws-route53';
 import * as targets from 'aws-cdk-lib/aws-route53-targets';
+import * as iam from 'aws-cdk-lib/aws-iam';
 
 interface CdkStackProps extends cdk.StackProps {
   stage: 'dev' | 'prod';
@@ -46,6 +47,16 @@ export class CdkStack extends cdk.Stack {
         },
       ],
     });
+
+    // IAM constructs (require inside the constructor so no top-level import change is needed)
+
+    // Create an IAM user for programmatic access to the assets bucket
+    const assetsUser = new iam.User(this, 'BackendUser', {
+      userName: `${stage}-backend-user`,
+    });
+
+    // Grant read/write permissions on the assets bucket to both the user and the role
+    assetsBucket.grantReadWrite(assetsUser);
 
     // CloudFront distribution in front of the S3 bucket
     // ACM certificate for the CloudFront distribution
