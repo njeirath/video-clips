@@ -24,6 +24,7 @@ const GET_VIDEO_CLIP = graphql(`
       userId
       userEmail
       videoUrl
+      shareUrl
       thumbnailUrl
       script
       duration
@@ -168,9 +169,34 @@ export default function VideoClipDetail() {
             </Typography>
           </Divider>
 
+          {clip.shareUrl && (
+            <Box sx={{ mb: 2 }}>
+              <Typography
+                variant="subtitle2"
+                color="text.secondary"
+                gutterBottom
+              >
+                Share URL
+              </Typography>
+              <Typography variant="body1">
+                <a
+                  href={clip.shareUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {clip.shareUrl}
+                </a>
+              </Typography>
+            </Box>
+          )}
+
           {clip.description && (
             <Box sx={{ mb: 2 }}>
-              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+              <Typography
+                variant="subtitle2"
+                color="text.secondary"
+                gutterBottom
+              >
                 Description
               </Typography>
               <Typography variant="body1">{clip.description}</Typography>
@@ -179,7 +205,11 @@ export default function VideoClipDetail() {
 
           {clip.script && (
             <Box sx={{ mb: 2 }}>
-              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+              <Typography
+                variant="subtitle2"
+                color="text.secondary"
+                gutterBottom
+              >
                 Script
               </Typography>
               <Typography variant="body1" sx={{ fontStyle: 'italic' }}>
@@ -190,7 +220,11 @@ export default function VideoClipDetail() {
 
           {clip.duration !== null && clip.duration !== undefined && (
             <Box sx={{ mb: 2 }}>
-              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+              <Typography
+                variant="subtitle2"
+                color="text.secondary"
+                gutterBottom
+              >
                 Duration
               </Typography>
               <Typography variant="body1">{clip.duration} seconds</Typography>
@@ -199,7 +233,11 @@ export default function VideoClipDetail() {
 
           {clip.characters && clip.characters.length > 0 && (
             <Box sx={{ mb: 2 }}>
-              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+              <Typography
+                variant="subtitle2"
+                color="text.secondary"
+                gutterBottom
+              >
                 Characters
               </Typography>
               <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
@@ -212,12 +250,21 @@ export default function VideoClipDetail() {
 
           {clip.tags && clip.tags.length > 0 && (
             <Box sx={{ mb: 2 }}>
-              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+              <Typography
+                variant="subtitle2"
+                color="text.secondary"
+                gutterBottom
+              >
                 Tags
               </Typography>
               <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                 {clip.tags.map((tag, index) => (
-                  <Chip key={index} label={tag} color="primary" variant="outlined" />
+                  <Chip
+                    key={index}
+                    label={tag}
+                    color="primary"
+                    variant="outlined"
+                  />
                 ))}
               </Box>
             </Box>
@@ -225,7 +272,11 @@ export default function VideoClipDetail() {
 
           {clip.source && (
             <Box sx={{ mb: 2 }}>
-              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+              <Typography
+                variant="subtitle2"
+                color="text.secondary"
+                gutterBottom
+              >
                 Source
               </Typography>
               {'season' in clip.source || 'episode' in clip.source ? (
@@ -234,23 +285,39 @@ export default function VideoClipDetail() {
                     <strong>Show:</strong> {clip.source.title}
                   </Typography>
                   {'season' in clip.source && clip.source.season && (
-                    <Typography variant="body2">Season {clip.source.season}</Typography>
+                    <Typography variant="body2">
+                      Season {clip.source.season}
+                    </Typography>
                   )}
                   {'episode' in clip.source && clip.source.episode && (
-                    <Typography variant="body2">Episode {clip.source.episode}</Typography>
+                    <Typography variant="body2">
+                      Episode {clip.source.episode}
+                    </Typography>
                   )}
                   {'airDate' in clip.source && clip.source.airDate && (
-                    <Typography variant="body2">Aired: {clip.source.airDate}</Typography>
+                    <Typography variant="body2">
+                      Aired: {clip.source.airDate}
+                    </Typography>
                   )}
-                  {('start' in clip.source && clip.source.start !== null && clip.source.start !== undefined) ||
-                   ('end' in clip.source && clip.source.end !== null && clip.source.end !== undefined) ? (
+                  {('start' in clip.source &&
+                    clip.source.start !== null &&
+                    clip.source.start !== undefined) ||
+                  ('end' in clip.source &&
+                    clip.source.end !== null &&
+                    clip.source.end !== undefined) ? (
                     <Typography variant="body2">
                       Clip time:{' '}
-                      {'start' in clip.source && clip.source.start !== null && clip.source.start !== undefined ? 
-                        `${clip.source.start}s` : '?'}
+                      {'start' in clip.source &&
+                      clip.source.start !== null &&
+                      clip.source.start !== undefined
+                        ? `${clip.source.start}s`
+                        : '?'}
                       {' - '}
-                      {'end' in clip.source && clip.source.end !== null && clip.source.end !== undefined ? 
-                        `${clip.source.end}s` : '?'}
+                      {'end' in clip.source &&
+                      clip.source.end !== null &&
+                      clip.source.end !== undefined
+                        ? `${clip.source.end}s`
+                        : '?'}
                     </Typography>
                   ) : null}
                 </Box>
@@ -260,17 +327,29 @@ export default function VideoClipDetail() {
                     <strong>Movie:</strong> {clip.source.title}
                   </Typography>
                   {'releaseDate' in clip.source && clip.source.releaseDate && (
-                    <Typography variant="body2">Released: {clip.source.releaseDate}</Typography>
+                    <Typography variant="body2">
+                      Released: {clip.source.releaseDate}
+                    </Typography>
                   )}
-                  {('start' in clip.source && clip.source.start !== null && clip.source.start !== undefined) ||
-                   ('end' in clip.source && clip.source.end !== null && clip.source.end !== undefined) ? (
+                  {('start' in clip.source &&
+                    clip.source.start !== null &&
+                    clip.source.start !== undefined) ||
+                  ('end' in clip.source &&
+                    clip.source.end !== null &&
+                    clip.source.end !== undefined) ? (
                     <Typography variant="body2">
                       Clip time:{' '}
-                      {'start' in clip.source && clip.source.start !== null && clip.source.start !== undefined ? 
-                        `${clip.source.start}s` : '?'}
+                      {'start' in clip.source &&
+                      clip.source.start !== null &&
+                      clip.source.start !== undefined
+                        ? `${clip.source.start}s`
+                        : '?'}
                       {' - '}
-                      {'end' in clip.source && clip.source.end !== null && clip.source.end !== undefined ? 
-                        `${clip.source.end}s` : '?'}
+                      {'end' in clip.source &&
+                      clip.source.end !== null &&
+                      clip.source.end !== undefined
+                        ? `${clip.source.end}s`
+                        : '?'}
                     </Typography>
                   ) : null}
                 </Box>
@@ -281,11 +360,19 @@ export default function VideoClipDetail() {
           <Divider sx={{ my: 3 }} />
 
           <Box sx={{ mb: 2 }}>
-            <Typography variant="caption" color="text.secondary" display="block">
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              display="block"
+            >
               Created: {new Date(clip.createdAt).toLocaleString()}
             </Typography>
             {clip.updatedAt && (
-              <Typography variant="caption" color="text.secondary" display="block">
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                display="block"
+              >
                 Last updated: {new Date(clip.updatedAt).toLocaleString()}
                 {clip.updatedBy && ` by ${clip.updatedBy}`}
               </Typography>
