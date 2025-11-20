@@ -227,7 +227,14 @@ export default function VideoClipDetail() {
               >
                 Duration
               </Typography>
-              <Typography variant="body1">{clip.duration} seconds</Typography>
+              <Typography variant="body1">
+                {typeof clip.duration === 'number'
+                  ? clip.duration.toFixed(3)
+                  : !isNaN(Number(clip.duration))
+                  ? Number(clip.duration).toFixed(3)
+                  : clip.duration}{' '}
+                seconds
+              </Typography>
             </Box>
           )}
 
