@@ -270,7 +270,7 @@ export default function EditVideoClip() {
 
   if (loading) {
     return (
-      <Container component="main" maxWidth="md">
+      <Container component="main" maxWidth="md" sx={{ px: { xs: 2, sm: 3 } }}>
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
           <CircularProgress />
         </Box>
@@ -280,8 +280,8 @@ export default function EditVideoClip() {
 
   if (error || !data?.videoClip) {
     return (
-      <Container component="main" maxWidth="md">
-        <Box sx={{ mt: 8 }}>
+      <Container component="main" maxWidth="md" sx={{ px: { xs: 2, sm: 3 } }}>
+        <Box sx={{ mt: { xs: 4, md: 8 } }}>
           <Alert severity="error">
             Failed to load video clip. Please try again later.
           </Alert>
@@ -300,10 +300,10 @@ export default function EditVideoClip() {
   const clip = data.videoClip;
 
   return (
-    <Container component="main" maxWidth="md">
+    <Container component="main" maxWidth="md" sx={{ px: { xs: 2, sm: 3 } }}>
       <Box
         sx={{
-          marginTop: 8,
+          marginTop: { xs: 4, md: 8 },
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -315,7 +315,15 @@ export default function EditVideoClip() {
         <Typography component="h1" variant="h5">
           Edit Video Clip
         </Typography>
-        <Typography variant="h6" sx={{ mt: 2, mb: 1 }}>
+        <Typography 
+          variant="h6" 
+          sx={{ 
+            mt: 2, 
+            mb: 1,
+            textAlign: 'center',
+            px: 2
+          }}
+        >
           {clip.name}
         </Typography>
 
