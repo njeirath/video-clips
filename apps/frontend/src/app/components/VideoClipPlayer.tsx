@@ -56,7 +56,8 @@ export function VideoClipPlayer({ clip }: VideoClipPlayerProps) {
     <Card
       onClick={handleCardClick}
       sx={{
-        width: 280,
+        width: '100%',
+        maxWidth: 280,
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
@@ -65,6 +66,7 @@ export function VideoClipPlayer({ clip }: VideoClipPlayerProps) {
         bgcolor: '#2a3544',
         borderRadius: '12px',
         overflow: 'hidden',
+        mx: { xs: 'auto', sm: 0 },
         '&:hover': {
           transform: 'translateY(-4px)',
           boxShadow: '0 8px 24px rgba(0, 0, 0, 0.3)',

@@ -7,6 +7,11 @@ import { graphql } from '../gql/gql';
 import { FilterSidebar } from './components/FilterSidebar';
 import { ClipsHeader } from './components/ClipsHeader';
 import { ClipsGrid } from './components/ClipsGrid';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { useTheme } from '@mui/material/styles';
+import Drawer from '@mui/material/Drawer';
+import IconButton from '@mui/material/IconButton';
+import FilterListIcon from '@mui/icons-material/FilterList';
 
 const GET_VIDEO_CLIPS = graphql(`
   query GetVideoClips($filter: VideoClipFilter, $offset: Int, $limit: Int, $sortBy: String) {
@@ -71,6 +76,11 @@ export default function Home() {
   // dedupe requests by offset to avoid making duplicate fetches for the same page
   const lastRequestedOffsetRef = useRef<number | null>(null);
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
+  
+  // Mobile drawer state
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const { data, loading, error, fetchMore, refetch } = useQuery(GET_VIDEO_CLIPS, {
     variables: {
@@ -298,20 +308,51 @@ export default function Home() {
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
-      {/* Left Sidebar */}
-      <FilterSidebar
-        availableShows={availableShows}
-        availableCharacters={availableCharacters}
-        filterShow={filterShow}
-        filterCharacter={filterCharacter}
-        onShowFilterChange={setFilterShow}
-        onCharacterFilterChange={setFilterCharacter}
-      />
+      {/* Left Sidebar - Desktop only */}
+      {!isMobile && (
+        <FilterSidebar
+          availableShows={availableShows}
+          availableCharacters={availableCharacters}
+          filterShow={filterShow}
+          filterCharacter={filterCharacter}
+          onShowFilterChange={setFilterShow}
+          onCharacterFilterChange={setFilterCharacter}
+        />
+      )}
+
+      {/* Mobile Drawer for Filters */}
+      {isMobile && (
+        <Drawer
+          anchor="left"
+          open={drawerOpen}
+          onClose={() => setDrawerOpen(false)}
+        >
+          <FilterSidebar
+            availableShows={availableShows}
+            availableCharacters={availableCharacters}
+            filterShow={filterShow}
+            filterCharacter={filterCharacter}
+            onShowFilterChange={(show) => {
+              setFilterShow(show);
+              setDrawerOpen(false);
+            }}
+            onCharacterFilterChange={(character) => {
+              setFilterCharacter(character);
+              setDrawerOpen(false);
+            }}
+          />
+        </Drawer>
+      )}
 
       {/* Main Content Area */}
       <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         {/* Header with Title and Sort */}
-        <ClipsHeader sortBy={sortBy} onSortChange={setSortBy} />
+        <ClipsHeader 
+          sortBy={sortBy} 
+          onSortChange={setSortBy}
+          isMobile={isMobile}
+          onFilterClick={() => setDrawerOpen(true)}
+        />
 
         {/* Video clips grid */}
         <ClipsGrid

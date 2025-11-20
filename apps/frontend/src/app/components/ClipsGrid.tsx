@@ -28,7 +28,7 @@ export function ClipsGrid({
   observerTarget,
 }: ClipsGridProps) {
   return (
-    <Box sx={{ flex: 1, px: 4, pb: 4 }}>
+    <Box sx={{ flex: 1, px: { xs: 2, md: 4 }, pb: { xs: 2, md: 4 } }}>
       {loading && clips.length === 0 && (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
           <CircularProgress />
@@ -55,8 +55,12 @@ export function ClipsGrid({
         <Box
           sx={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 280px))',
-            gap: 3,
+            gridTemplateColumns: {
+              xs: '1fr',
+              sm: 'repeat(auto-fill, minmax(280px, 1fr))',
+              md: 'repeat(auto-fill, minmax(280px, 280px))',
+            },
+            gap: { xs: 2, md: 3 },
             justifyContent: 'start',
           }}
         >

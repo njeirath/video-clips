@@ -15,6 +15,8 @@ import InputAdornment from '@mui/material/InputAdornment';
 import { useLocation } from 'react-router-dom';
 import { getCurrentUser, signOut } from 'aws-amplify/auth';
 import { SearchProvider, useSearch } from './SearchContext';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { useTheme } from '@mui/material/styles';
 
 export function App() {
   const [signedIn, setSignedIn] = useState(false);
@@ -24,6 +26,8 @@ export function App() {
   const menuOpen = Boolean(anchorEl);
   const navigate = useNavigate();
   const location = useLocation();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   // Check auth state on mount and whenever the route changes
   useEffect(() => {
@@ -85,7 +89,7 @@ export function App() {
           borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
         }}
       >
-  <Toolbar sx={{ py: 1, position: 'relative' }}>
+  <Toolbar sx={{ py: 1, position: 'relative', flexWrap: 'wrap', gap: 1 }}>
           {/* VideoClips Logo/Brand */}
           <Box 
             component={Link}
@@ -94,13 +98,13 @@ export function App() {
               display: 'flex', 
               alignItems: 'center', 
               textDecoration: 'none',
-              mr: 4 
+              mr: { xs: 'auto', md: 4 }
             }}
           >
             <Box
               sx={{
-                width: 32,
-                height: 32,
+                width: { xs: 28, md: 32 },
+                height: { xs: 28, md: 32 },
                 mr: 1,
                 display: 'flex',
                 alignItems: 'center',
@@ -116,38 +120,40 @@ export function App() {
               sx={{ 
                 color: '#fff',
                 fontWeight: 600,
-                fontSize: '1.25rem'
+                fontSize: { xs: '1.1rem', md: '1.25rem' }
               }}
             >
               VideoClips
             </Typography>
           </Box>
 
-          {/* Centered Search Bar */}
-          <Box
-            sx={{
-              position: 'absolute',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              width: 'min(760px, 60%)',
-            }}
-          >
-            <HeaderSearch />
-          </Box>
+          {/* Centered Search Bar - Hidden on mobile */}
+          {!isMobile && (
+            <Box
+              sx={{
+                position: 'absolute',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: 'min(760px, 60%)',
+              }}
+            >
+              <HeaderSearch />
+            </Box>
+          )}
 
           {/* Right aligned action buttons */}
-          <Box sx={{ marginLeft: 'auto', display: 'flex', alignItems: 'center' }}>
+          <Box sx={{ marginLeft: { xs: 0, md: 'auto' }, display: 'flex', alignItems: 'center', gap: 1 }}>
             {!checking && !signedIn && (
               <>
                 <Button
                   component={Link}
                   to="/signin"
                   variant="contained"
+                  size={isMobile ? 'small' : 'medium'}
                   sx={{ 
-                    mr: 2,
                     bgcolor: '#3b9dd6',
                     color: '#fff',
-                    px: 3,
+                    px: { xs: 2, md: 3 },
                     '&:hover': {
                       bgcolor: '#2d8ac4',
                     }
@@ -159,10 +165,11 @@ export function App() {
                   component={Link}
                   to="/signup"
                   variant="outlined"
+                  size={isMobile ? 'small' : 'medium'}
                   sx={{ 
                     borderColor: '#374151',
                     color: '#fff',
-                    px: 3,
+                    px: { xs: 2, md: 3 },
                     '&:hover': {
                       borderColor: '#4b5563',
                       bgcolor: 'rgba(255, 255, 255, 0.05)',
@@ -179,6 +186,7 @@ export function App() {
                 color="inherit"
                 component={Link}
                 to="/add-clip"
+                size={isMobile ? 'small' : 'medium'}
                 sx={{ mr: 1 }}
               >
                 Add Clip
@@ -187,7 +195,7 @@ export function App() {
             {!checking && signedIn && (
               <>
                 <IconButton
-                  size="large"
+                  size={isMobile ? 'medium' : 'large'}
                   edge="end"
                   color="inherit"
                   onClick={handleMenu}
@@ -212,6 +220,18 @@ export function App() {
           </Box>
         </Toolbar>
       </AppBar>
+      
+      {/* Mobile Search Bar - Shows below header on mobile */}
+      {isMobile && (
+        <Box sx={{ 
+          bgcolor: '#1a2332',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+          px: 2,
+          py: 1.5
+        }}>
+          <HeaderSearch />
+        </Box>
+      )}
       {/* Main app content goes here. Routing is handled in main.tsx. */}
       <Outlet />
     </Box>
