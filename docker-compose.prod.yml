@@ -68,11 +68,8 @@ services:
       dockerfile: ./apps/frontend/Dockerfile
     image: video-clips-frontend:latest
     container_name: video-clips-frontend
-    environment:
-      # The frontend entrypoint writes /runtime-config.js from GRAPHQL_URI at container start
-      - GRAPHQL_URI=http://192.168.0.56:3020/graphql
     env_file:
-      - ./apps/backend/.env.prod.frontend
+      - ./apps/frontend/.env.prod.frontend
     ports:
       - "4200:80"
     networks:
