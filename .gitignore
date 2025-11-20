@@ -52,5 +52,6 @@ screenshots/
 .env
 *.local
 .env.*.local
-apps/backend/.env.prod.local
+apps/backend/.env.prod.backend
+apps/backend/.env.prod.frontend
 /apps/frontend-e2e/playwright-report

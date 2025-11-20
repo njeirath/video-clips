@@ -42,14 +42,10 @@ services:
       - PORT=3020
       - OPENSEARCH_HOST=opensearch
       - OPENSEARCH_PORT=9200
-      # Cognito envs can be overridden in production environment
-      - COGNITO_CLIENT_ID=4lk87f6cg3o2dr9sbsldkv8ntq
-      - S3_VIDEO_BUCKET=dev-assetsbucket5cb76180-vj3xg2shbmn6
-      - CLOUDFRONT_DOMAIN=assets-dev.vidclip.co
     # Optional: load sensitive runtime variables (AWS credentials, overrides) from a local env file
     # Copy apps/backend/.env.prod.example -> apps/backend/.env.prod.local and fill values.
     env_file:
-      - ./apps/backend/.env.prod.local
+      - ./apps/backend/.env.prod.backend
     ports:
       - "3020:3020"
     networks:
@@ -75,6 +71,8 @@ services:
     environment:
       # The frontend entrypoint writes /runtime-config.js from GRAPHQL_URI at container start
       - GRAPHQL_URI=http://192.168.0.56:3020/graphql
+    env_file:
+      - ./apps/backend/.env.prod.frontend
     ports:
       - "4200:80"
     networks:
