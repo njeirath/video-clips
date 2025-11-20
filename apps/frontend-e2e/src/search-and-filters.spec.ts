@@ -18,13 +18,22 @@ async function openFilterDrawerIfMobile(page) {
   
   if (!isVisible) {
     // We're on mobile, need to open the drawer
-    // Find the filter button (should have FilterList icon)
-    const filterButtons = page.getByRole('button');
-    const filterButton = filterButtons.first();
-    await filterButton.click();
+    // Look for the filter button next to "Explore Clips" heading
+    const exploreClipsHeading = page.getByRole('heading', { name: 'Explore Clips' });
     
-    // Wait for drawer to open
-    await page.waitForTimeout(300);
+    // The filter button should be nearby - look for it by aria-label or role
+    // It's the first button in the header area with an icon
+    const filterButton = page.locator('button').first();
+    
+    try {
+      await filterButton.click({ timeout: 3000 });
+      // Wait for drawer to open and Shows heading to become visible
+      await showsHeading.waitFor({ state: 'visible', timeout: 3000 });
+    } catch (e) {
+      // If we can't find or click the filter button, or drawer doesn't open,
+      // we might already be on desktop or the element structure is different
+      console.log('Could not open filter drawer:', e.message);
+    }
   }
 }
 

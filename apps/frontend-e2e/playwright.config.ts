@@ -45,7 +45,7 @@ export default defineConfig({
     {
       command: 'npx nx serve frontend',
       url: 'http://localhost:4200',
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: !!process.env.CI,
       cwd: workspaceRoot,
       timeout: 120000,
     },
