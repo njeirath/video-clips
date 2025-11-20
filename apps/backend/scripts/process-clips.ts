@@ -26,7 +26,8 @@ const LOCAL_THUMB_DIR = path.resolve(
 );
 const REMOTE_HOST = '192.168.0.7';
 const REMOTE_USER = 'nakul';
-const GRAPHQL_ENDPOINT = 'http://localhost:3020/graphql'; // TODO: set actual endpoint
+const endpointHost = (process.env.ENDPOINT_HOST || 'localhost').replace(/\/+$/, '');
+const GRAPHQL_ENDPOINT = `http://${endpointHost}:3020/graphql`; // TODO: set actual endpoint
 const GRAPHQL_AUTH_TOKEN = process.env.GRAPHQL_AUTH_TOKEN || '';
 
 async function processCSV(passphrase: string, rowArg?: string) {
