@@ -5,7 +5,28 @@ import { test, expect } from '@playwright/test';
  *
  * Tests the sorting feature for video clips.
  * Validates that users can sort clips by different criteria.
+ * Handles both desktop and mobile layouts.
  */
+
+/**
+ * Helper function to open filter drawer on mobile devices
+ */
+async function openFilterDrawerIfMobile(page) {
+  // Check if the Shows heading is visible (desktop) or if we need to open drawer (mobile)
+  const showsHeading = page.getByRole('heading', { name: 'Shows' });
+  const isVisible = await showsHeading.isVisible().catch(() => false);
+  
+  if (!isVisible) {
+    // We're on mobile, need to open the drawer
+    // Find the filter button (should have FilterList icon)
+    const filterButtons = page.getByRole('button');
+    const filterButton = filterButtons.first();
+    await filterButton.click();
+    
+    // Wait for drawer to open
+    await page.waitForTimeout(300);
+  }
+}
 
 test.describe('Sort Functionality', () => {
   test.beforeEach(async ({ page }) => {
@@ -97,6 +118,9 @@ test.describe('Sort Functionality', () => {
     await sortSelect.click();
     await page.getByRole('option', { name: 'Name (A-Z)' }).click();
     await page.waitForTimeout(500);
+
+    // Open drawer if mobile
+    await openFilterDrawerIfMobile(page);
 
     // Apply a filter
     const allShows = page.getByText('All Shows');

@@ -5,7 +5,28 @@ import { test, expect } from '@playwright/test';
  * 
  * Tests the interaction between search and filter features.
  * Validates that users can use both together to narrow down results.
+ * Handles both desktop (sidebar) and mobile (drawer) layouts.
  */
+
+/**
+ * Helper function to open filter drawer on mobile devices
+ */
+async function openFilterDrawerIfMobile(page) {
+  // Check if the Shows heading is visible (desktop) or if we need to open drawer (mobile)
+  const showsHeading = page.getByRole('heading', { name: 'Shows' });
+  const isVisible = await showsHeading.isVisible().catch(() => false);
+  
+  if (!isVisible) {
+    // We're on mobile, need to open the drawer
+    // Find the filter button (should have FilterList icon)
+    const filterButtons = page.getByRole('button');
+    const filterButton = filterButtons.first();
+    await filterButton.click();
+    
+    // Wait for drawer to open
+    await page.waitForTimeout(300);
+  }
+}
 
 test.describe('Combined Search and Filters', () => {
   test.beforeEach(async ({ page }) => {
@@ -15,6 +36,9 @@ test.describe('Combined Search and Filters', () => {
 
   test('should allow searching while show filter is active', async ({ page }) => {
     await page.waitForTimeout(500);
+    
+    // Open drawer if mobile
+    await openFilterDrawerIfMobile(page);
     
     // Select a show filter
     const allShows = page.getByText('All Shows');
@@ -32,6 +56,9 @@ test.describe('Combined Search and Filters', () => {
 
   test('should allow searching while character filter is active', async ({ page }) => {
     await page.waitForTimeout(500);
+    
+    // Open drawer if mobile
+    await openFilterDrawerIfMobile(page);
     
     // Select a character filter
     const allCharacters = page.getByText('All Characters');
@@ -52,6 +79,9 @@ test.describe('Combined Search and Filters', () => {
     await searchInput.fill('search first');
     await page.waitForTimeout(600);
     
+    // Open drawer if mobile
+    await openFilterDrawerIfMobile(page);
+    
     // Then apply a filter
     const allShows = page.getByText('All Shows');
     await allShows.click();
@@ -65,6 +95,9 @@ test.describe('Combined Search and Filters', () => {
     const searchInput = page.getByPlaceholder('Search for video clips...');
     await searchInput.fill('combined');
     await page.waitForTimeout(600);
+    
+    // Open drawer if mobile
+    await openFilterDrawerIfMobile(page);
     
     // Apply filter
     const allShows = page.getByText('All Shows');
@@ -87,10 +120,16 @@ test.describe('Combined Search and Filters', () => {
     await searchInput.fill('triple');
     await page.waitForTimeout(600);
     
+    // Open drawer if mobile
+    await openFilterDrawerIfMobile(page);
+    
     // Apply show filter
     const allShows = page.getByText('All Shows');
     await allShows.click();
     await page.waitForTimeout(300);
+    
+    // On mobile, drawer closes after selection, so we need to reopen
+    await openFilterDrawerIfMobile(page);
     
     // Apply character filter
     const allCharacters = page.getByText('All Characters');
