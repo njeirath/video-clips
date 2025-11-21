@@ -5,7 +5,37 @@ import { test, expect } from '@playwright/test';
  *
  * Tests the sorting feature for video clips.
  * Validates that users can sort clips by different criteria.
+ * Handles both desktop and mobile layouts.
  */
+
+/**
+ * Helper function to open filter drawer on mobile devices
+ */
+async function openFilterDrawerIfMobile(page) {
+  // Check if the Shows heading is visible (desktop) or if we need to open drawer (mobile)
+  const showsHeading = page.getByRole('heading', { name: 'Shows' });
+  const isVisible = await showsHeading.isVisible().catch(() => false);
+  
+  if (!isVisible) {
+    // We're on mobile, need to open the drawer
+    // Look for the filter button next to "Explore Clips" heading
+    const exploreClipsHeading = page.getByRole('heading', { name: 'Explore Clips' });
+    
+    // The filter button should be nearby - look for it by aria-label or role
+    // It's the first button in the header area with an icon
+    const filterButton = page.locator('button').first();
+    
+    try {
+      await filterButton.click({ timeout: 3000 });
+      // Wait for drawer to open and Shows heading to become visible
+      await showsHeading.waitFor({ state: 'visible', timeout: 3000 });
+    } catch (e) {
+      // If we can't find or click the filter button, or drawer doesn't open,
+      // we might already be on desktop or the element structure is different
+      console.log('Could not open filter drawer:', e.message);
+    }
+  }
+}
 
 test.describe('Sort Functionality', () => {
   test.beforeEach(async ({ page }) => {
@@ -97,6 +127,9 @@ test.describe('Sort Functionality', () => {
     await sortSelect.click();
     await page.getByRole('option', { name: 'Name (A-Z)' }).click();
     await page.waitForTimeout(500);
+
+    // Open drawer if mobile
+    await openFilterDrawerIfMobile(page);
 
     // Apply a filter
     const allShows = page.getByText('All Shows');

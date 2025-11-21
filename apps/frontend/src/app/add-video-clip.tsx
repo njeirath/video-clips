@@ -268,10 +268,10 @@ export default function AddVideoClip() {
   };
 
   return (
-    <Container component="main" maxWidth="md">
+    <Container component="main" maxWidth="md" sx={{ px: { xs: 2, sm: 3 } }}>
       <Box
         sx={{
-          marginTop: 8,
+          marginTop: { xs: 4, md: 8 },
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',

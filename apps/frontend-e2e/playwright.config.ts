@@ -67,14 +67,22 @@ export default defineConfig({
     },
 
     // Uncomment for mobile browsers support
-    /* {
+    {
       name: 'Mobile Chrome',
-      use: { ...devices['Pixel 5'] },
+      use: { ...devices['Pixel 7'] },
+    },
+    {
+      name: 'Mobile Chrome landscape',
+      use: { ...devices['Pixel 7 landscape'] },
     },
     {
       name: 'Mobile Safari',
       use: { ...devices['iPhone 12'] },
-    }, */
+    },
+    {
+      name: 'iPad Safari',
+      use: { ...devices['iPad Pro 11'] },
+    },
 
     // Uncomment for branded browsers
     /* {

@@ -108,10 +108,10 @@ export default function VideoClipDetail() {
   const clip = data.videoClip;
 
   return (
-    <Container component="main" maxWidth="md">
+    <Container component="main" maxWidth="md" sx={{ px: { xs: 2, sm: 3 } }}>
       <Box
         sx={{
-          marginTop: 8,
+          marginTop: { xs: 4, md: 8 },
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -120,13 +120,22 @@ export default function VideoClipDetail() {
         <Avatar sx={{ m: 1, bgcolor: 'primary.main' }}>
           <VideoLibraryIcon />
         </Avatar>
-        <Typography component="h1" variant="h4" sx={{ mb: 2 }}>
+        <Typography 
+          component="h1" 
+          variant="h4" 
+          sx={{ 
+            mb: 2,
+            fontSize: { xs: '1.75rem', md: '2.125rem' },
+            textAlign: 'center',
+            px: 2
+          }}
+        >
           {clip.name}
         </Typography>
 
         {/* Video and thumbnail */}
         {clip.videoUrl && (
-          <Box sx={{ width: '100%', maxWidth: 800, mb: 3 }}>
+          <Box sx={{ width: '100%', maxWidth: 800, mb: 3, px: { xs: 2, sm: 0 } }}>
             <video
               controls
               style={{ width: '100%', borderRadius: 8 }}
@@ -139,7 +148,7 @@ export default function VideoClipDetail() {
         )}
 
         {clip.thumbnailUrl && !clip.videoUrl && (
-          <Box sx={{ width: '100%', maxWidth: 800, mb: 3 }}>
+          <Box sx={{ width: '100%', maxWidth: 800, mb: 3, px: { xs: 2, sm: 0 } }}>
             <img
               src={clip.thumbnailUrl}
               alt={clip.name}
@@ -162,7 +171,7 @@ export default function VideoClipDetail() {
         )}
 
         {/* Details */}
-        <Box sx={{ width: '100%', maxWidth: 800 }}>
+        <Box sx={{ width: '100%', maxWidth: 800, px: { xs: 2, sm: 0 } }}>
           <Divider sx={{ mb: 3 }}>
             <Typography variant="subtitle2" color="text.secondary">
               Details

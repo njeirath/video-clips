@@ -5,7 +5,37 @@ import { test, expect } from '@playwright/test';
  * 
  * Tests the filtering features (Shows and Characters).
  * Validates that users can filter video clips by various criteria.
+ * Handles both desktop (sidebar) and mobile (drawer) layouts.
  */
+
+/**
+ * Helper function to open filter drawer on mobile devices
+ */
+async function openFilterDrawerIfMobile(page) {
+  // Check if the Shows heading is visible (desktop) or if we need to open drawer (mobile)
+  const showsHeading = page.getByRole('heading', { name: 'Shows' });
+  const isVisible = await showsHeading.isVisible().catch(() => false);
+  
+  if (!isVisible) {
+    // We're on mobile, need to open the drawer
+    // Look for the filter button next to "Explore Clips" heading
+    const exploreClipsHeading = page.getByRole('heading', { name: 'Explore Clips' });
+    
+    // The filter button should be nearby - look for it by aria-label or role
+    // It's the first button in the header area with an icon
+    const filterButton = page.locator('button').first();
+    
+    try {
+      await filterButton.click({ timeout: 3000 });
+      // Wait for drawer to open and Shows heading to become visible
+      await showsHeading.waitFor({ state: 'visible', timeout: 3000 });
+    } catch (e) {
+      // If we can't find or click the filter button, or drawer doesn't open,
+      // we might already be on desktop or the element structure is different
+      console.log('Could not open filter drawer:', e.message);
+    }
+  }
+}
 
 test.describe('Filter Functionality - Shows', () => {
   test.beforeEach(async ({ page }) => {
@@ -14,12 +44,16 @@ test.describe('Filter Functionality - Shows', () => {
   });
 
   test('should display "All Shows" filter option', async ({ page }) => {
-    // Look for "All Shows" in the sidebar
+    await openFilterDrawerIfMobile(page);
+    
+    // Look for "All Shows" in the sidebar or drawer
     const allShows = page.getByText('All Shows');
     await expect(allShows).toBeVisible();
   });
 
   test('should allow clicking on a show filter', async ({ page }) => {
+    await openFilterDrawerIfMobile(page);
+    
     // Wait to ensure filters are loaded
     await page.waitForTimeout(500);
     
@@ -38,6 +72,7 @@ test.describe('Filter Functionality - Shows', () => {
   });
 
   test('should highlight selected show filter', async ({ page }) => {
+    await openFilterDrawerIfMobile(page);
     await page.waitForTimeout(500);
     
     // "All Shows" should be selected by default
@@ -48,6 +83,7 @@ test.describe('Filter Functionality - Shows', () => {
   });
 
   test('should reset to "All Shows" when clicked', async ({ page }) => {
+    await openFilterDrawerIfMobile(page);
     await page.waitForTimeout(500);
     
     // Click "All Shows"
@@ -66,12 +102,15 @@ test.describe('Filter Functionality - Characters', () => {
   });
 
   test('should display "All Characters" filter option', async ({ page }) => {
-    // Look for "All Characters" in the sidebar
+    await openFilterDrawerIfMobile(page);
+    
+    // Look for "All Characters" in the sidebar or drawer
     const allCharacters = page.getByText('All Characters');
     await expect(allCharacters).toBeVisible();
   });
 
   test('should allow clicking on a character filter', async ({ page }) => {
+    await openFilterDrawerIfMobile(page);
     await page.waitForTimeout(500);
     
     // Click "All Characters" to ensure it's functional
@@ -82,6 +121,7 @@ test.describe('Filter Functionality - Characters', () => {
   });
 
   test('should show character counts', async ({ page }) => {
+    await openFilterDrawerIfMobile(page);
     await page.waitForTimeout(500);
     
     // Verify that "All Characters" has a count displayed
@@ -97,11 +137,15 @@ test.describe('Combined Filters', () => {
   });
 
   test('should allow selecting both show and character filters', async ({ page }) => {
+    await openFilterDrawerIfMobile(page);
     await page.waitForTimeout(500);
     
     // Select a show filter (if available)
     const allShows = page.getByText('All Shows');
     await allShows.click();
+    
+    // On mobile, drawer closes after selection, so we might need to reopen
+    await openFilterDrawerIfMobile(page);
     
     // Select a character filter
     const allCharacters = page.getByText('All Characters');
@@ -112,6 +156,7 @@ test.describe('Combined Filters', () => {
   });
 
   test('should update results when filters are applied', async ({ page }) => {
+    await openFilterDrawerIfMobile(page);
     await page.waitForTimeout(500);
     
     // Apply filters
