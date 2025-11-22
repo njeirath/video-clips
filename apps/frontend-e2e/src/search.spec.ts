@@ -68,6 +68,25 @@ test.describe('Search Functionality', () => {
     await expect(searchInput).toHaveValue('');
   });
 
+  test('clear button clears the search input and focuses it', async ({ page }) => {
+    const searchInput = page.getByPlaceholder('Search for video clips...');
+
+    // Type a search query
+    await searchInput.fill('clear me');
+    await page.waitForTimeout(100);
+
+    // Click the clear button (aria-label="clear search")
+    const clearBtn = page.getByRole('button', { name: 'clear search' });
+    await clearBtn.click();
+
+    // Verify input is cleared
+    await expect(searchInput).toHaveValue('');
+
+    // Verify input is focused
+    const activeTag = await page.evaluate(() => (document.activeElement as HTMLElement)?.tagName);
+    expect(activeTag).toBe('INPUT');
+  });
+
   test('should show loading state while searching', async ({ page }) => {
     const searchInput = page.getByPlaceholder('Search for video clips...');
     

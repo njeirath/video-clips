@@ -4,12 +4,13 @@ import Toolbar from '@mui/material/Toolbar';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import IconButton from '@mui/material/IconButton';
 import AccountCircle from '@mui/icons-material/AccountCircle';
 import SearchIcon from '@mui/icons-material/Search';
+import CloseIcon from '@mui/icons-material/Close';
 import TextField from '@mui/material/TextField';
 import InputAdornment from '@mui/material/InputAdornment';
 import { useLocation } from 'react-router-dom';
@@ -243,9 +244,17 @@ export default App;
 
 function HeaderSearch() {
   const { searchInput, setSearchInput } = useSearch();
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  const handleClear = () => {
+    setSearchInput('');
+    // return focus to the input
+    inputRef.current?.focus();
+  };
 
   return (
     <TextField
+      inputRef={inputRef}
       value={searchInput}
       onChange={(e) => setSearchInput(e.target.value)}
       fullWidth
@@ -255,6 +264,18 @@ function HeaderSearch() {
         startAdornment: (
           <InputAdornment position="start">
             <SearchIcon sx={{ color: '#9ca3af' }} />
+          </InputAdornment>
+        ),
+        endAdornment: (
+          <InputAdornment position="end">
+            <IconButton
+              size="small"
+              onClick={handleClear}
+              aria-label="clear search"
+              sx={{ color: searchInput ? '#fff' : 'rgba(255,255,255,0.35)' }}
+            >
+              <CloseIcon fontSize="small" />
+            </IconButton>
           </InputAdornment>
         ),
         sx: {
