@@ -237,17 +237,20 @@ jobs:
           echo "Stopping backend (PID: $BACKEND_PID)..."
           kill $BACKEND_PID || true
           
-          # Wait for the port to be fully released
-          echo "Waiting for port 3020 to be released..."
-          sleep 5
+          # Wait for the process to fully terminate
+          echo "Waiting for backend process to terminate..."
           for i in {1..10}; do
-            if ! lsof -i:3020 > /dev/null 2>&1; then
-              echo "Port 3020 is now free!"
+            if ! kill -0 $BACKEND_PID 2>/dev/null; then
+              echo "Backend process has terminated!"
               break
             fi
-            echo "Port still in use, waiting... (attempt $i/10)"
-            sleep 2
+            echo "Process still running, waiting... (attempt $i/10)"
+            sleep 1
           done
+          
+          # Additional wait to ensure port is released
+          echo "Additional wait for port to be fully released..."
+          sleep 3
         env:
           OPENSEARCH_HOST: opensearch
           OPENSEARCH_PORT: 9200

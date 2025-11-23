@@ -18,12 +18,7 @@ async function openFilterDrawerIfMobile(page) {
   
   if (!isVisible) {
     // We're on mobile, need to open the drawer
-    // Look for the filter button next to "Explore Clips" heading
-    const exploreClipsHeading = page.getByRole('heading', { name: 'Explore Clips' });
-    
-    // The filter button should be nearby - look for it by aria-label or role
-    // It's the first button in the header area with an icon
-    const filterButton = page.locator('button').first();
+    const filterButton = page.getByRole('button', { name: 'open filters' });
     
     try {
       await filterButton.click({ timeout: 3000 });
@@ -141,7 +136,7 @@ test.describe('Sort Functionality', () => {
   });
 
   test('should maintain sort order when searching', async ({ page }) => {
-    const sortSelect = page.getByLabel('Sort by');
+    const sortSelect = page.locator('#sort-select');
 
     // Set sort to Name
     await sortSelect.click();
