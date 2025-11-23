@@ -34,6 +34,7 @@ export function ClipsHeader({ sortBy, onSortChange, isMobile, onFilterClick }: C
         {isMobile && onFilterClick && (
           <IconButton 
             onClick={onFilterClick}
+            aria-label="open filters"
             sx={{ 
               color: '#fff',
               bgcolor: 'rgba(255, 255, 255, 0.05)',

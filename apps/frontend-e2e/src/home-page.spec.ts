@@ -66,7 +66,7 @@ test.describe('Home Page - Video Clips Display', () => {
 
   test('should display sort dropdown', async ({ page }) => {
     // Verify sort dropdown is present
-    const sortSelect = page.getByLabel('Sort by');
+    const sortSelect = page.locator('#sort-select');
     await expect(sortSelect).toBeVisible();
   });
 
