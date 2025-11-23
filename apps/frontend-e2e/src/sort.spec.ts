@@ -141,7 +141,7 @@ test.describe('Sort Functionality', () => {
   });
 
   test('should maintain sort order when searching', async ({ page }) => {
-    const sortSelect = page.getByLabel('Sort by');
+    const sortSelect = page.locator('#sort-select');
 
     // Set sort to Name
     await sortSelect.click();
