@@ -44,11 +44,11 @@ test.describe('Admin Page - Access Control', () => {
     await page.waitForLoadState('networkidle');
 
     // Should see the sign in page with email input
-    const emailInput = page.getByRole('textbox', { name: /email/i });
+    const emailInput = page.getByRole('textbox', { name: 'Email Address' });
     await expect(emailInput).toBeVisible();
 
     // Should have a continue button
-    const continueButton = page.getByRole('button', { name: /continue/i });
+    const continueButton = page.getByRole('button', { name: 'Continue' });
     await expect(continueButton).toBeVisible();
   });
 });
