@@ -11,6 +11,7 @@ import Home from './app/home';
 import AddVideoClip from './app/add-video-clip';
 import VideoClipDetail from './app/video-clip-detail';
 import EditVideoClip from './app/edit-video-clip';
+import Admin from './app/admin';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import theme from './theme';
@@ -38,7 +39,11 @@ const router = createBrowserRouter([
         element: <ConfirmSignUp />,
       },
       {
-        path: 'add-clip',
+        path: 'admin',
+        element: <Admin />,
+      },
+      {
+        path: 'admin/add-clip',
         element: <AddVideoClip />,
       },
       {
