@@ -247,7 +247,7 @@ async function processCSV(passphrase: string, rowArg?: string) {
     if (!fs.existsSync(trimmedVideoPath)) {
       console.log(`Trimming video: ${localSource} -> ${trimmedVideoPath}`);
       execSync(
-        `ffmpeg -y -i "${localSource}" -ss ${Start} -to ${End} -c:v libx264 -profile:v high -pix_fmt yuv420p -c:a copy -b:a 128k -movflags +faststart "${trimmedVideoPath}"`
+        `ffmpeg -y -i "${localSource}" -ss ${Start} -to ${End} -map 0:v:0 -c:v libx264 -profile:v high -pix_fmt yuv420p -map 0:a:0 -c:a aac -ac 2 -b:a 128k -movflags +faststart "${trimmedVideoPath}"`
       );
     }
 
