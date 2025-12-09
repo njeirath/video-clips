@@ -7,7 +7,9 @@ import { useEffect, useState, useRef } from 'react';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import IconButton from '@mui/material/IconButton';
+import Button from '@mui/material/Button';
 import AccountCircle from '@mui/icons-material/AccountCircle';
+import AddIcon from '@mui/icons-material/Add';
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
 import TextField from '@mui/material/TextField';
@@ -145,6 +147,21 @@ export function App() {
           <Box sx={{ marginLeft: { xs: 0, md: 'auto' }, display: 'flex', alignItems: 'center', gap: 1 }}>
             {!checking && signedIn && (
               <>
+                <Button
+                  component={Link}
+                  to="/admin/add-clip"
+                  variant="contained"
+                  size={isMobile ? 'small' : 'medium'}
+                  startIcon={<AddIcon />}
+                  sx={{
+                    textTransform: 'none',
+                    bgcolor: '#3b9dd6',
+                    '&:hover': { bgcolor: '#3390c8' },
+                    mr: 1
+                  }}
+                >
+                  {!isMobile && 'Add Clip'}
+                </Button>
                 <IconButton
                   size={isMobile ? 'medium' : 'large'}
                   edge="end"
