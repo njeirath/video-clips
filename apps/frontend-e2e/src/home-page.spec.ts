@@ -39,12 +39,17 @@ test.describe('Home Page - Video Clips Display', () => {
   }) => {
     // On desktop, sidebar is visible. On mobile, we have a filter button instead.
     const showsHeading = page.getByRole('heading', { name: 'Shows' });
-    const filterButton = page.getByRole('button').filter({ has: page.locator('svg') }).first();
-    
+    const filterButton = page
+      .getByRole('button')
+      .filter({ has: page.locator('svg') })
+      .first();
+
     // Either sidebar is visible OR filter button exists
     const sidebarVisible = await showsHeading.isVisible().catch(() => false);
-    const filterButtonVisible = await filterButton.isVisible().catch(() => false);
-    
+    const filterButtonVisible = await filterButton
+      .isVisible()
+      .catch(() => false);
+
     expect(sidebarVisible || filterButtonVisible).toBeTruthy();
   });
 
@@ -70,27 +75,35 @@ test.describe('Home Page - Video Clips Display', () => {
     await expect(sortSelect).toBeVisible();
   });
 
-  test('should show login buttons when not authenticated', async ({ page }) => {
+  test('should not show login/signup buttons on home page', async ({
+    page,
+  }) => {
     // Wait for auth state to be determined (the app checks auth on mount)
     await page.waitForLoadState('networkidle');
 
-    // Check for Login or SignUp buttons
+    // Login and signup buttons have been removed from the home page
+    // They should not be visible or present in the DOM
     const loginButton = page.getByRole('link', { name: /login/i });
     const signupButton = page.getByRole('link', { name: /signup/i });
 
-    // Check visibility of both buttons
-    const loginVisible = await loginButton.isVisible().catch(() => false);
-    const signupVisible = await signupButton.isVisible().catch(() => false);
-
-    // Some browsers (mobile/emulated Safari) may render the buttons off-screen
-    // due to responsive layout but they still exist in the DOM. Fall back to
-    // checking DOM presence (count) when visibility checks fail so the test is
-    // tolerant across environments.
+    // Check that login/signup buttons are not present
     const loginExists = (await loginButton.count().catch(() => 0)) > 0;
     const signupExists = (await signupButton.count().catch(() => 0)) > 0;
 
-    // At least one auth button should be visible or present in the DOM when
-    // not authenticated
-    expect(loginVisible || signupVisible || loginExists || signupExists).toBeTruthy();
+    // Login/signup buttons should not be present on the home page
+    expect(loginExists || signupExists).toBeFalsy();
+  });
+
+  test('should show login/signup buttons on admin page', async ({
+    page,
+  }) => {
+    // Wait for auth state to be determined (the app checks auth on mount)
+    await page.waitForLoadState('networkidle');
+
+    // The header no longer exposes login/signup links directly. Instead the
+    // app exposes dedicated routes for authentication. Verify the Sign In
+    // page is reachable and renders correctly when navigating to `/signin`.
+    await page.goto('/signin');
+    await expect(page.getByRole('heading', { name: 'Sign In' })).toBeVisible();
   });
 });

@@ -1,14 +1,15 @@
 import { Link, useNavigate, Outlet } from 'react-router-dom';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
-import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import { useEffect, useState, useRef } from 'react';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import IconButton from '@mui/material/IconButton';
+import Button from '@mui/material/Button';
 import AccountCircle from '@mui/icons-material/AccountCircle';
+import AddIcon from '@mui/icons-material/Add';
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
 import TextField from '@mui/material/TextField';
@@ -144,57 +145,23 @@ export function App() {
 
           {/* Right aligned action buttons */}
           <Box sx={{ marginLeft: { xs: 0, md: 'auto' }, display: 'flex', alignItems: 'center', gap: 1 }}>
-            {!checking && !signedIn && (
+            {!checking && signedIn && (
               <>
                 <Button
                   component={Link}
-                  to="/signin"
+                  to="/admin/add-clip"
                   variant="contained"
                   size={isMobile ? 'small' : 'medium'}
-                  sx={{ 
+                  startIcon={<AddIcon />}
+                  sx={{
+                    textTransform: 'none',
                     bgcolor: '#3b9dd6',
-                    color: '#fff',
-                    px: { xs: 2, md: 3 },
-                    '&:hover': {
-                      bgcolor: '#2d8ac4',
-                    }
+                    '&:hover': { bgcolor: '#3390c8' },
+                    mr: 1
                   }}
                 >
-                  Login
+                  {!isMobile && 'Add Clip'}
                 </Button>
-                <Button
-                  component={Link}
-                  to="/signup"
-                  variant="outlined"
-                  size={isMobile ? 'small' : 'medium'}
-                  sx={{ 
-                    borderColor: '#374151',
-                    color: '#fff',
-                    px: { xs: 2, md: 3 },
-                    '&:hover': {
-                      borderColor: '#4b5563',
-                      bgcolor: 'rgba(255, 255, 255, 0.05)',
-                    }
-                  }}
-                >
-                  SignUp
-                </Button>
-              </>
-            )}
-
-            {!checking && signedIn && (
-              <Button
-                color="inherit"
-                component={Link}
-                to="/add-clip"
-                size={isMobile ? 'small' : 'medium'}
-                sx={{ mr: 1 }}
-              >
-                Add Clip
-              </Button>
-            )}
-            {!checking && signedIn && (
-              <>
                 <IconButton
                   size={isMobile ? 'medium' : 'large'}
                   edge="end"

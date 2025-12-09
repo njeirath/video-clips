@@ -116,7 +116,7 @@ export default function AddVideoClip() {
         await getCurrentUser();
       } catch {
         // User not authenticated, redirect to sign in
-        navigate('/signin', { state: { from: '/add-clip' } });
+        navigate('/signin', { state: { from: '/admin/add-clip' } });
       }
     }
     checkAuth();
@@ -126,7 +126,7 @@ export default function AddVideoClip() {
   useEffect(() => {
     if (isSubmitSuccessful && !mutationError) {
       const timer = setTimeout(() => {
-        navigate('/');
+        navigate('/admin');
       }, 2000);
       return () => clearTimeout(timer);
     }
@@ -743,7 +743,7 @@ export default function AddVideoClip() {
           <Button
             fullWidth
             variant="outlined"
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/admin')}
             disabled={loading || isSubmitting || uploading}
           >
             Cancel
