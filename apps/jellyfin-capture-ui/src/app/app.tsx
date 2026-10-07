@@ -359,11 +359,6 @@ export function App() {
 
         <section className={styles.intro}>
           <p className={styles.eyebrow}>Local media bookmarker</p>
-          <h1>What’s playing?</h1>
-          <p className={styles.description}>
-            Select a Jellyfin stream, fine-tune its position, and save a
-            bookmark.
-          </p>
         </section>
 
         {error && (

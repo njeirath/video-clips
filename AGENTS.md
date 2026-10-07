@@ -11,3 +11,8 @@
 - If the user needs help with an Nx configuration or project graph error, use the `nx_workspace` tool to get any errors
 
 <!-- nx configuration end-->
+
+## Jellyfin Capture apps
+
+- `apps/jellyfin-capture-api/` is the TypeScript/Express backend. It reads Jellyfin sessions and appends validated captures to Google Sheets; keep API keys and service-account credentials server-side. See its `AGENTS.md` for routes, configuration, and commands.
+- `apps/jellyfin-capture-ui/` is the mobile-friendly React/Vite frontend. It uses the backend’s `/api` routes; Vite runs on port 4300 and proxies API requests to port 4301. See its `AGENTS.md` for UI behavior and commands.
