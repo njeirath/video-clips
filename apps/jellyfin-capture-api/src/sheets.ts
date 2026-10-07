@@ -8,6 +8,14 @@ import {
   type CaptureHistoryEntry,
   type CaptureSheetName,
 } from './capture-record';
+import {
+  findNextPendingClip,
+  ProcessingConflictError,
+  processingRowRevision,
+  validateProcessingUpdate,
+  type PendingClip,
+  type ProcessingTab,
+} from './processing-record';
 
 const SPREADSHEETS_SCOPE = 'https://www.googleapis.com/auth/spreadsheets';
 const SHEET_ROWS_CACHE_TTL_MS = 60_000;
@@ -95,7 +103,7 @@ function googleStatusCode(error: unknown): number | null {
 
 function googleErrorMessage(
   statusCode: number | null,
-  operation: 'read' | 'append'
+  operation: 'read' | 'append' | 'update'
 ): string {
   if (statusCode === 401 || statusCode === 403) {
     return 'Google Sheets rejected the service account. Check the credential file and make sure its account has Editor access to the spreadsheet.';
@@ -106,19 +114,25 @@ function googleErrorMessage(
   }
 
   if (statusCode === 400) {
-    return operation === 'append'
-      ? 'Google Sheets rejected the record. Check that the existing sheet tabs have the expected columns.'
+    if (operation === 'append') {
+      return 'Google Sheets rejected the record. Check that the existing sheet tabs have the expected columns.';
+    }
+    return operation === 'update'
+      ? 'Google Sheets rejected the clip update. Check that the Shows/Movies tabs have the expected columns.'
       : 'Google Sheets rejected the history lookup. Check that the Shows/Movies tabs have the expected columns.';
   }
 
-  return operation === 'append'
-    ? 'Could not append the record to Google Sheets. Check the Sheets API configuration and network connection.'
+  if (operation === 'append') {
+    return 'Could not append the record to Google Sheets. Check the Sheets API configuration and network connection.';
+  }
+  return operation === 'update'
+    ? 'Could not update the clip in Google Sheets. Check the Sheets API configuration and network connection.'
     : 'Could not read capture history from Google Sheets. Check the Sheets API configuration and network connection.';
 }
 
 function sheetsServiceError(
   error: unknown,
-  operation: 'read' | 'append'
+  operation: 'read' | 'append' | 'update'
 ): SheetsServiceError {
   const statusCode = googleStatusCode(error);
   console.error(
@@ -220,6 +234,104 @@ export async function appendCapture(
     row.sheetName
   );
   return { sheetName: row.sheetName };
+}
+
+export async function findNextProcessingClip(
+  tab: ProcessingTab
+): Promise<PendingClip | null> {
+  const configuration = getSheetsConfiguration();
+  const range = tab === 'Shows' ? "'Shows'!A:K" : "'Movies'!A:I";
+
+  try {
+    const rows = await getSheetRows(configuration, tab, range);
+    return findNextPendingClip(rows, tab);
+  } catch (error) {
+    throw sheetsServiceError(error, 'read');
+  }
+}
+
+export async function updateProcessedClip(
+  tab: ProcessingTab,
+  rowNumberValue: unknown,
+  input: unknown
+): Promise<{ tab: ProcessingTab; rowNumber: number }> {
+  const update = validateProcessingUpdate(tab, rowNumberValue, input);
+  const configuration = getSheetsConfiguration();
+  const rowRange =
+    tab === 'Shows'
+      ? `'Shows'!A${update.rowNumber}:K${update.rowNumber}`
+      : `'Movies'!A${update.rowNumber}:I${update.rowNumber}`;
+
+  let currentRow: unknown[] | undefined;
+  try {
+    const { data } = await configuration.sheets.spreadsheets.values.get({
+      spreadsheetId: configuration.spreadsheetId,
+      range: rowRange,
+      valueRenderOption: 'UNFORMATTED_VALUE',
+      dateTimeRenderOption: 'SERIAL_NUMBER',
+    });
+    currentRow = (data.values?.[0] ?? []) as unknown[];
+  } catch (error) {
+    throw sheetsServiceError(error, 'update');
+  }
+
+  if (!currentRow || currentRow.length === 0) {
+    throw new ProcessingConflictError(
+      'The sheet row no longer exists. Reload the queue and try again.'
+    );
+  }
+
+  const endColumn = tab === 'Shows' ? 4 : 2;
+  const endValue = currentRow[endColumn];
+  if (
+    endValue !== undefined &&
+    endValue !== null &&
+    String(endValue).trim() !== ''
+  ) {
+    throw new ProcessingConflictError(
+      'This clip has already been processed. Reload the queue.'
+    );
+  }
+
+  if (processingRowRevision(currentRow, tab) !== update.revision) {
+    throw new ProcessingConflictError(
+      'This sheet row changed while you were editing it. Reload the queue before saving.'
+    );
+  }
+
+  const updateRange =
+    tab === 'Shows'
+      ? `'Shows'!D${update.rowNumber}:J${update.rowNumber}`
+      : `'Movies'!B${update.rowNumber}:H${update.rowNumber}`;
+  try {
+    await configuration.sheets.spreadsheets.values.update({
+      spreadsheetId: configuration.spreadsheetId,
+      range: updateRange,
+      valueInputOption: 'RAW',
+      requestBody: {
+        values: [
+          [
+            update.start,
+            update.end,
+            update.name,
+            update.description,
+            update.script,
+            update.characters,
+            update.tags,
+          ],
+        ],
+      },
+    });
+  } catch (error) {
+    throw sheetsServiceError(error, 'update');
+  }
+
+  invalidateSheetRowsCache(
+    configuration.spreadsheetId,
+    configuration.credentialPath,
+    tab
+  );
+  return { tab, rowNumber: update.rowNumber };
 }
 
 export async function findCaptureHistory(

@@ -1,0 +1,641 @@
+.page {
+  min-height: 100vh;
+  padding: 28px 20px 48px;
+  background: radial-gradient(
+      circle at 90% 0%,
+      rgba(53, 132, 164, 0.2),
+      transparent 34rem
+    ),
+    #09111d;
+}
+
+.shell {
+  width: min(100%, 1080px);
+  margin: 0 auto;
+}
+
+.header {
+  padding: 10px 0 24px;
+}
+
+.headerTopLine {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 23px;
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #9ed6e3;
+  font-size: 0.84rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.backLink:hover {
+  color: #d6f5fb;
+}
+
+.backLink span {
+  font-size: 1.2rem;
+}
+
+.queueSelector {
+  display: grid;
+  min-width: 220px;
+  gap: 5px;
+}
+
+.queueSelector label {
+  color: #a5b9c8;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.queueSelector select {
+  width: 100%;
+  min-height: 41px;
+  padding: 0 12px;
+  border: 1px solid rgba(143, 174, 196, 0.22);
+  border-radius: 10px;
+  outline: none;
+  background: #0a1522;
+  color: #edf6fc;
+  font: inherit;
+  font-size: 0.88rem;
+}
+
+.queueSelector span {
+  color: #8196a6;
+  font-size: 0.66rem;
+  line-height: 1.4;
+}
+
+.eyebrow {
+  margin: 0 0 7px;
+  color: #7eb5c6;
+  font-size: 0.68rem;
+  font-weight: 750;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.header h1 {
+  margin: 0;
+  color: #f3f8fc;
+  font-size: clamp(2rem, 6vw, 3.25rem);
+  font-weight: 760;
+  letter-spacing: -0.06em;
+  line-height: 1.04;
+}
+
+.intro {
+  max-width: 68ch;
+  margin: 12px 0 0;
+  color: #a7bac8;
+  font-size: 0.96rem;
+  line-height: 1.6;
+}
+
+.sourcePanel,
+.playerPanel,
+.playbackStatus,
+.frameSettings,
+.markerSection,
+.outputPanel {
+  border: 1px solid rgba(151, 183, 205, 0.14);
+  border-radius: 18px;
+  background: rgba(15, 27, 41, 0.92);
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.12);
+}
+
+.sourcePanel {
+  display: grid;
+  grid-template-columns: minmax(190px, 0.7fr) minmax(260px, 1.3fr);
+  align-items: end;
+  gap: 12px 20px;
+  margin-bottom: 14px;
+  padding: 18px 20px;
+}
+
+.sourcePanel h2,
+.markerHeading h2,
+.outputPanel h2 {
+  margin: 0;
+  color: #edf4fa;
+  font-size: 1.12rem;
+  letter-spacing: -0.025em;
+}
+
+.sourcePanel .eyebrow,
+.markerHeading .eyebrow,
+.outputPanel .eyebrow {
+  margin-bottom: 5px;
+}
+
+.selectLabel,
+.timeInputLabel {
+  display: grid;
+  gap: 7px;
+  color: #a5b9c8;
+  font-size: 0.75rem;
+  font-weight: 650;
+}
+
+.selectLabel select,
+.timeInput {
+  width: 100%;
+  min-height: 43px;
+  padding: 0 12px;
+  border: 1px solid rgba(143, 174, 196, 0.22);
+  border-radius: 10px;
+  outline: none;
+  background: #0a1522;
+  color: #edf6fc;
+  font: inherit;
+  font-size: 0.9rem;
+}
+
+.selectLabel select:focus,
+.timeInput:focus,
+.frameSettings input:focus {
+  border-color: #6ac6dc;
+  box-shadow: 0 0 0 3px rgba(106, 198, 220, 0.15);
+}
+
+.fileNote,
+.subtleNote,
+.warningNote {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: #8298a8;
+  font-size: 0.75rem;
+}
+
+.warningNote {
+  color: #eccb8a;
+  line-height: 1.5;
+}
+
+.warningNote code,
+.outputPanel code,
+.errorBanner code {
+  color: #c7e8f1;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.playerPanel {
+  overflow: hidden;
+  background: #050a10;
+}
+
+.video {
+  display: block;
+  width: 100%;
+  max-height: min(68vh, 720px);
+  aspect-ratio: 16 / 9;
+  background: #020407;
+  object-fit: contain;
+}
+
+.playerPlaceholder {
+  display: grid;
+  min-height: clamp(240px, 50vw, 540px);
+  place-content: center;
+  justify-items: center;
+  gap: 12px;
+  color: #8da4b4;
+  text-align: center;
+}
+
+.playerPlaceholder span {
+  display: grid;
+  width: 54px;
+  height: 54px;
+  place-items: center;
+  border: 1px solid rgba(112, 194, 217, 0.22);
+  border-radius: 18px;
+  background: rgba(83, 174, 198, 0.1);
+  color: #8ad8e8;
+}
+
+.playerPlaceholder p {
+  margin: 0;
+  font-size: 0.88rem;
+}
+
+.playbackError,
+.validationError {
+  margin: 0;
+  padding: 12px 15px;
+  border-top: 1px solid rgba(240, 137, 123, 0.2);
+  background: rgba(94, 43, 44, 0.24);
+  color: #ffc1b5;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.playbackStatus {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-top: 14px;
+  padding: 16px 19px;
+}
+
+.statusLabel {
+  display: block;
+  margin-bottom: 4px;
+  color: #8fa6b7;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.currentTime {
+  color: #f2fbff;
+  font-size: clamp(1.6rem, 5vw, 2.25rem);
+  font-variant-numeric: tabular-nums;
+  font-weight: 730;
+  letter-spacing: -0.045em;
+}
+
+.statusDetails {
+  display: grid;
+  gap: 5px;
+  color: #90a5b5;
+  font-size: 0.73rem;
+  text-align: right;
+}
+
+.statusDetails strong {
+  color: #c9dce8;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.frameSettings {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) 180px;
+  align-items: center;
+  gap: 4px 16px;
+  margin-top: 14px;
+  padding: 14px 18px;
+}
+
+.frameSettings label {
+  color: #b6c6d2;
+  font-size: 0.78rem;
+  font-weight: 650;
+}
+
+.frameSettings input {
+  width: 100%;
+  min-height: 38px;
+  padding: 0 10px;
+  border: 1px solid rgba(143, 174, 196, 0.2);
+  border-radius: 9px;
+  outline: none;
+  background: #0a1522;
+  color: #eef7fc;
+  font: inherit;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.frameSettings p {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: #8196a6;
+  font-size: 0.71rem;
+  line-height: 1.45;
+}
+
+.markerSection {
+  margin-top: 14px;
+  padding: clamp(17px, 3vw, 24px);
+}
+
+.markerHeading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.loopToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #a9becb;
+  font-size: 0.78rem;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.loopToggle input {
+  width: 16px;
+  height: 16px;
+  accent-color: #61c4a4;
+}
+
+.markerGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 13px;
+}
+
+.markerCard {
+  display: grid;
+  align-content: start;
+  gap: 11px;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid rgba(112, 190, 195, 0.18);
+  border-radius: 15px;
+  background: linear-gradient(140deg, rgba(35, 77, 79, 0.2), transparent 60%),
+    rgba(6, 15, 25, 0.62);
+}
+
+.markerCardHeading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.markerKicker {
+  color: #79b6bb;
+  font-size: 0.65rem;
+  font-weight: 750;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.markerCard h3 {
+  margin: 3px 0 0;
+  color: #e8f2f8;
+  font-size: 1.08rem;
+}
+
+.markerTime {
+  color: #eefaff;
+  font-size: clamp(1.05rem, 3vw, 1.36rem);
+  font-variant-numeric: tabular-nums;
+  font-weight: 720;
+  white-space: nowrap;
+}
+
+.timeInput {
+  min-height: 40px;
+  font-variant-numeric: tabular-nums;
+}
+
+.setCurrentButton,
+.stepButtons button,
+.jumpButton,
+.playSelectionButton {
+  min-height: 40px;
+  border: 1px solid rgba(123, 184, 197, 0.2);
+  border-radius: 10px;
+  background: rgba(27, 49, 64, 0.86);
+  color: #dcecf4;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 680;
+  transition: border-color 140ms ease, background 140ms ease, opacity 140ms ease;
+}
+
+.setCurrentButton:hover:not(:disabled),
+.stepButtons button:hover:not(:disabled),
+.jumpButton:hover:not(:disabled) {
+  border-color: rgba(113, 209, 223, 0.55);
+  background: rgba(35, 67, 85, 0.98);
+}
+
+.setCurrentButton:disabled,
+.stepButtons button:disabled,
+.jumpButton:disabled,
+.playSelectionButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.stepButtons {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.stepButtons button {
+  min-height: 42px;
+  color: #bfe8ef;
+  font-variant-numeric: tabular-nums;
+}
+
+.jumpButton {
+  min-height: 35px;
+  border-color: transparent;
+  background: transparent;
+  color: #91b8c6;
+  text-align: left;
+}
+
+.playSelectionButton {
+  display: flex;
+  width: 100%;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  margin-top: 14px;
+  border-color: rgba(91, 197, 160, 0.28);
+  background: #246b5c;
+  color: #e6faf3;
+  font-size: 0.87rem;
+}
+
+.playSelectionButton:hover:not(:disabled) {
+  background: #2c806d;
+}
+
+.playSelectionButton span {
+  color: #a7f1d4;
+  font-size: 0.75rem;
+}
+
+.validationError {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 1px solid rgba(240, 137, 123, 0.18);
+  border-radius: 10px;
+}
+
+.outputPanel {
+  margin-top: 14px;
+  padding: 18px 20px;
+  border-color: rgba(95, 196, 176, 0.25);
+  background: linear-gradient(135deg, rgba(33, 80, 70, 0.2), transparent 60%),
+    rgba(15, 27, 41, 0.94);
+}
+
+.outputGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 15px;
+}
+
+.outputGrid > div {
+  display: grid;
+  gap: 5px;
+  padding: 12px 13px;
+  border: 1px solid rgba(144, 184, 183, 0.12);
+  border-radius: 11px;
+  background: rgba(4, 14, 21, 0.46);
+}
+
+.outputGrid span {
+  color: #8ca9ad;
+  font-size: 0.68rem;
+  font-weight: 750;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.outputGrid output {
+  color: #ecfff8;
+  font-size: clamp(1.2rem, 4vw, 1.65rem);
+  font-variant-numeric: tabular-nums;
+  font-weight: 720;
+  letter-spacing: -0.03em;
+}
+
+.outputPanel > p {
+  margin: 12px 0 0;
+  color: #839aab;
+  font-size: 0.73rem;
+  line-height: 1.5;
+}
+
+.errorBanner {
+  display: grid;
+  gap: 5px;
+  margin-bottom: 14px;
+  padding: 13px 15px;
+  border: 1px solid rgba(240, 137, 123, 0.28);
+  border-radius: 12px;
+  background: rgba(94, 43, 44, 0.24);
+  color: #ffd7d0;
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.errorBanner span {
+  color: #e5bdb7;
+}
+
+.footer {
+  margin-top: 22px;
+  color: #738899;
+  font-size: 0.7rem;
+  text-align: center;
+}
+
+.backLink:focus-visible,
+.queueSelector select:focus-visible,
+.selectLabel select:focus-visible,
+.timeInput:focus-visible,
+.frameSettings input:focus-visible,
+.setCurrentButton:focus-visible,
+.stepButtons button:focus-visible,
+.jumpButton:focus-visible,
+.playSelectionButton:focus-visible {
+  outline: 3px solid rgba(103, 207, 233, 0.7);
+  outline-offset: 2px;
+}
+
+@media (max-width: 680px) {
+  .page {
+    padding: 18px 12px 34px;
+  }
+
+  .sourcePanel {
+    grid-template-columns: 1fr;
+    padding: 15px;
+  }
+
+  .sourcePanel .fileNote,
+  .sourcePanel .subtleNote,
+  .sourcePanel .warningNote {
+    grid-column: auto;
+  }
+
+  .playbackStatus {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 9px;
+    padding: 14px 15px;
+  }
+
+  .statusDetails {
+    width: 100%;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    text-align: left;
+  }
+
+  .statusDetails span:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .frameSettings {
+    grid-template-columns: 1fr 130px;
+    padding: 13px 15px;
+  }
+}
+
+@media (max-width: 520px) {
+  .headerTopLine {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .queueSelector {
+    width: min(100%, 320px);
+  }
+
+  .markerHeading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .markerGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .markerCard {
+    padding: 14px;
+  }
+
+  .outputPanel {
+    padding: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+  }
+}

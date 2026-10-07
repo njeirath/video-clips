@@ -50,6 +50,32 @@
   font-size: 0.8rem;
 }
 
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.processLink {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
+  border: 1px solid rgba(105, 209, 238, 0.22);
+  border-radius: 12px;
+  background: rgba(27, 62, 76, 0.62);
+  color: #a9e5f0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.processLink:hover {
+  border-color: rgba(105, 209, 238, 0.55);
+  background: rgba(31, 78, 96, 0.85);
+}
+
 .refreshButton {
   display: inline-flex;
   min-height: 42px;
@@ -242,6 +268,7 @@
 }
 
 .streamCard:focus-visible,
+.processLink:focus-visible,
 .refreshButton:focus-visible,
 .adjustButton:focus-visible,
 .saveButton:focus-visible {

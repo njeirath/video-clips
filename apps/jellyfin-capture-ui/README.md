@@ -26,10 +26,22 @@ Enable the Google Sheets API in the Google Cloud project for the service account
 
 The spreadsheet must already contain tabs named exactly `Shows` and `Movies`. The app uses the existing column order:
 
-- **Shows** (`A:K`): `Show`, `Season`, `Episode`, `Start`, `End`, `name`, `description`, `script`, `characters`, `tags`, `source`. Episode records fill Show from Jellyfin's series name, Season and Episode as integers, Start as `HH:MM:SS`, and source with the file path when Jellyfin provides it. Other cells are left blank.
-- **Movies** (`A:I`): `Title`, `Start`, `End`, `name`, `description`, `script`, `characters`, `tags`, `source`. Movie records fill Title, Start as `HH:MM:SS`, and source when available. Other cells are left blank.
+- **Shows** (`A:K`): `Show`, `Season`, `Episode`, `Start`, `End`, `name`, `description`, `script`, `characters`, `tags`, `source`. Episode captures fill Show from Jellyfin's series name, Season and Episode as integers, Start as `HH:MM:SS`, and source with the file path when Jellyfin provides it. Clip processing replaces Start and fills End with exact `HH:MM:SS.mmm` timecodes.
+- **Movies** (`A:I`): `Title`, `Start`, `End`, `name`, `description`, `script`, `characters`, `tags`, `source`. Movie captures fill Title, Start as `HH:MM:SS`, and source when available. Clip processing replaces Start and fills End with exact `HH:MM:SS.mmm` timecodes.
 
-Writes use the Sheets API append operation with row insertion enabled. The app does not update, clear, or rewrite existing data. Only Jellyfin items typed as an episode or movie can be saved; an episode must include series, season, and episode metadata. If Jellyfin does not expose a file path, `source` is appended as an empty cell. The same service-account configuration is used to read capture history.
+The Jellyfin capture screen appends new rows and leaves existing rows unchanged. The clip processor updates only the selected row's `Start`, `End`, `name`, `description`, `script`, `characters`, and `tags` cells; it preserves the row identity and `source`. Capture-history and processing reads, appends, and updates all use the API's server-side service-account configuration.
+
+## Media files
+
+Processing reads the original media files from the media-server filesystem. Sheet `source` paths are expected to be absolute paths under `/mnt/nfs`. Docker Compose mounts the host `/mnt/nfs` at the same container path, read-only. Ensure the NFS mount is active before starting the service and that the configured container UID/GID can traverse and read it.
+
+For local development outside Docker, set `MEDIA_BASE_PATH` to the repository's `testData` directory. For example:
+
+```bash
+MEDIA_BASE_PATH="$(pwd)/testData" npm run start:jellyfin-capture
+```
+
+A sheet path such as `/mnt/nfs/Shows/.../episode.mkv` then resolves under `testData/mnt/nfs/Shows/.../episode.mkv`. For local Docker testing instead, set `MEDIA_HOST_PATH=./testData/mnt/nfs` in `.env`; Compose mounts that directory at `/mnt/nfs`, so leave `MEDIA_BASE_PATH` unset. Neither mode copies or downloads media files.
 
 ## Run in development
 
@@ -42,6 +54,24 @@ npm run start:jellyfin-capture
 Open the Vite UI at <http://localhost:4300>. The API health endpoint is available at <http://localhost:4300/api/health> through the Vite proxy.
 
 To use it from an Android device on the same network, open `http://<computer-lan-ip>:4300`. The Vite server listens on all network interfaces; allow the port through the host firewall if needed.
+
+## Clip timing proof of concept
+
+The local-only timing editor is available at `http://127.0.0.1:4300/poc` when started with:
+
+```bash
+npm run start:video-poc
+```
+
+This starts the UI and API bound to `127.0.0.1`, and enables a small API route that streams local test media with byte-range support so Chrome can seek. It does not call Jellyfin or Google Sheets and does not download files. The Shows/Movies selector at the top remembers the choice locally, but is not connected to a sheet queue yet. The existing app remains at `http://127.0.0.1:4300/`.
+
+Put `.mkv` and `.mp4` test files anywhere under the root `testData/` folder. The proof of concept lists them recursively and shows their relative paths; these large local media files are ignored by Git. The current fixture is `testData/mnt/nfs/Shows/The Office - US/S01/S01E02.mkv`.
+
+The editor uses Chrome's presented-frame callback when available to display the timestamp for the frame currently shown. Play the video briefly to estimate a typical frame interval, then use the one-frame controls to refine Start and End. If needed, enter a frame-step interval in milliseconds manually. The output preview shows the decimal timecodes (`HH:MM:SS.mmm`) only; no spreadsheet calls are made. Browser support for MKV depends on the container's codecs, so playback errors are useful POC results rather than a converted-file fallback.
+
+## Clip processor
+
+Open `http://localhost:4300/process` in development, or `/process` on the deployed service. The remembered Shows/Movies selector scopes the queue to the first top-to-bottom row with a blank `End`. The processor loads that row's `source`, starts at its approximate `Start`, and saves exact `Start`/`End` plus metadata back to the same row. Use **Save & Next** to continue through the selected tab. Rows without a readable `source` remain visible with an error instead of being silently skipped.
 
 ## Run as one service
 

@@ -230,8 +230,8 @@ node dist/backend/apps/backend/scripts/process-clips.js
 ```
 
 The script utilizes two environment variables:
-- Must set `GRAPHQL_AUTH_TOKEN` in the shell with a valid cognito ID token for the targeted environment
-- Can set `ENDPOINT_HOST` to specify which environment to target (default: `localhost`)
+- Must set `GRAPHQL_AUTH_TOKEN` in the shell with a valid cognito ID token for the targeted environment (Go to http://192.168.0.7:4200/admin to sign in)
+- Can set `ENDPOINT_HOST` to specify which environment to target (default: `localhost`) (use `192.168.0.7` for prod)
 - Make sure your `.env` file is configured with the necessary credentials and endpoints.
 - The script expects the CSV file at `apps/backend/Video Clips - Sheet1.csv`.
 - See comments in `apps/backend/scripts/process-clips.ts` for configuration details.

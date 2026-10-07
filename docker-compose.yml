@@ -47,6 +47,12 @@ services:
       CREDENTIAL_PATH: /run/secrets/google-service-account.json
     volumes:
       - ./apps/jellyfin-capture-api/secrets:/run/secrets:ro
+      - type: bind
+        source: ${MEDIA_HOST_PATH:-/mnt/nfs}
+        target: /mnt/nfs
+        read_only: true
+        bind:
+          create_host_path: false
     ports:
       - "${JELLYFIN_CAPTURE_PORT:-4301}:4301"
     networks:

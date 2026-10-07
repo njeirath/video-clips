@@ -8,7 +8,7 @@ export default defineConfig(() => ({
   root: __dirname,
   cacheDir: '../../node_modules/.vite/apps/jellyfin-capture-ui',
   server: {
-    host: '0.0.0.0',
+    host: process.env.HOST ?? '0.0.0.0',
     port: 4300,
     proxy: {
       '/api': {
@@ -18,7 +18,7 @@ export default defineConfig(() => ({
     },
   },
   preview: {
-    host: '0.0.0.0',
+    host: process.env.HOST ?? '0.0.0.0',
     port: 4300,
   },
   plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],

@@ -48,6 +48,9 @@ vitest.config.*.timestamp*
 /.nx/workspace-data
 /apps/backend/Video Clips - Sheet1.csv
 screenshots/
+# Local video files used by the clip-timing proof of concept
+/testData/*
+!/testData/.gitkeep
 # local env files
 .env
 *.local

@@ -7,6 +7,8 @@ import {
   findCaptureHistory,
   SheetsServiceError,
 } from './sheets';
+import { createProcessingRouter } from './processing-routes';
+import { createVideoPocRouter } from './video-poc';
 
 const app = express();
 const host = process.env.HOST ?? '0.0.0.0';
@@ -16,6 +18,11 @@ const uiDirectory =
   path.resolve(process.cwd(), 'dist/apps/jellyfin-capture-ui');
 
 app.use(express.json({ limit: '16kb' }));
+
+if (process.env.VIDEO_POC_ENABLED === 'true') {
+  app.use('/api/poc', createVideoPocRouter());
+}
+app.use('/api/processing', createProcessingRouter());
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', service: 'jellyfin-capture-api' });

@@ -501,16 +501,21 @@ export function App() {
             </span>
             <span>Jellyfin Capture</span>
           </div>
-          <button
-            className={styles.refreshButton}
-            type="button"
-            onClick={refreshSnapshot}
-            disabled={loading || saving}
-            aria-label="Refresh Jellyfin snapshot"
-          >
-            <span aria-hidden="true">↻</span>
-            <span>{loading ? 'Loading' : 'Refresh'}</span>
-          </button>
+          <div className={styles.headerActions}>
+            <a className={styles.processLink} href="/process">
+              Process clips
+            </a>
+            <button
+              className={styles.refreshButton}
+              type="button"
+              onClick={refreshSnapshot}
+              disabled={loading || saving}
+              aria-label="Refresh Jellyfin snapshot"
+            >
+              <span aria-hidden="true">↻</span>
+              <span>{loading ? 'Loading' : 'Refresh'}</span>
+            </button>
+          </div>
         </header>
 
         {error && (
@@ -705,7 +710,8 @@ export function App() {
                       )}
                     </div>
 
-                    {!selectedHistory || selectedHistory.status === 'loading' ? (
+                    {!selectedHistory ||
+                    selectedHistory.status === 'loading' ? (
                       <p className={styles.historyStatus} role="status">
                         Checking saved positions…
                       </p>
