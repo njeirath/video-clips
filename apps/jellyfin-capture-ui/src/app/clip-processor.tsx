@@ -42,6 +42,26 @@ interface MetadataForm {
 type Boundary = 'start' | 'end';
 type StepUnit = 'frame' | 'half-second' | 'second';
 
+interface PendingBoundarySeek {
+  boundary: Boundary;
+  targetTime: number;
+  frameTimeAtRequest: number | null;
+  frameInterval: number;
+}
+
+function isExpectedSeekFrame(time: number, pending: PendingBoundarySeek) {
+  const distanceFromTarget = Math.abs(time - pending.targetTime);
+  const distanceAtRequest =
+    pending.frameTimeAtRequest === null
+      ? Number.POSITIVE_INFINITY
+      : Math.abs(pending.frameTimeAtRequest - pending.targetTime);
+
+  return (
+    distanceFromTarget <= pending.frameInterval &&
+    distanceFromTarget + 0.0005 < distanceAtRequest
+  );
+}
+
 const stepAdjustments = [
   {
     label: '-1s',
@@ -222,7 +242,7 @@ export function ClipProcessor() {
   const startTimeRef = useRef<number | null>(null);
   const endTimeRef = useRef<number | null>(null);
   const loopEnabledRef = useRef(true);
-  const pendingBoundaryRef = useRef<Boundary | null>(null);
+  const pendingBoundaryRef = useRef<PendingBoundarySeek | null>(null);
   const lastFrameTimeRef = useRef<number | null>(null);
   const lastPresentedFrameCountRef = useRef<number | null>(null);
   const frameSamplesRef = useRef<number[]>([]);
@@ -398,16 +418,18 @@ export function ClipProcessor() {
     lastPresentedFrameCountRef.current = presentedFrameCount ?? null;
 
     const pending = pendingBoundaryRef.current;
-    if (pending && !video.seeking) {
+    if (pending && !video.seeking && isExpectedSeekFrame(time, pending)) {
       pendingBoundaryRef.current = null;
       setSeekingBoundary(null);
-      setBoundaryValue(pending, time);
+      setBoundaryValue(pending.boundary, time);
     }
 
     const start = startTimeRef.current;
     const end = endTimeRef.current;
     if (
       !video.paused &&
+      !video.seeking &&
+      pendingBoundaryRef.current === null &&
       loopEnabledRef.current &&
       start !== null &&
       end !== null &&
@@ -526,29 +548,37 @@ export function ClipProcessor() {
     if (Math.abs(video.currentTime - clampedTime) < 0.0005) {
       pendingBoundaryRef.current = null;
       setSeekingBoundary(null);
-      const displayedTime = currentFrameTimeRef.current;
-      if (displayedTime !== null) {
-        setBoundaryValue(boundary, displayedTime);
-      }
       return;
     }
 
-    pendingBoundaryRef.current = boundary;
+    const pendingSeek: PendingBoundarySeek = {
+      boundary,
+      targetTime: clampedTime,
+      frameTimeAtRequest:
+        currentFrameTimeRef.current ??
+        (Number.isFinite(video.currentTime) ? video.currentTime : null),
+      frameInterval: observedFrameStep ?? 1 / 25,
+    };
+    pendingBoundaryRef.current = pendingSeek;
     setSeekingBoundary(boundary);
+    video.addEventListener(
+      'seeked',
+      () => {
+        const seekTime = video.currentTime;
+        if (
+          pendingBoundaryRef.current === pendingSeek &&
+          !video.seeking &&
+          Math.abs(seekTime - pendingSeek.targetTime) <=
+            pendingSeek.frameInterval
+        ) {
+          pendingBoundaryRef.current = null;
+          setSeekingBoundary(null);
+          setBoundaryValue(boundary, seekTime);
+        }
+      },
+      { once: true }
+    );
     video.currentTime = clampedTime;
-    if (typeof video.requestVideoFrameCallback !== 'function') {
-      video.addEventListener(
-        'seeked',
-        () => {
-          if (pendingBoundaryRef.current === boundary) {
-            pendingBoundaryRef.current = null;
-            setSeekingBoundary(null);
-            setBoundaryValue(boundary, video.currentTime);
-          }
-        },
-        { once: true }
-      );
-    }
   }
 
   function stepBoundary(
@@ -589,6 +619,31 @@ export function ClipProcessor() {
     if (video && time !== null) {
       video.currentTime = time;
     }
+  }
+
+  function resetTimes() {
+    if (!clip) {
+      return;
+    }
+
+    const spreadsheetStart = clip.start ? parseTimecode(clip.start) : null;
+    pendingBoundaryRef.current = null;
+    setSeekingBoundary(null);
+    setTimeError(null);
+    setSaveError(null);
+    setSaved(false);
+
+    if (spreadsheetStart === null) {
+      startTimeRef.current = null;
+      setStartTime(null);
+      setStartDraft('');
+    } else {
+      setBoundaryValue('start', spreadsheetStart);
+    }
+
+    endTimeRef.current = null;
+    setEndTime(null);
+    setEndDraft('');
   }
 
   function handleTabChange(nextTab: ProcessingTab) {
@@ -742,12 +797,23 @@ export function ClipProcessor() {
                 <h2>{rowHeading}</h2>
               </div>
               <div className={styles.sourceSummary}>
-                <span>Approximate start</span>
-                <strong>{clip.start ?? 'Not set'}</strong>
-                <details>
-                  <summary>Source path</summary>
-                  <code>{clip.source ?? 'No source path in this row'}</code>
-                </details>
+                <div className={styles.sourceInfo}>
+                  <span>Approximate start</span>
+                  <strong>{clip.start ?? 'Not set'}</strong>
+                  <details>
+                    <summary>Source path</summary>
+                    <code>{clip.source ?? 'No source path in this row'}</code>
+                  </details>
+                </div>
+                <button
+                  className={styles.secondaryButton}
+                  type="button"
+                  disabled={saved}
+                  aria-label="Reset start and end times"
+                  onClick={resetTimes}
+                >
+                  Reset
+                </button>
               </div>
             </section>
 
@@ -852,34 +918,6 @@ export function ClipProcessor() {
                   className={styles.timingPanel}
                   aria-label="Start and end controls"
                 >
-                  <section
-                    className={styles.frameSettings}
-                    aria-label="Frame step settings"
-                  >
-                    <label htmlFor="processor-frame-step">
-                      Frame-step interval override (ms)
-                    </label>
-                    <input
-                      id="processor-frame-step"
-                      type="number"
-                      min="0.1"
-                      step="0.001"
-                      placeholder="Auto from playback"
-                      value={frameStepOverrideMs}
-                      disabled={saved}
-                      onChange={(event) =>
-                        setFrameStepOverrideMs(event.target.value)
-                      }
-                    />
-                    <p>
-                      {hasManualFrameStep
-                        ? `Using ${manualFrameStepMs.toFixed(3)} ms per step.`
-                        : observedFrameStep !== null
-                        ? 'Using the measured median frame interval.'
-                        : 'Play briefly to measure the frame interval; stepping initially uses a 40 ms fallback.'}
-                    </p>
-                  </section>
-
                   <div className={styles.boundaryHeading}>
                     <div>
                       <p className={styles.eyebrow}>Edit points</p>
@@ -928,6 +966,33 @@ export function ClipProcessor() {
                       onJump={() => jumpToBoundary('end')}
                     />
                   </div>
+                  <section
+                    className={styles.frameSettings}
+                    aria-label="Frame step settings"
+                  >
+                    <label htmlFor="processor-frame-step">
+                      Frame-step interval override (ms)
+                    </label>
+                    <input
+                      id="processor-frame-step"
+                      type="number"
+                      min="0.1"
+                      step="0.001"
+                      placeholder="Auto from playback"
+                      value={frameStepOverrideMs}
+                      disabled={saved}
+                      onChange={(event) =>
+                        setFrameStepOverrideMs(event.target.value)
+                      }
+                    />
+                    <p>
+                      {hasManualFrameStep
+                        ? `Using ${manualFrameStepMs.toFixed(3)} ms per step.`
+                        : observedFrameStep !== null
+                        ? 'Using the measured median frame interval.'
+                        : 'Play briefly to measure the frame interval; stepping initially uses a 40 ms fallback.'}
+                    </p>
+                  </section>
                   {timeError && (
                     <p className={styles.validationError} role="alert">
                       {timeError}

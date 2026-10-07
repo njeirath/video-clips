@@ -125,12 +125,24 @@
 }
 
 .sourceSummary {
-  display: grid;
+  display: flex;
   min-width: min(100%, 330px);
-  gap: 4px;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 12px;
   color: #8fa6b7;
   font-size: 0.72rem;
   text-align: right;
+}
+
+.sourceInfo {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+.sourceSummary > button {
+  flex: 0 0 auto;
 }
 
 .sourceSummary strong {
@@ -303,7 +315,7 @@
   grid-template-columns: 1fr;
   align-items: center;
   gap: 6px;
-  margin: 0 0 14px;
+  margin: 14px 0 0;
 }
 
 .frameSettings label {
@@ -716,6 +728,7 @@
 
   .sourceSummary {
     width: 100%;
+    justify-content: space-between;
     text-align: left;
   }
 

@@ -114,6 +114,146 @@ describe('clip processor', () => {
     });
   });
 
+  it('resets the start and end times to the spreadsheet state', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ clip: pendingClip }),
+      })
+    );
+
+    const { container } = render(<ClipProcessor />);
+    expect(await screen.findByDisplayValue('00:07:30.000')).toBeTruthy();
+
+    const startInput = screen.getByLabelText('Start timecode');
+    const endInput = screen.getByLabelText('End timecode');
+    fireEvent.change(startInput, { target: { value: '00:07:31.000' } });
+    fireEvent.blur(startInput);
+    fireEvent.change(endInput, { target: { value: '00:07:35.000' } });
+    fireEvent.blur(endInput);
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Reset start and end times' })
+    );
+    expect(startInput).toHaveProperty('value', '00:07:30.000');
+    expect(endInput).toHaveProperty('value', '');
+
+    const video = container.querySelector('video');
+    if (video) {
+      fireEvent.seeked(video);
+    }
+    expect(startInput).toHaveProperty('value', '00:07:30.000');
+    expect(endInput).toHaveProperty('value', '');
+  });
+
+  it('keeps the stepped time when the video is already at that position', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ clip: pendingClip }),
+      })
+    );
+
+    const { container } = render(<ClipProcessor />);
+    expect(
+      await screen.findByRole('heading', { name: /The Office/ })
+    ).toBeTruthy();
+    expect(await screen.findByDisplayValue('00:07:30.000')).toBeTruthy();
+
+    const video = container.querySelector('video');
+    if (!video) {
+      throw new Error('Expected the clip video to be rendered.');
+    }
+    Object.defineProperty(video, 'currentTime', {
+      configurable: true,
+      value: 450,
+      writable: true,
+    });
+    fireEvent.timeUpdate(video);
+
+    const startInput = screen.getByLabelText('Start timecode');
+    fireEvent.change(startInput, { target: { value: '00:07:29.960' } });
+    fireEvent.blur(startInput);
+    fireEvent.seeked(video);
+
+    // Simulate currentTime reaching the next-frame position after the displayed
+    // frame time was sampled, leaving currentFrameTimeRef one frame behind.
+    Object.defineProperty(video, 'currentTime', {
+      configurable: true,
+      value: 450,
+      writable: true,
+    });
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Move start forward one frame' })
+    );
+
+    expect(startInput).toHaveProperty('value', '00:07:30.000');
+  });
+
+  it('does not snap an end adjustment to Start while playback loops', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ clip: pendingClip }),
+      })
+    );
+
+    const { container } = render(<ClipProcessor />);
+    expect(await screen.findByDisplayValue('00:07:30.000')).toBeTruthy();
+
+    const video = container.querySelector('video');
+    if (!video) {
+      throw new Error('Expected the clip video to be rendered.');
+    }
+    const setVideoTime = (time: number) =>
+      Object.defineProperty(video, 'currentTime', {
+        configurable: true,
+        value: time,
+        writable: true,
+      });
+    const setSeeking = (seeking: boolean) =>
+      Object.defineProperty(video, 'seeking', {
+        configurable: true,
+        value: seeking,
+      });
+
+    Object.defineProperty(video, 'paused', {
+      configurable: true,
+      value: false,
+    });
+    setSeeking(false);
+    setVideoTime(450);
+    fireEvent.timeUpdate(video);
+
+    const endInput = screen.getByLabelText('End timecode');
+    fireEvent.change(endInput, { target: { value: '00:08:00.000' } });
+    fireEvent.blur(endInput);
+    fireEvent.seeked(video);
+    expect(endInput).toHaveProperty('value', '00:08:00.000');
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Move end back half a second' })
+    );
+    expect(endInput).toHaveProperty('value', '00:07:59.500');
+
+    // A queued frame at the old out point must not trigger the loop to Start
+    // while the seek to the adjusted out point is still pending.
+    setSeeking(true);
+    setVideoTime(480);
+    fireEvent.timeUpdate(video);
+    setSeeking(false);
+    setVideoTime(450);
+    fireEvent.timeUpdate(video);
+    expect(endInput).toHaveProperty('value', '00:07:59.500');
+
+    setVideoTime(479.5);
+    fireEvent.seeked(video);
+    expect(endInput).toHaveProperty('value', '00:07:59.500');
+  });
+
   it('offers second, half-second, and frame adjustments for both points', async () => {
     vi.stubGlobal(
       'fetch',
@@ -127,6 +267,7 @@ describe('clip processor', () => {
     expect(
       await screen.findByRole('heading', { name: /The Office/ })
     ).toBeTruthy();
+    expect(await screen.findByDisplayValue('00:07:30.000')).toBeTruthy();
 
     const video = container.querySelector('video');
     if (video) {
