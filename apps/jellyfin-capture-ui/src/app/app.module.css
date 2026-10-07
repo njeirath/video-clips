@@ -2,9 +2,16 @@
   min-height: 100vh;
   min-height: 100svh;
   padding: 20px 18px 36px;
-  background:
-    radial-gradient(circle at 88% 0%, rgba(43, 141, 173, 0.18), transparent 34rem),
-    radial-gradient(circle at 0% 48%, rgba(37, 91, 126, 0.12), transparent 28rem),
+  background: radial-gradient(
+      circle at 88% 0%,
+      rgba(43, 141, 173, 0.18),
+      transparent 34rem
+    ),
+    radial-gradient(
+      circle at 0% 48%,
+      rgba(37, 91, 126, 0.12),
+      transparent 28rem
+    ),
     #09111d;
 }
 
@@ -58,10 +65,7 @@
   font: inherit;
   font-size: 0.86rem;
   font-weight: 650;
-  transition:
-    border-color 140ms ease,
-    background 140ms ease,
-    opacity 140ms ease;
+  transition: border-color 140ms ease, background 140ms ease, opacity 140ms ease;
 }
 
 .refreshButton span:first-child {
@@ -224,9 +228,7 @@
   color: inherit;
   cursor: pointer;
   text-align: left;
-  transition:
-    border-color 140ms ease,
-    background 140ms ease,
+  transition: border-color 140ms ease, background 140ms ease,
     transform 140ms ease;
 }
 
@@ -249,7 +251,11 @@
 
 .streamCardSelected {
   border-color: rgba(94, 207, 185, 0.68);
-  background: linear-gradient(110deg, rgba(25, 66, 68, 0.58), rgba(17, 36, 50, 0.93));
+  background: linear-gradient(
+    110deg,
+    rgba(25, 66, 68, 0.58),
+    rgba(17, 36, 50, 0.93)
+  );
   box-shadow: inset 0 0 0 1px rgba(94, 207, 185, 0.12);
 }
 
@@ -381,8 +387,7 @@
   padding: clamp(18px, 5vw, 26px);
   border: 1px solid rgba(95, 196, 176, 0.25);
   border-radius: 22px;
-  background:
-    linear-gradient(140deg, rgba(27, 68, 67, 0.24), transparent 50%),
+  background: linear-gradient(140deg, rgba(27, 68, 67, 0.24), transparent 50%),
     rgba(15, 27, 41, 0.94);
   box-shadow: 0 22px 65px rgba(0, 0, 0, 0.18);
 }
@@ -495,9 +500,7 @@
   font: inherit;
   font-size: 0.88rem;
   font-weight: 650;
-  transition:
-    background 140ms ease,
-    border-color 140ms ease,
+  transition: background 140ms ease, border-color 140ms ease,
     transform 140ms ease;
 }
 
@@ -548,19 +551,41 @@
   border-radius: 15px;
   background: #276b5e;
   color: #e7faf4;
-  cursor: not-allowed;
+  cursor: pointer;
   font: inherit;
   font-size: 0.96rem;
   font-weight: 750;
+  transition: background 140ms ease, opacity 140ms ease;
+}
+
+.saveButton:hover:not(:disabled) {
+  background: #328473;
+}
+
+.saveButton:disabled {
+  cursor: not-allowed;
   opacity: 0.56;
 }
 
-.saveNote {
+.saveNote,
+.saveError,
+.saveSuccess {
   margin: 9px 0 0;
-  color: #849aab;
   font-size: 0.75rem;
   line-height: 1.45;
   text-align: center;
+}
+
+.saveNote {
+  color: #849aab;
+}
+
+.saveError {
+  color: #ffb7a9;
+}
+
+.saveSuccess {
+  color: #8fe0c4;
 }
 
 .footer {

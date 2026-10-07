@@ -93,6 +93,33 @@ function isEpisode(stream: PlayingStream): boolean {
   return stream.itemType?.toLowerCase() === 'episode';
 }
 
+function sheetForStream(stream: PlayingStream): 'Shows' | 'Movies' | null {
+  const itemType = stream.itemType?.toLowerCase();
+  if (itemType === 'episode') {
+    return 'Shows';
+  }
+  if (itemType === 'movie') {
+    return 'Movies';
+  }
+  return null;
+}
+
+function canSaveStream(stream: PlayingStream): boolean {
+  const sheet = sheetForStream(stream);
+  if (sheet === 'Movies') {
+    return Boolean(stream.title.trim());
+  }
+
+  return (
+    sheet === 'Shows' &&
+    Boolean(stream.seriesName?.trim()) &&
+    Number.isSafeInteger(stream.seasonNumber) &&
+    (stream.seasonNumber ?? -1) >= 0 &&
+    Number.isSafeInteger(stream.episodeNumber) &&
+    (stream.episodeNumber ?? -1) >= 0
+  );
+}
+
 function mainTitle(stream: PlayingStream): string {
   return isEpisode(stream) ? stream.seriesName ?? stream.title : stream.title;
 }
@@ -117,13 +144,20 @@ function playbackSource(stream: PlayingStream): string | null {
 
 export function App() {
   const [snapshot, setSnapshot] = useState<SessionSnapshot | null>(null);
-  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
+  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(
+    null
+  );
   const [positions, setPositions] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [savedSheet, setSavedSheet] = useState<'Shows' | 'Movies' | null>(null);
 
   function applySnapshot(nextSnapshot: SessionSnapshot) {
     setSnapshot(nextSnapshot);
+    setSaveError(null);
+    setSavedSheet(null);
     setPositions(
       Object.fromEntries(
         nextSnapshot.streams.map((stream) => [
@@ -175,6 +209,9 @@ export function App() {
   const selectedPosition = selectedStream
     ? positions[selectedStream.sessionId] ?? selectedStream.positionSeconds
     : 0;
+  const selectedSheet = selectedStream ? sheetForStream(selectedStream) : null;
+  const selectedCanSave =
+    selectedStream !== null && canSaveStream(selectedStream);
   const hasPositionEdits =
     snapshot?.streams.some(
       (stream) => positions[stream.sessionId] !== stream.positionSeconds
@@ -183,13 +220,16 @@ export function App() {
   async function refreshSnapshot() {
     if (
       hasPositionEdits &&
-      !window.confirm('Refreshing will discard your position adjustments. Continue?')
+      !window.confirm(
+        'Refreshing will discard your position adjustments. Continue?'
+      )
     ) {
       return;
     }
 
     setLoading(true);
     setError(null);
+    setSaveError(null);
     try {
       applySnapshot(await requestSnapshot());
     } catch (requestError) {
@@ -203,15 +243,24 @@ export function App() {
     }
   }
 
+  function selectStream(sessionId: string) {
+    setSelectedSessionId(sessionId);
+    setSaveError(null);
+    setSavedSheet(null);
+  }
+
   function adjustPosition(delta: number) {
     if (!selectedStream) {
       return;
     }
 
+    setSaveError(null);
+    setSavedSheet(null);
     const sessionId = selectedStream.sessionId;
     const duration = selectedStream.durationSeconds;
     setPositions((current) => {
-      const currentPosition = current[sessionId] ?? selectedStream.positionSeconds;
+      const currentPosition =
+        current[sessionId] ?? selectedStream.positionSeconds;
       const adjustedPosition = Math.max(0, currentPosition + delta);
       return {
         ...current,
@@ -221,6 +270,69 @@ export function App() {
             : Math.min(duration, adjustedPosition),
       };
     });
+  }
+
+  async function saveCapture() {
+    if (
+      !selectedStream ||
+      !selectedSheet ||
+      !selectedCanSave ||
+      saving ||
+      savedSheet
+    ) {
+      return;
+    }
+
+    setSaving(true);
+    setSaveError(null);
+
+    try {
+      const response = await fetch('/api/records', {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          itemType: selectedStream.itemType,
+          title: selectedStream.title,
+          seriesName: selectedStream.seriesName,
+          seasonNumber: selectedStream.seasonNumber,
+          episodeNumber: selectedStream.episodeNumber,
+          path: selectedStream.path,
+          positionSeconds: selectedPosition,
+        }),
+      });
+      const payload: unknown = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        const message =
+          payload &&
+          typeof payload === 'object' &&
+          'message' in payload &&
+          typeof payload.message === 'string'
+            ? payload.message
+            : 'The record could not be saved to Google Sheets.';
+        throw new Error(message);
+      }
+
+      const responseSheet =
+        payload &&
+        typeof payload === 'object' &&
+        'sheetName' in payload &&
+        (payload.sheetName === 'Shows' || payload.sheetName === 'Movies')
+          ? payload.sheetName
+          : selectedSheet;
+      setSavedSheet(responseSheet);
+    } catch (requestError) {
+      setSaveError(
+        requestError instanceof Error
+          ? requestError.message
+          : 'The record could not be saved to Google Sheets.'
+      );
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -237,7 +349,7 @@ export function App() {
             className={styles.refreshButton}
             type="button"
             onClick={refreshSnapshot}
-            disabled={loading}
+            disabled={loading || saving}
             aria-label="Refresh Jellyfin snapshot"
           >
             <span aria-hidden="true">↻</span>
@@ -272,7 +384,10 @@ export function App() {
           </div>
         ) : snapshot ? (
           <>
-            <section className={styles.streamSection} aria-labelledby="streams-heading">
+            <section
+              className={styles.streamSection}
+              aria-labelledby="streams-heading"
+            >
               <div className={styles.sectionHeading}>
                 <div>
                   <p className={styles.sectionEyebrow}>Jellyfin</p>
@@ -298,7 +413,8 @@ export function App() {
                         }`}
                         type="button"
                         key={stream.sessionId}
-                        onClick={() => setSelectedSessionId(stream.sessionId)}
+                        onClick={() => selectStream(stream.sessionId)}
+                        disabled={saving}
                         aria-pressed={selected}
                       >
                         <span className={styles.mediaIcon} aria-hidden="true">
@@ -323,7 +439,10 @@ export function App() {
                             <span className={styles.pausedBadge}>Paused</span>
                           )}
                           {selected && (
-                            <span className={styles.selectedMark} aria-hidden="true">
+                            <span
+                              className={styles.selectedMark}
+                              aria-hidden="true"
+                            >
                               ✓
                             </span>
                           )}
@@ -358,7 +477,10 @@ export function App() {
             )}
 
             {selectedStream && (
-              <section className={styles.capturePanel} aria-labelledby="selected-heading">
+              <section
+                className={styles.capturePanel}
+                aria-labelledby="selected-heading"
+              >
                 <div className={styles.captureHeading}>
                   <div>
                     <p className={styles.sectionEyebrow}>Selected media</p>
@@ -396,6 +518,7 @@ export function App() {
                     className={styles.adjustButton}
                     type="button"
                     onClick={() => adjustPosition(-1)}
+                    disabled={saving}
                     aria-label="Move position back one second"
                   >
                     <span aria-hidden="true">−</span>
@@ -405,6 +528,7 @@ export function App() {
                     className={styles.adjustButton}
                     type="button"
                     onClick={() => adjustPosition(1)}
+                    disabled={saving}
                     aria-label="Move position forward one second"
                   >
                     <span aria-hidden="true">+</span>
@@ -419,13 +543,43 @@ export function App() {
                   </details>
                 )}
 
-                <button className={styles.saveButton} type="button" disabled>
-                  Save to Google Sheets
+                <button
+                  className={styles.saveButton}
+                  type="button"
+                  onClick={saveCapture}
+                  disabled={!selectedCanSave || saving || savedSheet !== null}
+                >
+                  {saving
+                    ? 'Saving…'
+                    : savedSheet
+                    ? `Saved to ${savedSheet}`
+                    : `Save to ${selectedSheet ?? 'Google Sheets'}`}
                 </button>
-                <p className={styles.saveNote}>
-                  Jellyfin is connected. Google Sheets saving hasn’t been set up
-                  yet.
-                </p>
+                {saveError && (
+                  <p className={styles.saveError} role="alert">
+                    {saveError}
+                  </p>
+                )}
+                {savedSheet && (
+                  <p className={styles.saveSuccess} role="status">
+                    Added as a new row in the {savedSheet} sheet.
+                  </p>
+                )}
+                {!selectedCanSave && (
+                  <p className={styles.saveNote}>
+                    {isEpisode(selectedStream)
+                      ? 'Jellyfin must provide the series, season, and episode details to save this show.'
+                      : selectedSheet === null
+                      ? 'Only Jellyfin TV episodes and movies can be saved.'
+                      : 'The movie title is unavailable.'}
+                  </p>
+                )}
+                {selectedCanSave && !saveError && !savedSheet && (
+                  <p className={styles.saveNote}>
+                    This app appends a new row; existing sheet data is left
+                    unchanged.
+                  </p>
+                )}
               </section>
             )}
           </>

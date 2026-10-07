@@ -1,6 +1,6 @@
 # Jellyfin Capture
 
-A mobile-friendly LAN web app for capturing a playback-position snapshot from Jellyfin. The app currently reads Jellyfin sessions and supports choosing a stream and adjusting its position. Google Sheets saving is not integrated yet, so the save button is intentionally disabled.
+A mobile-friendly LAN web app for capturing a playback-position snapshot from Jellyfin and appending it to Google Sheets. The app supports choosing a stream, adjusting its frozen position, and saving TV episodes to the `Shows` tab or movies to the `Movies` tab.
 
 ## Configure Jellyfin
 
@@ -12,6 +12,24 @@ export JELLYFIN_URL='http://192.168.0.7:8096' # optional; this is the default
 ```
 
 The backend makes the authenticated request to Jellyfin; the browser never receives the API key. The key is sent only from the API service to the Jellyfin server.
+
+## Configure Google Sheets
+
+Set the spreadsheet ID and the path to a service-account JSON credential file on the API service:
+
+```bash
+export SHEET_ID='your-google-spreadsheet-id'
+export CREDENTIAL_PATH='/absolute/path/to/service-account.json'
+```
+
+Enable the Google Sheets API in the Google Cloud project for the service account, and share the existing spreadsheet with the service-account email address as an Editor. Keep the credential file outside the repository and do not commit it. A relative `CREDENTIAL_PATH` is resolved from the API process working directory.
+
+The spreadsheet must already contain tabs named exactly `Shows` and `Movies`. The app uses the existing column order:
+
+- **Shows** (`A:K`): `Show`, `Season`, `Episode`, `Start`, `End`, `name`, `description`, `script`, `characters`, `tags`, `source`. Episode records fill Show from Jellyfin's series name, Season and Episode as integers, Start as `HH:MM:SS`, and source with the file path when Jellyfin provides it. Other cells are left blank.
+- **Movies** (`A:I`): `Title`, `Start`, `End`, `name`, `description`, `script`, `characters`, `tags`, `source`. Movie records fill Title, Start as `HH:MM:SS`, and source when available. Other cells are left blank.
+
+Writes use the Sheets API append operation with row insertion enabled. The app does not update, clear, or rewrite existing data. Only Jellyfin items typed as an episode or movie can be saved; an episode must include series, season, and episode metadata. If Jellyfin does not expose a file path, `source` is appended as an empty cell.
 
 ## Run in development
 

@@ -1,6 +1,8 @@
 import express from 'express';
 import path from 'node:path';
+import { CaptureValidationError } from './capture-record';
 import { fetchJellyfinSnapshot, JellyfinServiceError } from './jellyfin';
+import { appendCapture, SheetsServiceError } from './sheets';
 
 const app = express();
 const host = process.env.HOST ?? '0.0.0.0';
@@ -8,6 +10,8 @@ const port = process.env.PORT ? Number(process.env.PORT) : 4301;
 const uiDirectory =
   process.env.UI_DIST_DIR ??
   path.resolve(process.cwd(), 'dist/apps/jellyfin-capture-ui');
+
+app.use(express.json({ limit: '16kb' }));
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', service: 'jellyfin-capture-api' });
@@ -25,6 +29,27 @@ app.get('/api/sessions', async (_req, res) => {
       error instanceof Error
         ? error.message
         : 'The Jellyfin sessions could not be loaded.';
+
+    res.status(statusCode).json({ message });
+  }
+});
+
+app.post('/api/records', async (req, res) => {
+  try {
+    // appendCapture validates the payload before making an API request.
+    const result = await appendCapture(req.body);
+    res.status(201).json({ status: 'ok', sheetName: result.sheetName });
+  } catch (error) {
+    const statusCode =
+      error instanceof CaptureValidationError
+        ? 400
+        : error instanceof SheetsServiceError
+        ? error.statusCode
+        : 502;
+    const message =
+      error instanceof Error
+        ? error.message
+        : 'The record could not be saved to Google Sheets.';
 
     res.status(statusCode).json({ message });
   }
