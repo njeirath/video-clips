@@ -1,0 +1,9 @@
+{
+  "name": "jellyfin-capture-ui",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/jellyfin-capture-ui/src",
+  "projectType": "application",
+  "tags": [],
+  "// targets": "to see all targets run: nx show project jellyfin-capture-ui --web",
+  "targets": {}
+}

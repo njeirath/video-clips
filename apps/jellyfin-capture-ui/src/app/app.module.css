@@ -1,0 +1,85 @@
+.page {
+  display: grid;
+  min-height: 100vh;
+  min-height: 100svh;
+  place-items: center;
+  padding: 24px;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(45, 130, 170, 0.18), transparent 42%),
+    #0b1220;
+}
+
+.card {
+  width: min(100%, 520px);
+  padding: clamp(28px, 7vw, 48px);
+  border: 1px solid rgba(177, 201, 224, 0.16);
+  border-radius: 24px;
+  background: rgba(19, 31, 48, 0.9);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.28);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #e9f3fb;
+  font-size: 0.95rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+}
+
+.brandMark {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border-radius: 10px;
+  background: rgba(76, 184, 222, 0.14);
+  color: #62c6e9;
+  font-size: 0.85rem;
+}
+
+.eyebrow {
+  margin: 44px 0 10px;
+  color: #91a8bd;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.card h1 {
+  margin: 0;
+  color: #f5f8fc;
+  font-size: clamp(2.25rem, 9vw, 3.25rem);
+  letter-spacing: -0.055em;
+  line-height: 1.05;
+}
+
+.description {
+  max-width: 38ch;
+  margin: 18px 0 0;
+  color: #b3c2d1;
+  font-size: 1rem;
+  line-height: 1.65;
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 32px;
+  padding: 9px 12px;
+  border: 1px solid rgba(177, 201, 224, 0.14);
+  border-radius: 999px;
+  color: #c5d2df;
+  font-size: 0.8rem;
+}
+
+.statusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #e1b35a;
+  box-shadow: 0 0 12px rgba(225, 179, 90, 0.35);
+}
