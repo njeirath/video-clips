@@ -1,0 +1,16 @@
+# Keep local build artifacts and credentials out of the Docker build context.
+.git
+.nx
+**/.nx
+node_modules
+**/node_modules
+dist
+**/dist
+coverage
+tmp
+.env
+.env.*
+**/*.local
+apps/jellyfin-capture-api/secrets/
+apps/backend/.env.prod.backend
+apps/frontend/.env.prod.frontend

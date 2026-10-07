@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   opensearch:
     image: opensearchproject/opensearch:2.11.0
@@ -31,6 +29,29 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  jellyfin-capture:
+    build:
+      context: .
+      dockerfile: ./apps/jellyfin-capture-api/Dockerfile
+    image: video-clips-jellyfin-capture:latest
+    container_name: video-clips-jellyfin-capture
+    user: "${JELLYFIN_CAPTURE_UID:-1000}:${JELLYFIN_CAPTURE_GID:-1000}"
+    env_file:
+      - path: ./.env
+        required: false
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: 4301
+      CREDENTIAL_PATH: /run/secrets/google-service-account.json
+    volumes:
+      - ./apps/jellyfin-capture-api/secrets:/run/secrets:ro
+    ports:
+      - "${JELLYFIN_CAPTURE_PORT:-4301}:4301"
+    networks:
+      - video-clips-network
+    restart: unless-stopped
 
 volumes:
   opensearch-data:

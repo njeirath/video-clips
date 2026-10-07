@@ -51,6 +51,39 @@ npx nx serve jellyfin-capture-api
 
 This builds the UI and serves it with the API from Express at <http://localhost:4301>. For a device on the same network, use `http://<computer-lan-ip>:4301`. The health endpoint is at `/api/health`.
 
+## Run with Docker Compose
+
+The `jellyfin-capture` service is available in both `docker-compose.yml` and `docker-compose.prod.yml`; use one Compose file at a time. From the repository root, copy the template to the ignored `.env` file and edit it:
+
+```bash
+cp .env.example .env
+```
+
+Both Compose files load the root `.env` into the service environment. Compose also reads it for host port and UID/GID interpolation. The `.env` file is gitignored; do not commit real credentials.
+
+`JELLYFIN_API_KEY` is required for Jellyfin access. `SHEET_ID` is only needed for Google Sheets saving. To enable Sheets, place the service-account JSON at `apps/jellyfin-capture-api/secrets/google-service-account.json` (create the directory if needed); this local secrets directory is excluded from git and mounted read-only in the container. Compose sets `CREDENTIAL_PATH` to `/run/secrets/google-service-account.json` inside the container, so do not set it to a host filesystem path. The container runs as the non-root UID/GID `1000:1000` by default; if the credential file is only readable by your host account, set `JELLYFIN_CAPTURE_UID` and `JELLYFIN_CAPTURE_GID` to the numeric values from `id -u` and `id -g`.
+
+Build and start just the capture service from the default Compose file:
+
+```bash
+docker compose up -d --build jellyfin-capture
+```
+
+Or start it alongside the production stack:
+
+```bash
+docker compose -f docker-compose.prod.yml up -d --build
+```
+
+Check its status and logs with:
+
+```bash
+docker compose ps jellyfin-capture
+docker compose logs -f jellyfin-capture
+```
+
+Open `http://<computer-lan-ip>:4301` from a device on the same network. To change the host port, set `JELLYFIN_CAPTURE_PORT` in `.env`. The container healthcheck uses `/api/health` and does not require Jellyfin or Sheets credentials to be configured.
+
 ## Playback snapshot behavior
 
 - On page load, `GET /api/sessions` requests Jellyfin's `/Sessions` endpoint once. Paused sessions with a current media item are included.

@@ -54,4 +54,5 @@ screenshots/
 .env.*.local
 apps/backend/.env.prod.backend
 apps/frontend/.env.prod.frontend
+/apps/jellyfin-capture-api/secrets/
 /apps/frontend-e2e/playwright-report

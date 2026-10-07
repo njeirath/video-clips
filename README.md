@@ -243,12 +243,13 @@ The script utilizes two environment variables:
 
 ## Docker / Production (compose)
 
-The repository includes a production-oriented Docker Compose file at `docker-compose.prod.yml`. It builds the `backend` and `frontend` images from `apps/backend` and `apps/frontend` respectively, and runs an embedded OpenSearch instance for easy single-host deployments or testing.
+The repository includes a production-oriented Docker Compose file at `docker-compose.prod.yml`. It builds the `backend`, `frontend`, and `jellyfin-capture` services, and runs an embedded OpenSearch instance for easy single-host deployments or testing. The Jellyfin Capture service builds its API and UI from the Nx workspace using `apps/jellyfin-capture-api/Dockerfile`.
 
 Quick notes:
 - The frontend uses an entrypoint script to write `/runtime-config.js` from the `GRAPHQL_URI` environment variable at container start. `docker-compose.prod.yml` sets this to `http://backend:3020/graphql` by default so the SPA points to the backend on the same Docker network.
 - The backend listens on port `3020` and exposes the GraphQL endpoint at `/graphql`.
 - OpenSearch runs on port `9200` and data is persisted to the `opensearch-data` Docker volume.
+- Jellyfin Capture serves its mobile web UI and API on port `4301` by default. Its Jellyfin API key is passed at runtime through `JELLYFIN_API_KEY`; an optional Google service-account file is mounted read-only from `apps/jellyfin-capture-api/secrets/`.
 
 Validate the compose file:
 ```bash
@@ -270,12 +271,14 @@ Tail logs for a specific service:
 docker compose -f docker-compose.prod.yml logs -f opensearch
 docker compose -f docker-compose.prod.yml logs -f backend
 docker compose -f docker-compose.prod.yml logs -f frontend
+docker compose -f docker-compose.prod.yml logs -f jellyfin-capture
 ```
 
 Quick smoke checks:
 - Backend GraphQL: http://localhost:3020/graphql
 - Frontend UI: http://localhost:4200
 - OpenSearch: http://localhost:9200
+- Jellyfin Capture: http://localhost:4301 (configure `JELLYFIN_API_KEY` in the root `.env` file; see `apps/jellyfin-capture-ui/README.md` for Sheets setup)
 
 Production considerations and recommendations:
 
