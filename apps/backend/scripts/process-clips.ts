@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { parse } from 'csv-parse';
+import { google } from 'googleapis';
 import { NodeSSH } from 'node-ssh';
 import { execSync } from 'child_process';
 import sharp from 'sharp';
@@ -9,9 +9,17 @@ import { GraphQLClient, gql } from 'graphql-request';
 import axios from 'axios';
 import readline from 'readline';
 import process from 'process';
+import {
+  AuthFlowType,
+  ChallengeNameType,
+  CognitoIdentityProviderClient,
+  InitiateAuthCommand,
+  RespondToAuthChallengeCommand,
+} from '@aws-sdk/client-cognito-identity-provider';
 
-const CSV_PATH =
-  '/Users/nakuljeirath/dev/work/video-clips/apps/backend/Video Clips - Sheet1.csv';
+const SPREADSHEETS_READONLY_SCOPE =
+  'https://www.googleapis.com/auth/spreadsheets.readonly';
+const SHOWS_SHEET_RANGE = "'Shows'!A:K";
 const LOCAL_VIDEO_DIR = path.resolve(
   __dirname,
   '/Users/nakuljeirath/dev/work/video-clips/apps/backend/tmp/videos'
@@ -28,9 +36,119 @@ const REMOTE_HOST = '192.168.0.7';
 const REMOTE_USER = 'nakul';
 const endpointHost = (process.env.ENDPOINT_HOST || 'localhost').replace(/\/+$/, '');
 const GRAPHQL_ENDPOINT = `http://${endpointHost}:3020/graphql`; // TODO: set actual endpoint
-const GRAPHQL_AUTH_TOKEN = process.env.GRAPHQL_AUTH_TOKEN || '';
+const DEFAULT_COGNITO_USER_POOL_ID = 'us-east-2_mhp2SrQ8t';
+const DEFAULT_COGNITO_CLIENT_ID = '629jeb5vet7jphq0d9avis4fqk';
 
-async function processCSV(passphrase: string, rowArg?: string) {
+type ClipSheetRow = Record<string, string>;
+
+async function readShowsFromSpreadsheet(): Promise<ClipSheetRow[]> {
+  const spreadsheetId = process.env.SHEET_ID?.trim();
+  const configuredCredentialPath = process.env.CREDENTIAL_PATH?.trim();
+
+  if (!spreadsheetId || !configuredCredentialPath) {
+    throw new Error(
+      'Google Sheets is not configured. Set SHEET_ID and CREDENTIAL_PATH.'
+    );
+  }
+
+  const auth = new google.auth.GoogleAuth({
+    keyFile: path.resolve(process.cwd(), configuredCredentialPath),
+    scopes: [SPREADSHEETS_READONLY_SCOPE],
+  });
+  const sheets = google.sheets({ version: 'v4', auth });
+  const { data } = await sheets.spreadsheets.values.get({
+    spreadsheetId,
+    range: SHOWS_SHEET_RANGE,
+    valueRenderOption: 'FORMATTED_VALUE',
+  });
+
+  const [headerRow, ...dataRows] = data.values ?? [];
+  if (!headerRow) return [];
+
+  const headers = headerRow.map((header) => String(header));
+  return dataRows.map((cells) => {
+    const row: ClipSheetRow = {};
+    headers.forEach((header, index) => {
+      row[header] = cells[index] == null ? '' : String(cells[index]);
+    });
+    return row;
+  });
+}
+
+async function authenticateWithCognito(): Promise<string> {
+  const userPoolId =
+    process.env.COGNITO_USER_POOL_ID?.trim() || DEFAULT_COGNITO_USER_POOL_ID;
+  const clientId =
+    process.env.COGNITO_CLIENT_ID?.trim() ||
+    process.env.COGNITO_USER_POOL_CLIENT_ID?.trim() ||
+    DEFAULT_COGNITO_CLIENT_ID;
+  const region =
+    process.env.COGNITO_REGION?.trim() || userPoolId.split('_')[0];
+  const username = await askForInput('Enter your Cognito email: ');
+
+  if (!username) {
+    throw new Error('A Cognito email address is required to sign in.');
+  }
+
+  const cognito = new CognitoIdentityProviderClient({ region });
+  try {
+    const authResponse = await cognito.send(
+      new InitiateAuthCommand({
+        AuthFlow: AuthFlowType.USER_AUTH,
+        ClientId: clientId,
+        AuthParameters: {
+          USERNAME: username,
+          PREFERRED_CHALLENGE: 'EMAIL_OTP',
+        },
+      })
+    );
+
+    if (
+      authResponse.ChallengeName !== ChallengeNameType.EMAIL_OTP ||
+      !authResponse.Session
+    ) {
+      throw new Error(
+        `Cognito did not return an email OTP challenge (received: ${authResponse.ChallengeName ?? 'none'}). Ensure USER_AUTH and EMAIL_OTP are enabled for the app client.`
+      );
+    }
+
+    const destination =
+      authResponse.ChallengeParameters?.CODE_DELIVERY_DESTINATION;
+    console.log(
+      `A one-time code was sent to ${destination || 'your email address'}.`
+    );
+    const code = await askForInput('Enter the email code: ');
+    if (!code) {
+      throw new Error('An email verification code is required to sign in.');
+    }
+
+    const challengeResponse = await cognito.send(
+      new RespondToAuthChallengeCommand({
+        ChallengeName: ChallengeNameType.EMAIL_OTP,
+        ClientId: clientId,
+        Session: authResponse.Session,
+        ChallengeResponses: {
+          USERNAME: username,
+          EMAIL_OTP_CODE: code,
+        },
+      })
+    );
+    const idToken = challengeResponse.AuthenticationResult?.IdToken;
+    if (!idToken) {
+      throw new Error('Cognito did not return an ID token after sign-in.');
+    }
+
+    return idToken;
+  } finally {
+    cognito.destroy();
+  }
+}
+
+async function processClips(
+  passphrase: string,
+  idToken: string,
+  rowArg?: string
+) {
   if (!fs.existsSync(LOCAL_VIDEO_DIR))
     fs.mkdirSync(LOCAL_VIDEO_DIR, { recursive: true });
   if (!fs.existsSync(LOCAL_SOURCE_DIR))
@@ -49,15 +167,11 @@ async function processCSV(passphrase: string, rowArg?: string) {
 
   const client = new GraphQLClient(GRAPHQL_ENDPOINT, {
     headers: {
-      authorization: `Bearer ${GRAPHQL_AUTH_TOKEN}`,
+      authorization: `Bearer ${idToken}`,
     },
   });
 
-  const parser = fs.createReadStream(CSV_PATH).pipe(parse({ columns: true }));
-  const rows = [];
-  for await (const row of parser) {
-    rows.push(row);
-  }
+  const rows = await readShowsFromSpreadsheet();
 
   // Parse rowArg to determine which rows to process
   let selectedRows: any[] = [];
@@ -115,7 +229,7 @@ async function processCSV(passphrase: string, rowArg?: string) {
     }
     return seconds;
   }
-  // Helper: split comma-separated CSV fields into string[] (trimmed), return undefined if empty
+  // Helper: split comma-separated sheet cells into string[] (trimmed), return undefined if empty
   function splitCsvArray(field?: string): string[] | undefined {
     if (!field) return undefined;
     const parts = String(field)
@@ -383,7 +497,7 @@ async function processCSV(passphrase: string, rowArg?: string) {
         }
       }
     `;
-    // Build source input based on CSV fields. Schema expects a VideoClipSourceInput
+    // Build source input based on sheet fields. Schema expects a VideoClipSourceInput
     // which has either a 'show' or 'movie' object. Use parsedStart/parsedEnd.
     let sourceInput: any = undefined;
     // If Season or Episode present, treat as ShowSource
@@ -445,6 +559,19 @@ async function processCSV(passphrase: string, rowArg?: string) {
   ssh.dispose();
 }
 
+function askForInput(prompt: string): Promise<string> {
+  return new Promise((resolve) => {
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout,
+    });
+    rl.question(prompt, (answer) => {
+      rl.close();
+      resolve(answer.trim());
+    });
+  });
+}
+
 function askPassphrase(): Promise<string> {
   return new Promise((resolve) => {
     const rl = readline.createInterface({
@@ -490,9 +617,14 @@ for (const arg of process.argv.slice(2)) {
     break;
   }
 }
-askPassphrase()
-  .then((passphrase) => processCSV(passphrase, rowArg))
-  .catch((err) => {
-    console.error(err);
-    process.exit(1);
-  });
+async function main() {
+  const idToken =
+    process.env.GRAPHQL_AUTH_TOKEN?.trim() || (await authenticateWithCognito());
+  const passphrase = await askPassphrase();
+  await processClips(passphrase, idToken, rowArg);
+}
+
+main().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});

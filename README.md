@@ -216,7 +216,7 @@ ENV_PATH=apps/backend/.env node dist/backend/apps/backend/scripts/cleanup-s3.js 
 
 ### Process Clips Script
 
-This script processes a CSV of video clips, downloads source files, trims videos, generates thumbnails and blurhashes, uploads to S3, and registers clips in the backend.
+This script reads clip rows from the `Shows` tab of a Google spreadsheet, downloads source files, trims videos, generates thumbnails and blurhashes, uploads to S3, and registers clips in the backend. It does not read the `Movies` tab.
 
 **Build the backend first:**
 ```bash
@@ -229,12 +229,12 @@ From the root of the repository:
 node dist/backend/apps/backend/scripts/process-clips.js
 ```
 
-The script utilizes two environment variables:
-- Must set `GRAPHQL_AUTH_TOKEN` in the shell with a valid cognito ID token for the targeted environment (Go to http://192.168.0.7:4200/admin to sign in)
-- Can set `ENDPOINT_HOST` to specify which environment to target (default: `localhost`) (use `192.168.0.7` for prod)
-- Make sure your `.env` file is configured with the necessary credentials and endpoints.
-- The script expects the CSV file at `apps/backend/Video Clips - Sheet1.csv`.
-- See comments in `apps/backend/scripts/process-clips.ts` for configuration details.
+Make sure these environment variables are available to the process:
+- `SHEET_ID`: the Google spreadsheet ID.
+- `CREDENTIAL_PATH`: path to the service-account JSON file. Relative paths are resolved from the current working directory. The service account needs the Google Sheets API enabled and at least Viewer access to the spreadsheet.
+- `ENDPOINT_HOST`: optional host for the target environment (default: `localhost`; use `192.168.0.7` for production).
+- Optional Cognito overrides: `COGNITO_USER_POOL_ID`, `COGNITO_CLIENT_ID` (or `COGNITO_USER_POOL_CLIENT_ID`), and `COGNITO_REGION`. By default, the script uses user pool `us-east-2_mhp2SrQ8t` and app client `629jeb5vet7jphq0d9avis4fqk`, derives the region from the pool ID, and prompts for your email and the emailed one-time code. The app client must allow `USER_AUTH` with `EMAIL_OTP`, and the target GraphQL API must be configured to verify this same pool and client.
+- Optional `GRAPHQL_AUTH_TOKEN`: if set, the script uses this Cognito ID token and skips the interactive Cognito sign-in. If unset, it obtains a token through the email OTP flow. Any provided token must be accepted by the target GraphQL API.
 
 ## Learn More
 
