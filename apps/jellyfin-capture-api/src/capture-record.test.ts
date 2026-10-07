@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { buildCaptureSheetRow, CaptureValidationError } from './capture-record';
+import {
+  buildCaptureLookup,
+  buildCaptureSheetRow,
+  CaptureValidationError,
+  matchCaptureHistoryRows,
+} from './capture-record';
 
 describe('buildCaptureSheetRow', () => {
   it('maps episodes to all 11 Shows columns and leaves unused cells blank', () => {
@@ -78,5 +83,100 @@ describe('buildCaptureSheetRow', () => {
         positionSeconds: 0,
       })
     ).toThrow(/seasonNumber/);
+  });
+});
+
+describe('capture history matching', () => {
+  it('matches TV history by series, season, and episode', () => {
+    const lookup = buildCaptureLookup({
+      itemType: 'Episode',
+      seriesName: 'the expanse',
+      seasonNumber: 2,
+      episodeNumber: 3,
+    });
+    const rows = [
+      ['Show', 'Season', 'Episode', 'Start'],
+      [
+        'The Expanse',
+        2,
+        3,
+        '00:42:15',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '/media/The Expanse/S02E03.mkv',
+      ],
+      ['The Expanse', 2, 4, '00:50:00'],
+      ['Other Show', 2, 3, '00:42:15'],
+      ['The Expanse', '2', '3', 0.5],
+    ];
+
+    expect(lookup.sheetName).toBe('Shows');
+    expect(matchCaptureHistoryRows(rows, lookup)).toEqual([
+      {
+        rowNumber: 2,
+        positionSeconds: 2535,
+        path: '/media/The Expanse/S02E03.mkv',
+      },
+      { rowNumber: 5, positionSeconds: 43_200, path: null },
+    ]);
+  });
+
+  it('matches movie history by title and skips rows without a readable position', () => {
+    const lookup = buildCaptureLookup({ itemType: 'Movie', title: 'arrival' });
+    const rows = [
+      ['Title', 'Start'],
+      ['Arrival', '00:01:29', '', '', '', '', '', '', '/media/Arrival.mkv'],
+      ['Arrival: The Final Cut', '00:01:29'],
+      ['Arrival', 'not-a-time'],
+    ];
+
+    expect(lookup.sheetName).toBe('Movies');
+    expect(matchCaptureHistoryRows(rows, lookup)).toEqual([
+      {
+        rowNumber: 2,
+        positionSeconds: 89,
+        path: '/media/Arrival.mkv',
+      },
+    ]);
+  });
+
+  it('reads existing MM:SS start values as minutes and seconds', () => {
+    const lookup = buildCaptureLookup({
+      itemType: 'Episode',
+      seriesName: 'South Park',
+      seasonNumber: 4,
+      episodeNumber: 9,
+    });
+
+    expect(
+      matchCaptureHistoryRows(
+        [
+          ['South Park', 4, 9, '18:20'],
+          ['South Park', 4, 9, '19:05'],
+        ],
+        lookup
+      )
+    ).toEqual([
+      { rowNumber: 1, positionSeconds: 1100, path: null },
+      { rowNumber: 2, positionSeconds: 1145, path: null },
+    ]);
+  });
+
+  it('rejects unsupported history lookups and incomplete TV identities', () => {
+    expect(() => buildCaptureLookup({ itemType: 'Series' })).toThrow(
+      CaptureValidationError
+    );
+    expect(() =>
+      buildCaptureLookup({
+        itemType: 'Episode',
+        seriesName: 'The Expanse',
+        seasonNumber: 2,
+        episodeNumber: null,
+      })
+    ).toThrow(/episodeNumber/);
   });
 });

@@ -29,7 +29,7 @@ The spreadsheet must already contain tabs named exactly `Shows` and `Movies`. Th
 - **Shows** (`A:K`): `Show`, `Season`, `Episode`, `Start`, `End`, `name`, `description`, `script`, `characters`, `tags`, `source`. Episode records fill Show from Jellyfin's series name, Season and Episode as integers, Start as `HH:MM:SS`, and source with the file path when Jellyfin provides it. Other cells are left blank.
 - **Movies** (`A:I`): `Title`, `Start`, `End`, `name`, `description`, `script`, `characters`, `tags`, `source`. Movie records fill Title, Start as `HH:MM:SS`, and source when available. Other cells are left blank.
 
-Writes use the Sheets API append operation with row insertion enabled. The app does not update, clear, or rewrite existing data. Only Jellyfin items typed as an episode or movie can be saved; an episode must include series, season, and episode metadata. If Jellyfin does not expose a file path, `source` is appended as an empty cell.
+Writes use the Sheets API append operation with row insertion enabled. The app does not update, clear, or rewrite existing data. Only Jellyfin items typed as an episode or movie can be saved; an episode must include series, season, and episode metadata. If Jellyfin does not expose a file path, `source` is appended as an empty cell. The same service-account configuration is used to read capture history.
 
 ## Run in development
 
@@ -91,5 +91,12 @@ Open `http://<computer-lan-ip>:4301` from a device on the same network. To chang
 - The displayed position is frozen from that response. Use Refresh to request a new snapshot; it will warn before discarding unsaved position adjustments.
 - Position adjustments are in one-second increments and are clamped to zero and, when known, the media duration.
 - Episode, season, series, title, user/device, duration, and file path are returned when Jellyfin provides them. The path may be omitted by Jellyfin or its permissions.
+
+## Saved-position history
+
+- Capture history is requested only after a supported movie or episode is selected; an empty stream list does not read Google Sheets.
+- The backend reads only the relevant tab (`Shows` or `Movies`), filters rows to the same series/season/episode or movie title, and returns those saved positions. The browser displays only entries within 60 seconds of the currently adjusted position, closest first; changing the position does not trigger more Sheets requests.
+- Rows for each tab are cached in the API process for up to 60 seconds and the relevant cache is invalidated after a successful append. Edits made directly in Google Sheets may therefore take up to one minute to appear.
+- The Sheets Values API reads ranges rather than filtering by cell values, so the backend scans the selected tab’s rows. For a personal capture log this avoids reading the workbook on every page load while keeping the implementation simple.
 
 Keep the service on your trusted LAN and do not expose it directly to the public internet. A browser home-screen shortcut can open the app on Android; a standalone installable PWA/HTTPS setup has not been added.

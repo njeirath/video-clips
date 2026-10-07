@@ -520,6 +520,132 @@
   transform: scale(0.98);
 }
 
+.historyPanel {
+  margin: 20px 0 0;
+  padding: 14px;
+  border: 1px solid rgba(121, 174, 190, 0.16);
+  border-radius: 16px;
+  background: rgba(7, 17, 27, 0.46);
+}
+
+.historyHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.historyTitle {
+  margin: 0;
+  color: #e6f0f6;
+  font-size: 0.96rem;
+  font-weight: 700;
+}
+
+.historyCount {
+  flex: 0 0 auto;
+  color: #92b9c6;
+  font-size: 0.72rem;
+  font-weight: 650;
+}
+
+.historyStatus {
+  margin: 12px 0 0;
+  color: #91a6b6;
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.historyList {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.historyEntry {
+  min-width: 0;
+  padding: 11px 12px;
+  border: 1px solid rgba(143, 175, 193, 0.11);
+  border-radius: 12px;
+  background: rgba(19, 33, 47, 0.74);
+}
+
+.historyEntryHeading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 7px 11px;
+}
+
+.historyPosition {
+  color: #e8f6fc;
+  font-size: 0.91rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.historyDifference {
+  color: #8fd7c1;
+  font-size: 0.76rem;
+}
+
+.historyRow {
+  display: block;
+  margin-top: 4px;
+  color: #7f94a5;
+  font-size: 0.68rem;
+}
+
+.historyPath {
+  margin-top: 7px;
+  color: #92a9b8;
+  font-size: 0.72rem;
+}
+
+.historyPath summary {
+  width: fit-content;
+  cursor: pointer;
+}
+
+.historyPath code {
+  display: block;
+  overflow-wrap: anywhere;
+  margin-top: 6px;
+  color: #b7c7d3;
+  font-size: 0.69rem;
+  line-height: 1.45;
+}
+
+.historyError {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 11px;
+  color: #ffb7a9;
+  font-size: 0.77rem;
+  line-height: 1.5;
+}
+
+.historyRetryButton {
+  flex: 0 0 auto;
+  padding: 3px 0;
+  border: 0;
+  background: transparent;
+  color: #ffb7a9;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.historyRetryButton:focus-visible {
+  outline: 2px solid rgba(255, 183, 169, 0.8);
+  outline-offset: 3px;
+}
+
 .pathDetails {
   margin: 17px 0 0;
   color: #93a9b9;

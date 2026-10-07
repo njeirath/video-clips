@@ -2,7 +2,11 @@ import express from 'express';
 import path from 'node:path';
 import { CaptureValidationError } from './capture-record';
 import { fetchJellyfinSnapshot, JellyfinServiceError } from './jellyfin';
-import { appendCapture, SheetsServiceError } from './sheets';
+import {
+  appendCapture,
+  findCaptureHistory,
+  SheetsServiceError,
+} from './sheets';
 
 const app = express();
 const host = process.env.HOST ?? '0.0.0.0';
@@ -29,6 +33,27 @@ app.get('/api/sessions', async (_req, res) => {
       error instanceof Error
         ? error.message
         : 'The Jellyfin sessions could not be loaded.';
+
+    res.status(statusCode).json({ message });
+  }
+});
+
+app.post('/api/records/matches', async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+
+  try {
+    res.json(await findCaptureHistory(req.body));
+  } catch (error) {
+    const statusCode =
+      error instanceof CaptureValidationError
+        ? 400
+        : error instanceof SheetsServiceError
+        ? error.statusCode
+        : 502;
+    const message =
+      error instanceof Error
+        ? error.message
+        : 'Could not load saved capture history.';
 
     res.status(statusCode).json({ message });
   }

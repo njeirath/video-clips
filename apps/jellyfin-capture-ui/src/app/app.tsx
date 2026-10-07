@@ -23,6 +23,23 @@ interface SessionSnapshot {
   streams: PlayingStream[];
 }
 
+interface CaptureHistoryEntry {
+  rowNumber: number;
+  positionSeconds: number;
+  path: string | null;
+}
+
+interface CaptureHistoryResponse {
+  entries: CaptureHistoryEntry[];
+}
+
+interface CaptureHistoryState {
+  sessionId: string;
+  status: 'loading' | 'loaded' | 'error';
+  entries: CaptureHistoryEntry[];
+  error?: string;
+}
+
 let inFlightSnapshot: Promise<SessionSnapshot> | null = null;
 
 function requestSnapshot(): Promise<SessionSnapshot> {
@@ -63,6 +80,75 @@ function requestSnapshot(): Promise<SessionSnapshot> {
   }
 
   return inFlightSnapshot;
+}
+
+async function requestCaptureHistory(
+  stream: PlayingStream
+): Promise<CaptureHistoryResponse> {
+  const response = await fetch('/api/records/matches', {
+    method: 'POST',
+    cache: 'no-store',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      itemType: stream.itemType,
+      title: stream.title,
+      seriesName: stream.seriesName,
+      seasonNumber: stream.seasonNumber,
+      episodeNumber: stream.episodeNumber,
+    }),
+  });
+  const payload: unknown = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    const message =
+      payload &&
+      typeof payload === 'object' &&
+      'message' in payload &&
+      typeof payload.message === 'string'
+        ? payload.message
+        : 'Could not load saved capture history.';
+    throw new Error(message);
+  }
+
+  if (
+    !payload ||
+    typeof payload !== 'object' ||
+    !('entries' in payload) ||
+    !Array.isArray(payload.entries)
+  ) {
+    throw new Error('Google Sheets returned an unexpected history response.');
+  }
+
+  const entries = payload.entries.flatMap((value) => {
+    if (!value || typeof value !== 'object') {
+      return [];
+    }
+
+    const entry = value as Record<string, unknown>;
+    if (
+      typeof entry.rowNumber !== 'number' ||
+      !Number.isSafeInteger(entry.rowNumber) ||
+      entry.rowNumber < 1 ||
+      typeof entry.positionSeconds !== 'number' ||
+      !Number.isSafeInteger(entry.positionSeconds) ||
+      entry.positionSeconds < 0
+    ) {
+      return [];
+    }
+
+    return [
+      {
+        rowNumber: entry.rowNumber,
+        positionSeconds: entry.positionSeconds,
+        path: typeof entry.path === 'string' ? entry.path : null,
+      },
+    ];
+  });
+
+  return { entries };
 }
 
 function formatPosition(totalSeconds: number): string {
@@ -142,6 +228,17 @@ function playbackSource(stream: PlayingStream): string | null {
   return source || null;
 }
 
+function describePositionDifference(differenceSeconds: number): string {
+  if (differenceSeconds === 0) {
+    return 'Same position';
+  }
+
+  const absoluteDifference = Math.abs(differenceSeconds);
+  const unit = absoluteDifference === 1 ? 'second' : 'seconds';
+  const direction = differenceSeconds < 0 ? 'earlier' : 'later';
+  return `${absoluteDifference} ${unit} ${direction}`;
+}
+
 export function App() {
   const [snapshot, setSnapshot] = useState<SessionSnapshot | null>(null);
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(
@@ -153,6 +250,9 @@ export function App() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [savedSheet, setSavedSheet] = useState<'Shows' | 'Movies' | null>(null);
+  const [captureHistory, setCaptureHistory] =
+    useState<CaptureHistoryState | null>(null);
+  const [historyRequestVersion, setHistoryRequestVersion] = useState(0);
 
   function applySnapshot(nextSnapshot: SessionSnapshot) {
     setSnapshot(nextSnapshot);
@@ -216,6 +316,61 @@ export function App() {
     snapshot?.streams.some(
       (stream) => positions[stream.sessionId] !== stream.positionSeconds
     ) ?? false;
+
+  useEffect(() => {
+    if (!selectedStream || !selectedCanSave) {
+      setCaptureHistory(null);
+      return;
+    }
+
+    let isCurrent = true;
+    const sessionId = selectedStream.sessionId;
+    setCaptureHistory({ sessionId, status: 'loading', entries: [] });
+
+    requestCaptureHistory(selectedStream)
+      .then(({ entries }) => {
+        if (isCurrent) {
+          setCaptureHistory({ sessionId, status: 'loaded', entries });
+        }
+      })
+      .catch((requestError: unknown) => {
+        if (isCurrent) {
+          setCaptureHistory({
+            sessionId,
+            status: 'error',
+            entries: [],
+            error:
+              requestError instanceof Error
+                ? requestError.message
+                : 'Could not load saved capture history.',
+          });
+        }
+      });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [selectedStream, selectedCanSave, historyRequestVersion]);
+
+  const selectedHistory =
+    selectedStream && captureHistory?.sessionId === selectedStream.sessionId
+      ? captureHistory
+      : null;
+  const nearbyHistoryEntries =
+    selectedHistory?.status === 'loaded'
+      ? selectedHistory.entries
+          .map((entry) => ({
+            ...entry,
+            differenceSeconds: entry.positionSeconds - selectedPosition,
+          }))
+          .filter((entry) => Math.abs(entry.differenceSeconds) <= 60)
+          .sort(
+            (first, second) =>
+              Math.abs(first.differenceSeconds) -
+                Math.abs(second.differenceSeconds) ||
+              second.rowNumber - first.rowNumber
+          )
+      : [];
 
   async function refreshSnapshot() {
     if (
@@ -324,6 +479,7 @@ export function App() {
           ? payload.sheetName
           : selectedSheet;
       setSavedSheet(responseSheet);
+      setHistoryRequestVersion((version) => version + 1);
     } catch (requestError) {
       setSaveError(
         requestError instanceof Error
@@ -356,10 +512,6 @@ export function App() {
             <span>{loading ? 'Loading' : 'Refresh'}</span>
           </button>
         </header>
-
-        <section className={styles.intro}>
-          <p className={styles.eyebrow}>Local media bookmarker</p>
-        </section>
 
         {error && (
           <div className={styles.errorBanner} role="alert">
@@ -530,6 +682,82 @@ export function App() {
                     <span>1 second</span>
                   </button>
                 </div>
+
+                {selectedCanSave && (
+                  <section
+                    className={styles.historyPanel}
+                    aria-labelledby="history-heading"
+                  >
+                    <div className={styles.historyHeader}>
+                      <div>
+                        <p className={styles.sectionEyebrow}>Google Sheets</p>
+                        <h3
+                          className={styles.historyTitle}
+                          id="history-heading"
+                        >
+                          Nearby saved positions
+                        </h3>
+                      </div>
+                      {selectedHistory?.status === 'loaded' && (
+                        <span className={styles.historyCount}>
+                          {nearbyHistoryEntries.length} nearby
+                        </span>
+                      )}
+                    </div>
+
+                    {!selectedHistory || selectedHistory.status === 'loading' ? (
+                      <p className={styles.historyStatus} role="status">
+                        Checking saved positions…
+                      </p>
+                    ) : selectedHistory.status === 'error' ? (
+                      <div className={styles.historyError} role="alert">
+                        <span>{selectedHistory.error}</span>
+                        <button
+                          className={styles.historyRetryButton}
+                          type="button"
+                          onClick={() =>
+                            setHistoryRequestVersion((version) => version + 1)
+                          }
+                        >
+                          Retry
+                        </button>
+                      </div>
+                    ) : nearbyHistoryEntries.length > 0 ? (
+                      <ol className={styles.historyList}>
+                        {nearbyHistoryEntries.map((entry) => (
+                          <li
+                            className={styles.historyEntry}
+                            key={entry.rowNumber}
+                          >
+                            <div className={styles.historyEntryHeading}>
+                              <strong className={styles.historyPosition}>
+                                {formatPosition(entry.positionSeconds)}
+                              </strong>
+                              <span className={styles.historyDifference}>
+                                {describePositionDifference(
+                                  entry.differenceSeconds
+                                )}
+                              </span>
+                            </div>
+                            <span className={styles.historyRow}>
+                              Sheet row {entry.rowNumber}
+                            </span>
+                            {entry.path && (
+                              <details className={styles.historyPath}>
+                                <summary>Show saved file path</summary>
+                                <code>{entry.path}</code>
+                              </details>
+                            )}
+                          </li>
+                        ))}
+                      </ol>
+                    ) : (
+                      <p className={styles.historyStatus}>
+                        No saved positions within one minute of this position.
+                      </p>
+                    )}
+                  </section>
+                )}
 
                 {selectedStream.path && (
                   <details className={styles.pathDetails}>
