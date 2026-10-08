@@ -6,7 +6,7 @@
     "start": "nx serve frontend",
     "start:backend": "nx serve backend",
     "start:jellyfin-capture": "nx run-many --target=serve --projects=jellyfin-capture-ui,jellyfin-capture-api --parallel",
-    "start:video-poc": "VIDEO_POC_ENABLED=true HOST=127.0.0.1 nx run-many --target=serve --projects=jellyfin-capture-ui,jellyfin-capture-api --parallel",
+    "start:video-poc": "VIDEO_POC_ENABLED=true nx run-many --target=serve --projects=jellyfin-capture-ui,jellyfin-capture-api --parallel",
     "build": "nx build",
     "test": "nx test",
     "e2e": "nx e2e frontend-e2e",

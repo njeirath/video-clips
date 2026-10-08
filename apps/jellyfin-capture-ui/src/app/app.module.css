@@ -555,6 +555,11 @@
   background: rgba(7, 17, 27, 0.46);
 }
 
+.historyPanelNearby {
+  border-color: rgba(239, 190, 115, 0.46);
+  background: rgba(153, 110, 44, 0.2);
+}
+
 .historyHeader {
   display: flex;
   align-items: center;

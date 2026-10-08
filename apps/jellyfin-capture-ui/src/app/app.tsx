@@ -690,7 +690,11 @@ export function App() {
 
                 {selectedCanSave && (
                   <section
-                    className={styles.historyPanel}
+                    className={
+                      nearbyHistoryEntries.length > 0
+                        ? `${styles.historyPanel} ${styles.historyPanelNearby}`
+                        : styles.historyPanel
+                    }
                     aria-labelledby="history-heading"
                   >
                     <div className={styles.historyHeader}>

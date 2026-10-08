@@ -2,6 +2,7 @@ import { StrictMode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import App from './app';
+import styles from './app.module.css';
 
 interface MockStream {
   sessionId: string;
@@ -110,6 +111,11 @@ describe('Jellyfin Capture', () => {
     expect(screen.getByText('Show Jellyfin file path')).toBeTruthy();
     expect(await screen.findByText(/No saved positions within one minute/)).toBeTruthy();
     expect(
+      screen
+        .getByRole('region', { name: 'Nearby saved positions' })
+        .classList.contains(styles.historyPanelNearby)
+    ).toBe(false);
+    expect(
       fetchMock.mock.calls.filter(([url]) => url === '/api/sessions')
     ).toHaveLength(1);
     expect(
@@ -142,6 +148,11 @@ describe('Jellyfin Capture', () => {
 
     expect(await screen.findByText('60 seconds earlier')).toBeTruthy();
     expect(screen.getByText('60 seconds later')).toBeTruthy();
+    expect(
+      screen
+        .getByRole('region', { name: 'Nearby saved positions' })
+        .classList.contains(styles.historyPanelNearby)
+    ).toBe(true);
     expect(screen.queryByText('61 seconds earlier')).toBeNull();
     expect(screen.getByText('Sheet row 10')).toBeTruthy();
 
