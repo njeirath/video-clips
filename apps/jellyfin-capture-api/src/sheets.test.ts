@@ -159,6 +159,69 @@ describe('Google Sheets service', () => {
     );
   });
 
+  it('bypasses cached rows for an explicitly refreshed processing queue', async () => {
+    const firstPendingRow = [
+      'The Office',
+      1,
+      2,
+      '00:07:30',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '/media/The Office/S01E02.mkv',
+    ];
+    const nextPendingRow = [
+      'The Office',
+      1,
+      3,
+      '00:08:00',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '/media/The Office/S01E03.mkv',
+    ];
+    mocks.get
+      .mockResolvedValueOnce({
+        data: {
+          values: [
+            ['Show', 'Season', 'Episode', 'Start', 'End'],
+            firstPendingRow,
+            nextPendingRow,
+          ],
+        },
+      })
+      .mockResolvedValueOnce({
+        data: {
+          values: [
+            ['Show', 'Season', 'Episode', 'Start', 'End'],
+            nextPendingRow,
+          ],
+        },
+      });
+
+    expect(await findNextProcessingClip('Shows')).toMatchObject({
+      rowNumber: 2,
+      episode: 2,
+    });
+    expect(
+      await findNextProcessingClip('Shows', { forceRefresh: true })
+    ).toMatchObject({
+      rowNumber: 2,
+      episode: 3,
+    });
+    expect(await findNextProcessingClip('Shows')).toMatchObject({
+      rowNumber: 2,
+      episode: 3,
+    });
+    expect(mocks.get).toHaveBeenCalledTimes(2);
+  });
+
   it('updates only the processing cells after checking the row revision', async () => {
     const row = [
       'The Office',

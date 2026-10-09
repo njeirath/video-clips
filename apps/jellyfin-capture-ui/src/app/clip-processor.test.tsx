@@ -114,6 +114,46 @@ describe('clip processor', () => {
     });
   });
 
+  it('reloads the queue from Google Sheets while bypassing the API cache', async () => {
+    const nextClip = {
+      ...pendingClip,
+      rowNumber: 3,
+      revision: 'b'.repeat(64),
+      episode: 3,
+      start: '00:08:00.000',
+    };
+    const fetchMock = vi.fn(async (input: string) => {
+      if (input === '/api/processing/next?tab=Shows') {
+        return {
+          ok: true,
+          json: async () => ({ clip: pendingClip }),
+        };
+      }
+      if (input === '/api/processing/next?tab=Shows&refresh=true') {
+        return {
+          ok: true,
+          json: async () => ({ clip: nextClip }),
+        };
+      }
+      return {
+        ok: false,
+        json: async () => ({ message: 'Unexpected request' }),
+      };
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    render(<ClipProcessor />);
+    expect(await screen.findByRole('heading', { name: /E02/ })).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reload queue' }));
+
+    expect(await screen.findByRole('heading', { name: /E03/ })).toBeTruthy();
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/processing/next?tab=Shows&refresh=true',
+      expect.objectContaining({ cache: 'no-store' })
+    );
+  });
+
   it('resets the start and end times to the spreadsheet state', async () => {
     vi.stubGlobal(
       'fetch',

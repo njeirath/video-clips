@@ -52,7 +52,10 @@ export function createProcessingRouter(
     }
 
     try {
-      const clip = await services.findNext(tab);
+      const clip =
+        req.query.refresh === 'true'
+          ? await services.findNext(tab, { forceRefresh: true })
+          : await services.findNext(tab);
       if (!clip) {
         res.json({ clip: null });
         return;

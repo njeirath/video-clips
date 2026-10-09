@@ -165,13 +165,22 @@ function invalidateSheetRowsCache(
 async function getSheetRows(
   configuration: SheetsConfiguration,
   sheetName: CaptureSheetName,
-  range: string
+  range: string,
+  forceRefresh = false
 ): Promise<unknown[][]> {
   const key = sheetRowsCacheKey(
     configuration.spreadsheetId,
     configuration.credentialPath,
     sheetName
   );
+  if (forceRefresh) {
+    invalidateSheetRowsCache(
+      configuration.spreadsheetId,
+      configuration.credentialPath,
+      sheetName
+    );
+  }
+
   const cached = cachedSheetRows.get(key);
   if (cached && cached.expiresAt > Date.now()) {
     return cached.rows;
@@ -237,13 +246,19 @@ export async function appendCapture(
 }
 
 export async function findNextProcessingClip(
-  tab: ProcessingTab
+  tab: ProcessingTab,
+  options: { forceRefresh?: boolean } = {}
 ): Promise<PendingClip | null> {
   const configuration = getSheetsConfiguration();
   const range = tab === 'Shows' ? "'Shows'!A:K" : "'Movies'!A:I";
 
   try {
-    const rows = await getSheetRows(configuration, tab, range);
+    const rows = await getSheetRows(
+      configuration,
+      tab,
+      range,
+      options.forceRefresh
+    );
     return findNextPendingClip(rows, tab);
   } catch (error) {
     throw sheetsServiceError(error, 'read');

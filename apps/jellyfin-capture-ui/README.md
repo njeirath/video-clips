@@ -71,7 +71,7 @@ The editor uses Chrome's presented-frame callback when available to display the 
 
 ## Clip processor
 
-Open `http://localhost:4300/process` in development, or `/process` on the deployed service. The remembered Shows/Movies selector scopes the queue to the first top-to-bottom row with a blank `End`. The processor loads that row's `source`, starts at its approximate `Start`, and saves exact `Start`/`End` plus metadata back to the same row. Use **Save & Next** to continue through the selected tab. Rows without a readable `source` remain visible with an error instead of being silently skipped.
+Open `http://localhost:4300/process` in development, or `/process` on the deployed service. The remembered Shows/Movies selector scopes the queue to the first top-to-bottom row with a blank `End`. The processor loads that row's `source`, starts at its approximate `Start`, and saves exact `Start`/`End` plus metadata back to the same row. Use **Reload queue** to fetch current rows directly from Google Sheets, bypassing the API's in-memory cache; reloading discards unsaved edits to the current clip. Use **Save & Next** to continue through the selected tab. Rows without a readable `source` remain visible with an error instead of being silently skipped.
 
 ## Run as one service
 
@@ -126,7 +126,7 @@ Open `http://<computer-lan-ip>:4301` from a device on the same network. To chang
 
 - Capture history is requested only after a supported movie or episode is selected; an empty stream list does not read Google Sheets.
 - The backend reads only the relevant tab (`Shows` or `Movies`), filters rows to the same series/season/episode or movie title, and returns those saved positions. The browser displays only entries within 60 seconds of the currently adjusted position, closest first; changing the position does not trigger more Sheets requests.
-- Rows for each tab are cached in the API process for up to 60 seconds and the relevant cache is invalidated after a successful append. Edits made directly in Google Sheets may therefore take up to one minute to appear.
+- Rows for each tab are cached in the API process for up to 60 seconds and the relevant cache is invalidated after a successful append or processing update. The processing page's **Reload queue** action bypasses that cache, so direct Google Sheets edits are visible when it completes; other cached reads may take up to one minute to reflect external edits.
 - The Sheets Values API reads ranges rather than filtering by cell values, so the backend scans the selected tab’s rows. For a personal capture log this avoids reading the workbook on every page load while keeping the implementation simple.
 
 Keep the service on your trusted LAN and do not expose it directly to the public internet. A browser home-screen shortcut can open the app on Android; a standalone installable PWA/HTTPS setup has not been added.

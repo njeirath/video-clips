@@ -14,7 +14,10 @@ let tempDirectory: string;
 let server: Server;
 let origin: string;
 let currentClip: PendingClip;
-const findNext = vi.fn(async (_tab: ProcessingTab) => currentClip);
+const findNext = vi.fn(
+  async (_tab: ProcessingTab, _options?: { forceRefresh?: boolean }) =>
+    currentClip
+);
 const update = vi.fn(async (tab: ProcessingTab, rowNumber: number) => ({
   tab,
   rowNumber,
@@ -102,6 +105,16 @@ describe('processing API routes', () => {
     expect(Buffer.from(await mediaResponse.arrayBuffer())).toEqual(
       Buffer.from([1, 2, 3])
     );
+  });
+
+  it('forces a fresh row read when the queue refresh query is set', async () => {
+    const response = await fetch(
+      `${origin}/api/processing/next?tab=Shows&refresh=true`
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('cache-control')).toBe('no-store');
+    expect(findNext).toHaveBeenCalledWith('Shows', { forceRefresh: true });
   });
 
   it('returns pending rows with a missing-source warning instead of silently skipping them', async () => {

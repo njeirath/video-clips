@@ -284,7 +284,10 @@ export function ClipProcessor() {
     ? manualFrameStepMs / 1000
     : observedFrameStep ?? 1 / 25;
 
-  async function loadNextClip(selectedTab: ProcessingTab) {
+  async function loadNextClip(
+    selectedTab: ProcessingTab,
+    forceRefresh = false
+  ) {
     const generation = ++loadGenerationRef.current;
     setLoading(true);
     setLoadError(null);
@@ -293,8 +296,11 @@ export function ClipProcessor() {
     setClip(null);
 
     try {
+      const refreshQuery = forceRefresh ? '&refresh=true' : '';
       const response = await fetch(
-        `/api/processing/next?tab=${encodeURIComponent(selectedTab)}`,
+        `/api/processing/next?tab=${encodeURIComponent(
+          selectedTab
+        )}${refreshQuery}`,
         { cache: 'no-store', headers: { Accept: 'application/json' } }
       );
       const payload: unknown = await response.json().catch(() => null);
@@ -581,20 +587,12 @@ export function ClipProcessor() {
     video.currentTime = clampedTime;
   }
 
-  function stepBoundary(
-    boundary: Boundary,
-    direction: -1 | 1,
-    unit: StepUnit
-  ) {
+  function stepBoundary(boundary: Boundary, direction: -1 | 1, unit: StepUnit) {
     const current =
       boundary === 'start' ? startTimeRef.current : endTimeRef.current;
     if (current !== null) {
       const stepSize =
-        unit === 'frame'
-          ? frameStepSeconds
-          : unit === 'half-second'
-          ? 0.5
-          : 1;
+        unit === 'frame' ? frameStepSeconds : unit === 'half-second' ? 0.5 : 1;
       seekToBoundary(boundary, current + direction * stepSize);
     }
   }
@@ -761,10 +759,7 @@ export function ClipProcessor() {
         {loadError && (
           <div className={styles.errorBanner} role="alert">
             <span>{loadError}</span>
-            <button
-              type="button"
-              onClick={() => setLoadGeneration((value) => value + 1)}
-            >
+            <button type="button" onClick={() => void loadNextClip(tab, true)}>
               Retry
             </button>
           </div>
@@ -782,7 +777,7 @@ export function ClipProcessor() {
             <button
               className={styles.secondaryButton}
               type="button"
-              onClick={() => setLoadGeneration((value) => value + 1)}
+              onClick={() => void loadNextClip(tab, true)}
             >
               Check again
             </button>
@@ -813,6 +808,15 @@ export function ClipProcessor() {
                   onClick={resetTimes}
                 >
                   Reset
+                </button>
+                <button
+                  className={styles.secondaryButton}
+                  type="button"
+                  disabled={saving}
+                  title="Reload from Google Sheets; unsaved edits to this clip will be discarded."
+                  onClick={() => void loadNextClip(tab, true)}
+                >
+                  Reload queue
                 </button>
               </div>
             </section>
